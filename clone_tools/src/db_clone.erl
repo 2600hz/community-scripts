@@ -19,7 +19,7 @@
               ]).
 -define(REMOVE_KEYS, [<<"_rev">>, <<"_attachments">>]).
 -define(MAX_BULK, 100).
--define(MAX_WORKERS, 5).
+-define(MAX_WORKERS, 1).
 
 run() ->
     inets:start(),
