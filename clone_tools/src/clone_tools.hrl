@@ -1,6 +1,6 @@
 
--define(TARGET, "http://10.26.0.85:5984/").
--define(SOURCE, "http://10.26.0.81:15984/").
+-define(TARGET, "http://127.0.0.1:15984/").
+-define(SOURCE, "http://127.0.0.1:5984/").
 
 -define(WNM_DB_PREFIX, <<"numbers/">>).
 -define(LOG_PATH, "/tmp/").
@@ -18,7 +18,7 @@
 -define(LOG(C, F, A), fun(Control, Format, Args) ->
                       Path = ?LOG_PATH ++ atom_to_list(?MODULE),
                       file:write_file(Path, io_lib:format(Format, Args), ['append']),
-                      io:format(Control ++ Format, [Args])
+                      io:format(Control ++ Format, Args)
                       end(C, F, A)).
 -define(LOG(F, A), ?LOG_WHITE(F, A)).
 -define(LOG_BLACK(F, A), ?LOG("\e[30m", F, A)).
