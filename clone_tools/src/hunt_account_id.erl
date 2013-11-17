@@ -11,7 +11,7 @@ run(Account) ->
     inets:start(),
     process_flag('trap_exit', 'true'),
     AccountId = wh_account:format_id(Account, 'raw'),
-    ViewOptions = <<"startkey=\"", AccountId/binary, "\""
+    ViewOptions = <<"startkey=", (wh_json:encode([AccountId]))/binary
                     ,"&endkey=", (wh_json:encode([AccountId, wh_json:new()]))/binary>>,
     Target = target_request([<<"accounts">>
                              ,<<"_design">>
