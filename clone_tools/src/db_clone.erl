@@ -41,6 +41,18 @@ run([_|_]=Dbs) ->
 clone_dbs([]) -> 'ok';
 clone_dbs([Db|Dbs]) when not is_binary(Db) ->
     clone_dbs([wh_types:to_binary(Db)|Dbs]);
+clone_dbs([<<"ts_usage", _/binary>>|Dbs]) ->
+    clone_dbs(Dbs);
+clone_dbs([<<"ts_cdr", _/binary>>|Dbs]) ->
+    clone_dbs(Dbs);
+clone_dbs([<<"anonymous_cdrs">>|Dbs]) ->
+    clone_dbs(Dbs);
+clone_dbs([<<"media_files">>|Dbs]) ->
+    clone_dbs(Dbs);
+clone_dbs([<<"token_auth">>|Dbs]) ->
+    clone_dbs(Dbs);
+clone_dbs([<<"ts">>|Dbs]) ->
+    clone_dbs(Dbs);
 clone_dbs([Db|Dbs]) -> 
     _ = case wh_account:is_account_db(Db) of
         'true' ->
@@ -128,7 +140,7 @@ clone_filtered_docs(Db) ->
         Ids -> 
             ?LOG_CYAN("  found ~p missing filtered documents~n"
                       ,[length(Ids)]),
-            clone_docs(Ids, Db, 'true')
+            clone_docs(Ids, Db, 'false')
     end.
 
 find_missing_filtered_ids(Db) ->

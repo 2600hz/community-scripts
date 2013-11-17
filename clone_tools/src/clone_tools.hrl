@@ -1,6 +1,6 @@
 
 -define(TARGET, "http://127.0.0.1:15984/").
--define(SOURCE, "http://127.0.0.1:5984/").
+-define(SOURCE, "http://127.0.0.1:15984/").
 
 -define(WNM_DB_PREFIX, <<"numbers/">>).
 -define(LOG_PATH, "/tmp/").
