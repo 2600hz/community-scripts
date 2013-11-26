@@ -29,3 +29,6 @@
 -define(LOG_MAGENTA(F, A), ?LOG("\e[35m", F, A)).
 -define(LOG_CYAN(F, A), ?LOG("\e[36m", F, A)).
 -define(LOG_WHITE(F, A), ?LOG("\e[37m", F, A)).
+
+-define(MAX_CR_AGE, 20).
+-define(MAX_VM_AGE, 30).
