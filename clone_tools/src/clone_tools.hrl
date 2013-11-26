@@ -1,6 +1,23 @@
-
+%% ===========[ MODIFY ]====================
+%% TARGET should be set to the URL of haproxy
+%% for the new database cluster.
 -define(TARGET, "http://127.0.0.1:15984/").
+
+%% SOURCE should be set to a single node
+%% in the old database cluster.
 -define(SOURCE, "http://127.0.0.1:15984/").
+
+%% MAX_CR_AGE is the maxium age (in days)
+%% of the CDRs to copy (IE: last 30 days).
+%% Set to 0 to copy all or 'none'.
+-define(MAX_CR_AGE, 'none').
+
+%% MAX_VM_AGE is the maxium age (in days)
+%% of the voicemail in a box to copy.
+%% Set to 0 to copy all or 'none'.
+-define(MAX_VM_AGE, 0).
+%% =========================================
+
 
 -define(WNM_DB_PREFIX, <<"numbers/">>).
 -define(LOG_PATH, "/tmp/").
@@ -30,5 +47,3 @@
 -define(LOG_CYAN(F, A), ?LOG("\e[36m", F, A)).
 -define(LOG_WHITE(F, A), ?LOG("\e[37m", F, A)).
 
--define(MAX_CR_AGE, 20).
--define(MAX_VM_AGE, 30).
