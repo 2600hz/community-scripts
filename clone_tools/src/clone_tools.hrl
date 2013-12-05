@@ -31,7 +31,6 @@
 -define(CYAN, io:format("\e[36m", [])).
 -define(WHITE, io:format("\e[37m", [])).
 
-
 -define(LOG(C, F, A), fun(Control, Format, Args) ->
                       Path = ?LOG_PATH ++ atom_to_list(?MODULE),
                       file:write_file(Path, io_lib:format(Format, Args), ['append']),
@@ -46,4 +45,3 @@
 -define(LOG_MAGENTA(F, A), ?LOG("\e[35m", F, A)).
 -define(LOG_CYAN(F, A), ?LOG("\e[36m", F, A)).
 -define(LOG_WHITE(F, A), ?LOG("\e[37m", F, A)).
-

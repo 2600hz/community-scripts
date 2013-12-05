@@ -7,7 +7,7 @@
          ,run/1
         ]).
 
--define(VIEWS, [{<<"filtered_ids">>, wh_json:from_list([{<<"map">>, update_view(<<"function(doc) { if (doc.pvt_deleted || (doc.pvt_type == 'prviate_media'  && doc.pvt_created > {{date_media}}) || (doc.pvt_type == 'cdr'  && doc.pvt_created > {{date_cdr}}) || doc.pvt_type == 'vmbox' || doc.pvt_type == 'debit' || doc.pvt_type == 'credit' || doc.pvt_type == 'acdc_stat') return; emit(doc._id, null); }">>)}])}
+-define(VIEWS, [{<<"filtered_ids">>, wh_json:from_list([{<<"map">>, update_view(<<"function(doc) { if (doc.pvt_deleted || (doc.pvt_type == 'prviate_media'  && doc.pvt_created < {{date_media}}) || (doc.pvt_type == 'cdr'  && doc.pvt_created < {{date_cdr}}) || doc.pvt_type == 'vmbox' || doc.pvt_type == 'debit' || doc.pvt_type == 'credit' || doc.pvt_type == 'acdc_stat') return; emit(doc._id, null); }">>)}])}
                 ,{<<"vmbox_ids">>, wh_json:from_list([{<<"map">>, <<"function(doc) { if (doc.pvt_deleted || doc.pvt_type != 'vmbox') return; emit(doc._id, null); }">>}])}
                 ,{<<"has_attachments">>, wh_json:from_list([{<<"map">>, <<"function(doc) { if (doc.pvt_deleted || !doc._attachments) return; for(var attachment in doc._attachments) { emit(doc._id, doc._attachments[attachment].length); } }">>}
                                                             ,{<<"reduce">>, <<"_sum">>}
@@ -46,7 +46,6 @@ update_binary(Binary, Key, MaxAge) ->
     Replacement = list_to_binary(integer_to_list(get_time(MaxAge))),
     binary:replace(Binary, <<"{{", Key/binary, "}}">>, Replacement, ['global']).
 
-
 get_time('none') ->
     {CurrDate, _} = calendar:local_time(),
     NowInSec = calendar:datetime_to_gregorian_seconds({CurrDate, {0, 0, 0}}),
@@ -64,6 +63,8 @@ clone_dbs([Db|Dbs]) when not is_binary(Db) ->
 clone_dbs([<<"ts_usage", _/binary>>|Dbs]) ->
     clone_dbs(Dbs);
 clone_dbs([<<"ts_cdr", _/binary>>|Dbs]) ->
+    clone_dbs(Dbs);
+clone_dbs([<<"ts_rates">>|Dbs]) ->
     clone_dbs(Dbs);
 clone_dbs([<<"anonymous_cdrs">>|Dbs]) ->
     clone_dbs(Dbs);
