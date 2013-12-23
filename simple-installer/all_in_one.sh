@@ -68,11 +68,77 @@ if [[ ! $fqhn =~ $fqhn_regex ]]; then
 fi
 /bin/echo "Hostname = $fqhn"
 
+#check for all necessary RPMs
+debug "Checking for required RPMs"
+
+
+rpmcheckcount=1
+
+rpmcheckkazoo=`rpm -qa | grep kazoo-R15B`
+if [[ ! $rpmcheckkazoo == *15B* ]]; then
+    error "Missing or wrong version of Kazoo!"
+    rpmcheckcount=$(($rpmcheckcount+1))
+fi
+
+rpmcheckerlang=`rpm -qa | grep erlang`
+if [[ ! $rpmcheckerlang == *R15B03* ]]; then
+    error "Missing or wrong version of Erlang!"
+    rpmcheckcount=$(($rpmcheckcount+1))
+fi
+
+rpmcheckkamailio=`rpm -qa | grep kamailio`
+if [[ ! $rpmcheckkamailio == *kamailio* ]]; then
+    error "Missing or wrong version of kamailio!"
+    rpmcheckcount=$(($rpmcheckcount+1))
+fi
+
+rpmcheckhaproxy=`rpm -qa | grep haproxy`
+if [[ ! $rpmcheckhaproxy == *haproxy* ]]; then
+    error "Missing or wrong version of haproxy!"
+    rpmcheckcount=$(($rpmcheckcount+1))
+fi
+
+rpmcheckcouch=`rpm -qa | grep bigcouch`
+if [[ ! $rpmcheckcouch == *couch* ]]; then
+    error "Missing or wrong version of bigcouch!"
+    rpmcheckcount=$(($rpmcheckcount+1))
+fi
+
+rpmcheckfreeswitch=`rpm -qa | grep freeswitch`
+if [[ ! $rpmcheckfreeswitch == *freeswitch* ]]; then
+    error "Missing or wrong version of freeswitch!"
+    rpmcheckcount=$(($rpmcheckcount+1))
+fi
+
+rpmcheckkazooui=`rpm -qa | grep kazoo-ui`
+if [[ ! $rpmcheckkazooui == *kazoo-ui* ]]; then
+    error "Missing or wrong version of Kazoo-UI!"
+    rpmcheckcount=$(($rpmcheckcount+1))
+fi
+
+rpmcheckhttpd=`rpm -qa | grep httpd`
+if [[ ! $rpmcheckhttpd == *httpd* ]]; then
+    error "Missing or wrong version of httpd!"
+    rpmcheckcount=$(($rpmcheckcount+1))
+fi
+
+rpmcheckrsyslog=`rpm -qa | grep rsyslog`
+if [[ ! $rpmcheckrsyslog == *rsyslog* ]]; then
+    error "Missing or wrong version of rsyslog!"
+    rpmcheckcount=$(($rpmcheckcount+1))
+fi
+
+if [[ ! $rpmcheckcount == 1 ]]; then
+    error "Go back and fix the aforementioned packages!"
+    exit 1
+fi
+
+debug "Found all required RPMs"
 
 #have user select interface
 debug "Get IP address"
 count=1
-echo "Please select which interface to configure Kazoo with"
+echo "Please select which interface to configure Kazoo with:"
 for i in `ifconfig | grep Ethernet| awk '{print $1}'`
 do  
     tmpIP=`ifconfig $i | grep "inet addr" | cut -d: -f 2 | awk '{ print $1}'`
