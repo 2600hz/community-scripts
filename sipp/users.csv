@@ -1,0 +1,4 @@
+SEQUENTIAL
+user_101;sipp.2600hz.com;[authentication username=user_101 password=pwd_101]
+user_102;sipp.2600hz.com;[authentication username=user_102 password=pwd_102]
+user_103;sipp.2600hz.com;[authentication username=user_103 password=pwd_103]

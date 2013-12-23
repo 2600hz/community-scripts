@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="branch_client">
+  <send retrans="500">
+    <![CDATA[
+
+      REGISTER sip:[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:[field0]@[field1]>;tag=[call_number]
+      To: <sip:[field0]@[field1]>
+      Call-ID: [call_id]
+      CSeq: 1 REGISTER
+      Contact: sip:[field0]@[local_ip]:[local_port]
+      Max-Forwards: 5
+      Expires: 60
+      User-Agent: SIPp
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="401" auth="true">
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+      REGISTER sip:[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:[field0]@[field1]>;tag=[call_number]
+      To: <sip:[field0]@[field1]>
+      Call-ID: [call_id]
+      CSeq: 2 REGISTER
+      Contact: sip:[field0]@[local_ip]:[local_port]
+      [field2]
+      Max-Forwards: 5
+      Expires: 60
+      User-Agent: SIPp
+      Content-Length: 0
+
+    ]]>
+  </send>
+  
+  <recv response="200"></recv>
+
+  <!-- definition of the response time repartition table (unit is ms)   -->
+  <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
+
+  <!-- definition of the call length repartition table (unit is ms)     -->
+  <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
+</scenario>
+

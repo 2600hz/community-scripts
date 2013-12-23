@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>                                                                                                                                                                                                                                                   
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic Sipstone UAC">
+  <send retrans="500">
+    <![CDATA[
+      INVITE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=z9hG4bK[call_number]
+      From: "[field0]" <sip:[field0]@[field1]>;tag=[call_number]
+      To: <sip:[service]@[field1]>
+      Call-ID: [call_id]
+      CSeq: 1 INVITE
+      Contact: <sip:[field0]@[local_ip]:[local_port]>
+      Content-Type: application/sdp
+      Allow: INVITE, ACK, BYE, CANCEL, OPTIONS, NOTIFY, REGISTER
+      Max-Forwards: 70
+      User-Agent: SIPp
+      Allow-Events: talk,hold,conference,refer,check-sync
+      Content-Length: [len]
+
+      v=0
+      o=- 20102 20102 IN IP[local_ip_type] [local_ip]
+      s=SDP data
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [media_port] RTP/AVP 0 8 18 9 101
+      a=rtpmap:0 PCMU/8000
+      a=rtpmap:8 PCMA/8000
+      a=rtpmap:18 G729/8000
+      a=fmtp:18 annexb=no
+      a=rtpmap:9 G722/8000
+      a=fmtp:101 0-15
+      a=rtpmap:101 telephone-event/8000
+      a=ptime:20
+      a=sendrecv
+    ]]>
+  </send>
+
+  <recv response="100" optional="true">
+  </recv>
+
+  <recv response="407" auth="true">
+  </recv>
+
+  <send>
+    <![CDATA[
+      ACK sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      [last_Via:]
+      [last_From:]
+      To: <sip:[service]@[remote_ip]:[remote_port]>[peer_tag_param]
+      [last_Call-ID:]
+      CSeq: 1 ACK
+      Content-Length: 0
+    ]]>
+  </send>
+
+  <send retrans="500">
+    <![CDATA[
+      INVITE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      [last_Via:]
+      [last_From:]
+      To: <sip:[service]@[remote_ip]:[remote_port]>
+      [last_Call-ID:]
+      CSeq: 2 INVITE
+      Contact: <sip:[field0]@[local_ip]:[local_port]>
+      [field2]
+      Content-Type: application/sdp
+      Allow: INVITE, ACK, BYE, CANCEL, OPTIONS, NOTIFY, REGISTER
+      Max-Forwards: 70
+      User-Agent: SIPp
+      Allow-Events: talk,hold,conference,refer,check-sync
+      Content-Length: [len]
+
+      v=0
+      o=- 20102 20102 IN IP[local_ip_type] [local_ip]
+      s=SDP data
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [media_port] RTP/AVP 0 8 18 9 101
+      a=rtpmap:0 PCMU/8000
+      a=rtpmap:8 PCMA/8000
+      a=rtpmap:18 G729/8000
+      a=fmtp:18 annexb=no
+      a=rtpmap:9 G722/8000
+      a=fmtp:101 0-15
+      a=rtpmap:101 telephone-event/8000
+      a=ptime:20
+      a=sendrecv
+    ]]>
+  </send>
+
+  <recv response="100" optional="true"></recv>
+  <recv response="101" optional="true"></recv>
+  <recv response="180" optional="true"></recv>
+  <recv response="183" optional="true"></recv>
+  <recv response="480" optional="true" next="5"></recv>
+  <recv response="488" optional="true" next="5"></recv>
+  <recv response="502" optional="true" next="5"></recv>
+  <recv response="503" optional="true" next="6"></recv>
+  <recv response="486" optional="true" next="6"></recv>
+  <recv response="407" optional="true" next="6"></recv>
+
+  <!-- By adding rrs="true" (Record Route Sets), the route sets         -->
+  <!-- are saved and used for following messages sent. Useful to test   -->
+  <!-- against stateful SIP proxies/B2BUAs.                             -->
+  <recv response="200" rtd="true"></recv>
+
+  <!-- Packet lost can be simulated in any send/recv message by         -->
+  <!-- by adding the 'lost = "10"'. Value can be [1-100] percent.       -->
+  <send>
+    <![CDATA[
+
+      ACK sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_Contact:]
+      CSeq: 2 ACK
+      Max-Forwards: 70
+      Subject: Performance Test
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- This delay can be customized by the -d command-line option       -->
+  <!-- or by adding a 'milliseconds = "value"' option here.             -->
+  <pause/>
+
+  <!-- The 'crlf' option inserts a blank line in the statistics report. -->
+  <send retrans="500">
+    <![CDATA[
+
+      BYE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_Contact:]
+      CSeq: 3 BYE
+      Max-Forwards: 70
+      Subject: Performance Test
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true" next="6"></recv>
+
+  <label id="5"/>
+  <send>
+    <![CDATA[
+
+      ACK sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_Contact:]
+      CSeq: 2 ACK
+      Max-Forwards: 70
+      Subject: Performance Test
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+
+  <label id="6"/>
+
+  <!-- definition of the response time repartition table (unit is ms)   -->
+  <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
+
+  <!-- definition of the call length repartition table (unit is ms)     -->
+  <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
+
+</scenario>
+
