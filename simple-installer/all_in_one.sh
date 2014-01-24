@@ -178,6 +178,9 @@ if [ ! -L $haproxy_cfg ]; then
   /bin/ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
 fi
 
+debug "Edit freeswitch nodename"
+/bin/sed -i s/ue=\"freeswitch\"/ue=\"freeswitch@$fqhn\"/g /etc/kazoo/freeswitch/autoload_configs/kazoo.conf.xml
+
 debug "Edit kamailio dispatcher"
 /bin/sed -i s/127.0.0.1/$ip_address/g /etc/kazoo/kamailio/dbtext/dispatcher
 /bin/sed -i s/127.0.0.1/$ip_address/g /etc/kazoo/kamailio/local.cfg
@@ -240,7 +243,7 @@ debug "Create test account"
 
 
 debug "Importing media files"
-/opt/kazoo/utils/media_importer/media_importer -h $fqhn -P 15984 /opt/kazoo/system_media/*.wav 
+/opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav 
 
 debug "Congratulations, your server is now running an All-in-One Kazoo system!"
 
