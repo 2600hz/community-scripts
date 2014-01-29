@@ -68,6 +68,13 @@ if [[ ! $fqhn =~ $fqhn_regex ]]; then
 fi
 /bin/echo "Hostname = $fqhn"
 
+debug "Configure Kazoo Repo"
+curl -o /etc/yum.repos.d/2600hz.repo http://repo.2600hz.com/2600hz.repo
+
+debug "Yum installing all necessary RPMs"
+yum install -y esl-erlang kazoo-R15B kazoo-kamailio haproxy rsyslog httpd kazoo-ui kazoo-freeswitch-R15B kazoo-bigcouch-R15B sed
+
+
 #check for all necessary RPMs
 debug "Checking for required RPMs"
 
