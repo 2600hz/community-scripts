@@ -187,8 +187,13 @@ if [ ! -L $haproxy_cfg ]; then
   /bin/ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
 fi
 
-debug "Edit freeswitch nodename"
-/bin/sed -i s/ue=\"freeswitch\"/ue=\"freeswitch@$fqhn\"/g /etc/kazoo/freeswitch/autoload_configs/kazoo.conf.xml
+## NOTE: This is not required, if shortnames are set to false 
+##    and the node name does not include the servers FQDN then
+##    mod_kazoo will get it from the system when it starts.
+##    This is better than hard-coding it because it makes it "just work"
+##    if the hostname is ever changed.
+## debug "Edit freeswitch nodename"
+## /bin/sed -i s/ue=\"freeswitch\"/ue=\"freeswitch@$fqhn\"/g /etc/kazoo/freeswitch/autoload_configs/kazoo.conf.xml
 
 debug "Edit kamailio dispatcher"
 /bin/sed -i s/127.0.0.1/$ip_address/g /etc/kazoo/kamailio/dbtext/dispatcher
