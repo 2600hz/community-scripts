@@ -18,5 +18,6 @@ cdr_radius		- Ruby project to process CDR + send to RADIUS	server
 
 kazoo-puppet		- Puppet scripts for deploying Kazoo (requires an update, only valid for single server currently)
 
-All in one    - Single server install script
+simple-installer        - Single server install script
 
+clone_tools		- Erlang tool to copy all databases from one Bigcouch cluster to another, with options for CDRs and voicemails
