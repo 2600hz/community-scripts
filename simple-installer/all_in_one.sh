@@ -1,7 +1,9 @@
 #!/bin/bash
-
-## This script is a draft. The goal is to deploy Kazoo v3.0
-
+set -e
+#
+## The goal of this script is to deploy Kazoo on a single server.
+## For more information, join us on irc: #2600hz@freenode 
+#
 fUsage () {
     echo "Usage: [--account=account_name_here] [--realm=realm_here] [--user=username_here] [--pass=password_here]"
     echo "Options"
@@ -56,98 +58,45 @@ error()  { /bin/echo -e "\n ${red}         # ERROR: $* ${NC} \n "; }
 
 
 
-#checking for fqhn
+#checking for fqdn
 debug "Getting  FQDN"
-/bin/hostname -f
-fqhn=$(hostname -f)
-fqhn_regex="^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])(\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]))*$"
+hostname -f
+fqdn=$(hostname -f)
+fqdn_regex="^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])(\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]))*$"
 
-if [[ ! $fqhn =~ $fqhn_regex ]]; then 
-    error "Hostname \"$fqhn\" does not seem to be fully qualified"
+if [[ ! $fqdn =~ $fqdn_regex ]]; then 
+    error "Hostname \"$fqdn\" does not seem to be fully qualified"
     exit 1
 fi
-/bin/echo "Hostname = $fqhn"
+/bin/echo "Hostname = $fqdn"
 
-debug "Configure Kazoo Repo"
-curl -o /etc/yum.repos.d/2600hz.repo http://repo.2600hz.com/2600hz.repo
-
-yum clean all
-
-debug "Yum installing all necessary RPMs"
-yum install -y esl-erlang kazoo-R15B kazoo-kamailio haproxy rsyslog httpd kazoo-ui kazoo-freeswitch-R15B kazoo-bigcouch-R15B sed
-
-
-#check for all necessary RPMs
-debug "Checking for required RPMs"
-
-
-rpmcheckcount=1
-
-rpmcheckkazoo=`rpm -qa | grep kazoo-R15B`
-if [[ ! $rpmcheckkazoo == *15B* ]]; then
-    error "Missing or wrong version of Kazoo!"
-    rpmcheckcount=$(($rpmcheckcount+1))
-fi
-
-rpmcheckerlang=`rpm -qa | grep erlang`
-if [[ ! $rpmcheckerlang == *R15B03* ]]; then
-    error "Missing or wrong version of Erlang!"
-    rpmcheckcount=$(($rpmcheckcount+1))
-fi
-
-rpmcheckkamailio=`rpm -qa | grep kamailio`
-if [[ ! $rpmcheckkamailio == *kamailio* ]]; then
-    error "Missing or wrong version of kamailio!"
-    rpmcheckcount=$(($rpmcheckcount+1))
-fi
-
-rpmcheckhaproxy=`rpm -qa | grep haproxy`
-if [[ ! $rpmcheckhaproxy == *haproxy* ]]; then
-    error "Missing or wrong version of haproxy!"
-    rpmcheckcount=$(($rpmcheckcount+1))
-fi
-
-rpmcheckcouch=`rpm -qa | grep bigcouch`
-if [[ ! $rpmcheckcouch == *couch* ]]; then
-    error "Missing or wrong version of bigcouch!"
-    rpmcheckcount=$(($rpmcheckcount+1))
-fi
-
-rpmcheckfreeswitch=`rpm -qa | grep freeswitch`
-if [[ ! $rpmcheckfreeswitch == *freeswitch* ]]; then
-    error "Missing or wrong version of freeswitch!"
-    rpmcheckcount=$(($rpmcheckcount+1))
-fi
-
-rpmcheckkazooui=`rpm -qa | grep kazoo-ui`
-if [[ ! $rpmcheckkazooui == *kazoo-ui* ]]; then
-    error "Missing or wrong version of Kazoo-UI!"
-    rpmcheckcount=$(($rpmcheckcount+1))
-fi
-
-rpmcheckhttpd=`rpm -qa | grep httpd`
-if [[ ! $rpmcheckhttpd == *httpd* ]]; then
-    error "Missing or wrong version of httpd!"
-    rpmcheckcount=$(($rpmcheckcount+1))
-fi
-
-rpmcheckrsyslog=`rpm -qa | grep rsyslog`
-if [[ ! $rpmcheckrsyslog == *rsyslog* ]]; then
-    error "Missing or wrong version of rsyslog!"
-    rpmcheckcount=$(($rpmcheckcount+1))
-fi
-
-if [[ ! $rpmcheckcount == 1 ]]; then
-    error "Go back and fix the aforementioned packages!"
+#checking for selinux
+debug "Checking SELinux"
+selinux=`sestatus | awk '{print $NF;}'`
+echo "SELinux is currently: $selinux"
+if [[ $selinux != "disabled" ]]; then
+    error "Please disable SELinux for now, you can of course add it back once you understand how Kazoo works"
     exit 1
 fi
 
-debug "Found all required RPMs"
+# User interaction
+cat <<"EOT"
+Thanks for flying
+         ____   ___   __    __   _  _  ____             
+        (___ \ / __) /  \  /  \ / )( \(__  )            
+         / __/(  _ \(  0 )(  0 )) __ ( / _/             
+        (____) \___/ \__/  \__/ \_)(_/(____)           
 
-#have user select interface
-debug "Get IP address"
+This script is community maintained here: https://github.com/2600hz/community-scripts
+For more information, join us on irc: #2600hz@freenode 
+
+EOT
+
+
+#have user select network interface
+debug "Getting Network Interfaces Information..."
 count=1
-echo "Please select which interface to configure Kazoo with:"
+echo "Please select which interface you want to configure Kazoo with:"
 for i in `ifconfig | grep Ethernet| awk '{print $1}'`
 do  
     tmpIP=`ifconfig $i | grep "inet addr" | cut -d: -f 2 | awk '{ print $1}'`
@@ -168,18 +117,20 @@ if [ -z "$ip_address" ]; then
      error "Invalid interface selection";
     exit 1
 fi
-/bin/echo "IP = $ip_address"
+echo "IP = $ip_address"
 
-#checking for selinux
-debug "Checking selinux"
-selinux=`grep =enforcing /etc/selinux/config`
-if [ $selinux ]; then
-    error "Please disable selinux before continuing"
-    exit 1
-fi
+#Prerequisites
+debug "Installing Prerequisites Packages"
+yum install -y sed curl rsyslog httpd
 
+#Installing Softwares
+debug "Configuring 2600Hz Repository"
+curl -o /etc/yum.repos.d/2600hz.repo http://repo.2600hz.com/2600hz.repo
+yum clean all
+debug "Installing 2600Hz Packages"
+yum install -y esl-erlang kazoo-R15B kazoo-kamailio haproxy kazoo-ui kazoo-freeswitch-R15B kazoo-bigcouch-R15B
 
-
+#Configuring HAProxy
 haproxy_cfg='/etc/haproxy'
 if [ ! -L $haproxy_cfg ]; then
   debug "Replace /etc/haproxy with symlink /etc/kazoo/haproxy"
@@ -187,43 +138,44 @@ if [ ! -L $haproxy_cfg ]; then
   /bin/ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
 fi
 
+##Configuring FreeSWITCH
 ## NOTE: This is not required, if shortnames are set to false 
 ##    and the node name does not include the servers FQDN then
 ##    mod_kazoo will get it from the system when it starts.
 ##    This is better than hard-coding it because it makes it "just work"
 ##    if the hostname is ever changed.
 ## debug "Edit freeswitch nodename"
-## /bin/sed -i s/ue=\"freeswitch\"/ue=\"freeswitch@$fqhn\"/g /etc/kazoo/freeswitch/autoload_configs/kazoo.conf.xml
+## /bin/sed -i s/ue=\"freeswitch\"/ue=\"freeswitch@$fqdn\"/g /etc/kazoo/freeswitch/autoload_configs/kazoo.conf.xml
 
-debug "Edit kamailio dispatcher"
+debug "Configuring Kamailio dispatcher"
 /bin/sed -i s/127.0.0.1/$ip_address/g /etc/kazoo/kamailio/dbtext/dispatcher
 /bin/sed -i s/127.0.0.1/$ip_address/g /etc/kazoo/kamailio/local.cfg
-
-debug "Show changes"
 /bin/cat /etc/kazoo/kamailio/dbtext/dispatcher | grep "sip:$ip_address"
 
+debug "Show Kazoo config.ini"
+/bin/cat /etc/kazoo/config.ini
 
 #Start/restart services
+debug "Restart Rsyslog"
+/etc/init.d/rsyslog restart
 
 debug "Start EPMD"
 /usr/bin/epmd -daemon
 /bin/netstat -ptlen | grep epmd
 
-debug "Start FreeSWITCH"
-/etc/init.d/freeswitch stop
-/usr/bin/freeswitch -nc -nonat &
-
 debug "Restart HAProxy to apply changes"
 /etc/init.d/haproxy start
-
-debug "Restart Kamailio to apply the changes"
-/etc/init.d/kamailio restart
 
 debug "Start RabbitMQ"
 /etc/init.d/rabbitmq-server start
 
-debug "Show kazoo config.ini"
-/bin/cat /etc/kazoo/config.ini
+debug "Start FreeSWITCH"
+/etc/init.d/freeswitch stop
+#use init script?
+/usr/bin/freeswitch -nc -nonat &
+
+debug "Restart Kamailio to apply the changes"
+/etc/init.d/kamailio restart
 
 debug "Start Whapps"
 /etc/init.d/kz-whistle_apps start
@@ -231,34 +183,31 @@ debug "Start Whapps"
 debug "Start ecallmgr"
 /etc/init.d/kz-ecallmgr start
 
-debug "Restart rsyslog"
-/etc/init.d/rsyslog restart
-
 debug "Wait for 30s and check on Whapps & ecallmgr status"
 /bin/sleep 30
 /etc/init.d/kz-whistle_apps status
 
-debug "Attach ecallmgr to freeswitch"
-/opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@$fqhn
+debug "Attach ecallmgr to FreeSWITCH"
+/opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@$fqdn
+#add sup command SBC?
 
 #Kazoo-UI configurations
 debug "Edit config.js with actual IP address"
 /bin/sed -i s/'api.2600hz.com'/$ip_address/g /var/www/html/kazoo-ui/config/config.js
 
 debug "Show change of IP"
-/bin/cat /var/www/html/kazoo-ui/js/config.js
+/bin/cat /var/www/html/kazoo-ui/config/config.js | grep api_url
 
 debug "Start Apache"
 /etc/init.d/httpd start
 
-#Create new account
-debug "Create test account"
-/usr/bin/sup crossbar_maintenance create_account $account_name $realm $user $pass
-
-
 debug "Importing media files"
 /opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav 
 
-debug "Congratulations, your server is now running an All-in-One Kazoo system!"
+#Create new account
+debug "Create test account"
+/opt/kazoo/utils/sup/sup crossbar_maintenance create_account $account_name $realm $user $pass
+
+debug "Congratulations, your server is now running an All-in-One Kazoo, you can access the web interface by pointing your browser to: http://$ip_address/kazoo-ui"
 
 exit
