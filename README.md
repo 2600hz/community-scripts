@@ -18,3 +18,5 @@ cdr_radius		- Ruby project to process CDR + send to RADIUS	server
 
 kazoo-puppet		- Puppet scripts for deploying Kazoo (requires an update, only valid for single server currently)
 
+All in one    - Single server install script
+
