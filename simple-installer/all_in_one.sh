@@ -130,10 +130,13 @@ yum clean all
 debug "Installing 2600Hz Packages"
 yum install -y esl-erlang kazoo-R15B kazoo-kamailio haproxy kazoo-ui kazoo-freeswitch-R15B kazoo-bigcouch-R15B
 
-## NEED TO ADD: CONFIG BIGCOUCH
-#
-# commands here !!!!
-#
+#Configuration
+# Specific to all-in-one, multi-server script should be able to figure the best combo here
+debug "Configure Bigcouch for a single node"
+sed -i s/'r=2'/'r=1'/g /etc/kazoo/bigcouch/local.ini
+sed -i s/'q=3'/'q=1'/g /etc/kazoo/bigcouch/local.ini
+sed -i s/'w=2'/'w=1'/g /etc/kazoo/bigcouch/local.ini
+sed -i s/'n=3'/'n=1'/g /etc/kazoo/bigcouch/local.ini
 
 #Configuring HAProxy
 haproxy_cfg='/etc/haproxy'
@@ -168,8 +171,11 @@ debug "Start EPMD"
 /usr/bin/epmd -daemon
 netstat -ptlen | grep epmd
 
+debug "Restart Bigcouch to apply changes"
+/etc/init.d/bigcouch restart
+
 debug "Restart HAProxy to apply changes"
-/etc/init.d/haproxy start
+/etc/init.d/haproxy restart
 
 debug "Start RabbitMQ"
 /etc/init.d/rabbitmq-server start
