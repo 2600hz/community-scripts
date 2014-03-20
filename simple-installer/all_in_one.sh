@@ -96,7 +96,7 @@ EOT
 #have user select network interface
 debug "Getting Network Interfaces Information..."
 count=1
-echo "Please select which interface you want to configure Kazoo with:"
+echo "Please select which network interface you want to configure Kazoo with:"
 for i in `ifconfig | grep Ethernet| awk '{print $1}'`
 do  
     tmpIP=`ifconfig $i | grep "inet addr" | cut -d: -f 2 | awk '{ print $1}'`
@@ -130,12 +130,20 @@ yum clean all
 debug "Installing 2600Hz Packages"
 yum install -y esl-erlang kazoo-R15B kazoo-kamailio haproxy kazoo-ui kazoo-freeswitch-R15B kazoo-bigcouch-R15B
 
+#Configuration
+# Specific to all-in-one, multi-server script should be able to figure the best combo here
+debug "Configure Bigcouch for a single node"
+sed -i s/'r=2'/'r=1'/g /etc/kazoo/bigcouch/local.ini
+sed -i s/'q=3'/'q=1'/g /etc/kazoo/bigcouch/local.ini
+sed -i s/'w=2'/'w=1'/g /etc/kazoo/bigcouch/local.ini
+sed -i s/'n=3'/'n=1'/g /etc/kazoo/bigcouch/local.ini
+
 #Configuring HAProxy
 haproxy_cfg='/etc/haproxy'
 if [ ! -L $haproxy_cfg ]; then
   debug "Replace /etc/haproxy with symlink /etc/kazoo/haproxy"
-  /bin/rm -rf /etc/haproxy/haproxy.cfg
-  /bin/ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
+  rm -rf /etc/haproxy/haproxy.cfg
+  ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
 fi
 
 ##Configuring FreeSWITCH
@@ -148,12 +156,12 @@ fi
 ## /bin/sed -i s/ue=\"freeswitch\"/ue=\"freeswitch@$fqdn\"/g /etc/kazoo/freeswitch/autoload_configs/kazoo.conf.xml
 
 debug "Configuring Kamailio dispatcher"
-/bin/sed -i s/127.0.0.1/$ip_address/g /etc/kazoo/kamailio/dbtext/dispatcher
-/bin/sed -i s/127.0.0.1/$ip_address/g /etc/kazoo/kamailio/local.cfg
-/bin/cat /etc/kazoo/kamailio/dbtext/dispatcher | grep "sip:$ip_address"
+sed -i s/127.0.0.1/$ip_address/g /etc/kazoo/kamailio/dbtext/dispatcher
+sed -i s/127.0.0.1/$ip_address/g /etc/kazoo/kamailio/local.cfg
+cat /etc/kazoo/kamailio/dbtext/dispatcher | grep "sip:$ip_address"
 
 debug "Show Kazoo config.ini"
-/bin/cat /etc/kazoo/config.ini
+cat /etc/kazoo/config.ini
 
 #Start/restart services
 debug "Restart Rsyslog"
@@ -161,10 +169,13 @@ debug "Restart Rsyslog"
 
 debug "Start EPMD"
 /usr/bin/epmd -daemon
-/bin/netstat -ptlen | grep epmd
+netstat -ptlen | grep epmd
+
+debug "Restart Bigcouch to apply changes"
+/etc/init.d/bigcouch restart
 
 debug "Restart HAProxy to apply changes"
-/etc/init.d/haproxy start
+/etc/init.d/haproxy restart
 
 debug "Start RabbitMQ"
 /etc/init.d/rabbitmq-server start
@@ -200,6 +211,10 @@ debug "Show change of IP"
 
 debug "Start Apache"
 /etc/init.d/httpd start
+
+# Final prep
+debug "Updating all Bigcouch views"
+/opt/kazoo/utils/sup/sup whapps_maintenance blocking_refresh
 
 debug "Importing media files"
 /opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav 
