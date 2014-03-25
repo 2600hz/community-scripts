@@ -219,6 +219,11 @@ debug "Updating all Bigcouch views"
 debug "Importing media files"
 /opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav 
 
+#restart whapps before create account
+service kz-whistle_apps restart
+/bin/sleep 30
+
+
 #Create new account
 debug "Create test account"
 /opt/kazoo/utils/sup/sup crossbar_maintenance create_account $account_name $realm $user $pass
