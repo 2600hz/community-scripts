@@ -158,6 +158,7 @@ fi
 debug "Configuring Kamailio dispatcher"
 sed -i s/127.0.0.1/$ip_address/g /etc/kazoo/kamailio/dbtext/dispatcher
 sed -i s/127.0.0.1/$ip_address/g /etc/kazoo/kamailio/local.cfg
+sed -i 's/kamailio.2600hz.com/'$fqdn'/g' /etc/kazoo/kamailio/local.cfg
 cat /etc/kazoo/kamailio/dbtext/dispatcher | grep "sip:$ip_address"
 
 debug "Show Kazoo config.ini"
