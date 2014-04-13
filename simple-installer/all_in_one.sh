@@ -96,27 +96,7 @@ EOT
 #have user select network interface
 debug "Getting Network Interfaces Information..."
 count=1
-echo "Please select which network interface you want to configure Kazoo with:"
-for i in `ifconfig | grep Ethernet| awk '{print $1}'`
-do  
-    tmpIP=`ifconfig $i | grep "inet addr" | cut -d: -f 2 | awk '{ print $1}'`
-    echo "$count) $i $tmpIP"
-    count=$(($count+1))
-done
-read answer
-count=1
-for i in `ifconfig | grep Ethernet| awk '{print $1}'`
-do
-    case $answer in
-        $count) ip_address=`ifconfig $i | grep "inet addr" | cut -d: -f 2 | awk '{ print $1}'`
-            ;;      
-    esac
-    count=$(($count+1))
-done
-if [ -z "$ip_address" ]; then 
-     error "Invalid interface selection";
-    exit 1
-fi
+ip_address=$(hostname -i)
 echo "IP = $ip_address"
 
 #Prerequisites
