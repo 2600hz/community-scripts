@@ -5,7 +5,7 @@
 
 %% SOURCE should be set to a single node
 %% in the old database cluster.
--define(SOURCE, "http://127.0.0.1:15984/").
+-define(SOURCE, "http://127.0.0.1:5984/").
 
 %% MAX_CR_AGE is the maxium age (in days)
 %% of the CDRs to copy (IE: last 30 days).
