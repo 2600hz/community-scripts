@@ -16,8 +16,15 @@
 %% of the voicemail in a box to copy.
 %% Set to 0 to copy all or 'none'.
 -define(MAX_VM_AGE, 0).
-%% =========================================
 
+%% DEAD_ACCOUNT_IDS is the listing of account
+%% IDs that are no longer existent but appear
+%% in an account's pvt_tree. This will strip
+%% the dead account IDs from existing accounts
+%% -define(DEAD_ACCOUNT_IDS, [<<"abc1234...">>,...]
+-define(DEAD_ACCOUNT_IDS, []).
+
+%% =========================================
 
 -define(WNM_DB_PREFIX, <<"numbers/">>).
 -define(LOG_PATH, "/tmp/").

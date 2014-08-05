@@ -2,6 +2,7 @@
 
 %% {'ok', Dbs} = couch_mgr:db_info(), [begin case Db of <<"test-", _/binary>> -> couch_mgr:db_delete(wh_util:uri_encode(Db)); _ -> ok end end || Db <- Dbs].
 -include("clone_tools.hrl").
+-include("wh_types.hrl").
 
 -export([run/0
          ,run/1
@@ -290,7 +291,8 @@ get_docs(Ids, Db) ->
                  ])
     end.
 
-put_doc(JObj, Db) ->
+put_doc(JObj0, Db) ->
+    JObj = maybe_fix_doc(JObj0, wh_json:get_value(<<"pvt_type">>, JObj0)),
     Id = uri_encode(wh_json:get_value(<<"_id">>, JObj)),
     Target = target_request([Db
                              ,Id
@@ -731,3 +733,8 @@ uri_encode(String) when is_list(String) ->
 uri_encode(Atom) when is_atom(Atom) ->
     wh_types:to_atom(http_uri:encode(wh_types:to_list(Atom)), 'true').
 
+-spec maybe_fix_doc(wh_json:object(), api_binary()) -> wh_json:object().
+maybe_fix_doc(JObj, <<"account">>) ->
+    wh_account:cleanup_dead_accounts(JObj);
+maybe_fix_doc(JObj, _PvtType) ->
+    JObj.
