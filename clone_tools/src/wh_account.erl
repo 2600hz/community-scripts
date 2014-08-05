@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @copyright (C) 2010-2012, VoIP INC
+%%% @copyright (C) 2010-2014, 2600Hz INC
 %%% @doc
 %%% Various utilities - a veritable cornicopia
 %%% @end
@@ -24,7 +24,10 @@
 -export([is_account_mod/1]).
 -export([is_account_db/1]).
 
+-export([cleanup_dead_accounts/1]).
+
 -include("wh_types.hrl").
+-include("clone_tools.hrl").
 
 -type account_format() :: 'unencoded' | 'encoded' | 'raw'.
 -spec format_id(ne_binaries() | ne_binary() | wh_json:object()) -> ne_binary().
@@ -154,12 +157,25 @@ get_realm(Db, AccountId) ->
 -spec is_account_mod(ne_binary()) -> boolean().
 is_account_mod(<<"account/", _AccountId:34/binary, "-", _Date:6/binary>>) -> 'true';
 is_account_mod(<<"account%2F", _AccountId:38/binary, "-", _Date:6/binary>>) -> 'true';
-is_account_mod(_) -> 'false'. 
+is_account_mod(_) -> 'false'.
 
 -spec is_account_db(ne_binary()) -> boolean().
 is_account_db(<<"account/", _AccountId:34/binary, "-", _Date:6/binary>>) -> 'false';
-is_account_db(<<"account%2F", _AccountId:38/binary, "-", _Date:6/binary>>) -> 'false'; 
+is_account_db(<<"account%2F", _AccountId:38/binary, "-", _Date:6/binary>>) -> 'false';
 is_account_db(<<"account/", _/binary>>) -> 'true';
 is_account_db(<<"account%2f", _/binary>>) -> 'true';
 is_account_db(<<"account%2F", _/binary>>) -> 'true';
 is_account_db(_) -> 'false'.
+
+-spec cleanup_dead_accounts(wh_json:object()) -> wh_json:object().
+-spec cleanup_dead_accounts(wh_json:object(), ne_binaries()) -> wh_json:object().
+cleanup_dead_accounts(AccountDoc) ->
+    cleanup_dead_accounts(AccountDoc, ?DEAD_ACCOUNT_IDS).
+cleanup_dead_accounts(AccountDoc, []) ->
+    AccountDoc;
+cleanup_dead_accounts(AccountDoc, DeadAccountIDs) ->
+    PvtTree = wh_json:get_value(<<"pvt_tree">>, AccountDoc, []),
+    wh_json:set_value(<<"pvt_tree">>
+                      ,lists:foldl(fun lists:delete/2, PvtTree, DeadAccountIDs)
+                      ,AccountDoc
+                     ).
