@@ -205,7 +205,7 @@ debug "Attach ecallmgr to FreeSWITCH"
 
 #Kazoo-UI configurations
 debug "Edit config.js with actual IP address"
-/bin/sed -i s/'api.2600hz.com'/$ip_address/g /var/www/html/kazoo-ui/config/config.js
+sed -i s#'https://api.zswitch.net:8443'#http://$ip_address:8000#g /var/www/html/kazoo-ui/config/config.js
 
 debug "Show change of IP"
 /bin/cat /var/www/html/kazoo-ui/config/config.js | grep api_url
