@@ -736,5 +736,38 @@ uri_encode(Atom) when is_atom(Atom) ->
 -spec maybe_fix_doc(wh_json:object(), api_binary()) -> wh_json:object().
 maybe_fix_doc(JObj, <<"account">>) ->
     wh_account:cleanup_dead_accounts(JObj);
+maybe_fix_doc(JObj, <<"cdr">>) ->
+    maybe_fix_cdr(JObj);
 maybe_fix_doc(JObj, _PvtType) ->
     JObj.
+
+maybe_fix_cdr(JObj) ->
+    Fs = [fun maybe_fix_cdr_date/1],
+    lists:foldl(fun(F, Acc) -> F(Acc) end, JObj, Fs).
+
+maybe_fix_cdr_date(JObj) ->
+    case wh_json:get_value(<<"_id">>, JObj) of
+        <<Y:4/binary, M:2/binary, "-", CallId/binary>> ->
+            Year = binary_to_list(list_to_integer(Y)),
+            Month = binary_to_list(list_to_integer(M)),
+
+            maybe_fix_cdr_date(JObj, Year, Month, CallId);
+        _Id ->
+            JObj
+    end.
+
+maybe_fix_cdr_date(JObj, Year, Month, CallId) ->
+    Created = wh_json:get_integer(<<"pvt_created">>, JObj),
+    case calendar:gregorian_seconds_to_datetime(Created) of
+        {{Year, Month, _}, _} -> JObj;
+        {{RealYear, RealMonth, _}, _} ->
+            NewId = <<(integer_to_list(list_to_binary(RealYear)))/binary
+                      ,(integer_to_list(list_to_binary(RealMonth)))/binary
+                      ,"-", CallId/binary
+                    >>,
+            ?LOG_WHITE(" fixing cdr ID from ~s to ~s", [wh_json:get_value(<<"_id">>, JObj)
+                                                        ,NewId
+                                                       ]
+                      ),
+            wh_json:set_value(<<"_id">>, NewId, JObj)
+    end.
