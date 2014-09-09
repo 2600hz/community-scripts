@@ -21,4 +21,6 @@ for FILE in $(listFiles $@); do
         printStat "Found Auth-by-IP" $(countMatches "replaying route_req")
         printStat "Missing Auth-by-IP" $(countMatches "no entry in sip_auth")
         printStat "Auth-by-IP Lookup Errors" $(countMatches "failed to lookup by ip")
+
+        zgrep "auth failure for" ${TMP_FILE}  | rev | cut -d " " -f 2 | rev | sort | uniq -c | sort -rn | head | printTable "Highest failures"
 done
