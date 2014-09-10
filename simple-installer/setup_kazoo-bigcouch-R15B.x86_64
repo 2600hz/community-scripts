@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+
+#logfile
+install_log="/var/log/kazoo_install.log"
+
+#lock_file MUST BE DEFINED!
+lockfile="/root/setup_bigcouch.lockfile"
+
+#
+# VARS
+#
+
+#Import common which has all the goodies for handling configuration/questions
+. /opt/installtest/setup_common
+
+trap clean_exit SIGHUP SIGTERM 
+trap int_exit SIGINT SIGQUIT
+trap clean_exit EXIT
+
+#Files to edit via this script
+bigcouch_local_ini="/etc/kazoo/bigcouch/local.ini"
+bigcouch_vm_args="/etc/kazoo/bigcouch/vm.args"
+
+default_cookie=""
+
+################################################################################
+# set_value NOTE:
+# *_cmd and *_dbg are access commands and debug statements for use in set_value
+# TOKEN is replaced using with the $value argument in set_value
+# using variable expansion substring replacement
+################################################################################
+#ask NOTE:
+# *_question, *_re, *_hint and *_ref are used by ask
+# for getting user input, this allows us to pass one name to ask and do all
+# defined actions requrired to provide help, get input, and save it to a var
+#### set_value variables #######################################################
+# *_dbg - print statement when setting parameter
+# *_cmd - command to execute
+#### ask variables #############################################################
+# *_question - the question to ask when getting the value from user
+# *_re       - the re to use to validate repsonse
+# *_hint     - the hint to provide in case of blank line, ? or invalid parameter
+# *_ref      - the ref to the variable used to store the user requested value
+################################################################################
+
+#BIGCOUCH COOKIE
+cookie=""
+cookie_dbg="setting $bigcouch_vm_args - setcookie = TOKEN"
+cookie_cmd="sed -i 's|-setcookie .*|-setcookie TOKEN|' $bigcouch_vm_args"
+cookie_question="Please enter your erlang cookie (string): "
+cookie_re=".*"
+cookie_hint="Cookie should be longish, like 32 chars at least"
+cookie_ref="cookie"
+
+#BIGCOUCH SHARDS
+q=""
+q_dbg="setting bigcouch $bigcouch_local_ini - q=TOKEN"
+q_cmd="sed -i  's|q=.*|q=TOKEN|' $bigcouch_local_ini"
+q_question="How many files do you want to split each database into? (Number: 1-9): "
+q_re="[1-9]"
+q_hint="this is the config for how many files to split up a database (q=N)"
+q_ref="q"
+
+#BIGCOUCH READ 
+r=""
+r_dbg="setting bigcouch $bigcouch_local_ini - r=TOKEN"
+r_cmd="sed -i  's|r=.*|r=TOKEN|' $bigcouch_local_ini"
+r_question="How many replies must be received to consider a response valid? (Number: 1-9): "
+r_re="[1-9]"
+r_ref="r"
+r_hint="this is the r value in the bigcouch config number of nodes to read from before we consider the read legitimate"
+
+#BIGCOUCH WRITE
+w=""
+w_dbg="setting bigcouch $bigcouch_local_ini - w=TOKEN"
+w_cmd="sed -i  's|w=.*|w=TOKEN|' $bigcouch_local_ini"
+w_question="How many servers must accept a save request for it to be successful? (Number: 1-9): "
+w_re="[1-9]"
+w_hint="The number of servers to write to in order to consider a write legitimate"
+w_ref="w"
+
+#BIGCOUCH NODE
+n=""
+n_dbg="setting bigcouch $bigcouch_local_ini - n=TOKEN"
+n_cmd="sed -i  's|n=.*|n=TOKEN|' $bigcouch_local_ini"
+n_question="How many bigcouch servers in the cluster? (Number: 1-9): "
+n_re="[1-9]"
+n_hint="HINT: this is the number of servers in the bigcouch cluster"
+n_ref="n"
+
+#BIGCOUCH ZONE
+z=""
+z_dbg="setting bigcouch $bigcouch_local_ini - z=TOKEN"
+z_cmd="sed -i  's|z=.*|z=TOKEN|' $bigcouch_local_ini"
+z_question="How many zones should each database be stored in? (Number: 0-9): "
+z_re="[0-9]"
+z_hint="HINT: you should have at least 2 if you have have more than one database server"
+z_ref="z_config"
+
+#BIGCOUCH BIND ADDRESS
+bind_addres=""
+bind_address_dbg="setting bigcouch $bigcouch_local_ini - bind_address = TOKEN"
+bind_address_cmd="sed -i 's|bind_address = .*|bind_address = TOKEN|' $bigcouch_local_ini"
+bind_address_question="Please enter bigcouch bind_ip_address (ip_address): "
+bind_address_re="[0-9]+\.[0-9]+\.[0-9]\.[0-9]+"
+bind_address_hint="Hint: this address listens for requests"
+bind_address_ref="bind_address"
+
+
+interactive() {
+    ask bind_address
+    ask n
+    ask z
+    ask r
+    ask w
+    ask q
+}
+
+dbg " : configuring bigcouch : "
+
+check_lock $lockfile
+get_default_cookie
+
+if [  ${default_cookie:-} ];then
+    cookie="$default_cookie"
+else
+    ask cookie
+fi
+
+
+if [[ ${1:-} =~ -a ]];then
+    all_in_one=1
+fi
+
+if [  ${all_in_one:-} ];then
+   #if allinone we default everything we can
+   cookie=$cookie
+   bind_address="0.0.0.0"
+   q="1"
+   r="1"
+   w="1"
+   n="1"
+   z="0"
+else
+   info "NOTE You can type '?' if you get on any question for a hint"
+   interactive
+fi
+
+dbg "Applying Bigcouch configuration..."
+
+set_value q $q
+set_value r $r
+set_value w $w
+set_value n $n
+if [[ ${z:-} -ne 0 ]]; then
+    set_value z $z
+fi
+set_value bind_address $bind_address
+set_value cookie $cookie
+
+clean_exit $lockfile

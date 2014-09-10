@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+
+#logfile
+#lock_file
+lockfile="/root/setup_freeswitch.lockfile"
+
+. /opt/installtest/setup_common
+
+trap clean_exit SIGHUP SIGTERM 
+trap int_exit SIGINT SIGQUIT
+trap clean_exit EXIT
+
+
+#
+# VARS
+#
+
+#Files to edit
+freeswitch_kazoo_conf="/etc/kazoo/freeswitch/autoload_configs/kazoo.conf.xml"
+freeswitch_sipinterface="/etc/kazoo/freeswitch/sip_profiles/sipinterface_1.xml"
+
+#file that stores erlang cookie
+cookie_file="/etc/kazoo/erlang.cookie"
+
+################################################################################
+# set_value NOTE:
+# *_cmd and *_dbg are access commands and debug statements for use in set_value
+# TOKEN is replaced using with the $value argument in set_value
+# using variable expansion substring replacement
+################################################################################
+#ask NOTE:
+# *_question, *_re, *_hint and *_ref are used by ask
+# for getting user input, this allows us to pass one name to ask and do all
+# defined actions requrired to provide help, get input, and save it to a var
+#### set_value variables #######################################################
+# *_dbg - print statement when setting parameter
+# *_cmd - command to execute
+#### ask variables #############################################################
+# *_question - the question to ask when getting the value from user
+# *_re       - the re to use to validate repsonse
+# *_hint     - the hint to provide in case of blank line, ? or invalid parameter
+# *_ref      - the ref to the variable used to store the user requested value
+################################################################################
+
+#MOD-KAZOO COOKIE
+cookie=""
+cookie_dbg="Setting freeswitch mod-kazoo erl $freeswitch_kazoo_conf - cookie value = TOKEN"
+cookie_cmd="sed -i 's|<param name=\"cookie\" value=\".*\"|<param name=\"cookie\" value=\"TOKEN\"|' $freeswitch_kazoo_conf"
+cookie_question="Please enter the erlang cookie for kazoo"
+cookie_re=".*"
+cookie_hint="This cookie is used to talk to eCallMgr via erlang"
+cookie_ref="cookie"
+
+#MOD-KAZOO LISTEN-IP
+kazoo_ip_address=""
+kazoo_ip_address_dbg="Setting freeswitch mod-kazoo $freeswitch_kazoo_conf - listen-ip value = TOKEN "
+kazoo_ip_address_cmd="sed -i 's|\"listen-ip\" value=\".*\"|\"listen-ip\" value=\"TOKEN\"|' $freeswitch_kazoo_conf"
+kazoo_ip_address_question="What IP address do you want to use to listen for communication from eCallMgr (ip address): "
+kazoo_ip_address_re="[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"
+kazoo_ip_address_hint="This value determines what IP freeswitch will use to listen for communication from eCallMgr"
+kazoo_ip_address_ref="kazoo_ip_address"
+
+#SIP LISTEN INTERFACE
+sip_ip_address=""
+sip_ip_address_dbg="Setting freeswitch sip interface 1 - ip_address value = TOKEN"
+sip_ip_address_cmd="sed -i 's|\"sip-ip\" value=\".*\"|\"sip-ip\" value=\"${sip-ip}\"|' $freeswitch_sipinterface"
+sip_ip_address_question="What IP address do you want to use for SIP? (<ip_address> or for local IP 'local_ip'):"
+sip_ip_address_re="[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+|\\\$\\\$\{local_ip_v4\}|local_ip"
+sip_ip_address_hint="This is the IP address freeswitch will use to talk to clients and Kamailio"
+sip_ip_address_ref="sip_ip_address"
+
+##
+##
+
+interactive() {
+   ask kazoo_ip_address
+   ask sip_ip_address 
+}
+
+dbg " : configuring freeswitch : "
+
+check_lock
+get_default_cookie
+
+
+if [  ${default_cookie:-} ];then
+    cookie="$default_cookie"
+else
+    ask cookie
+fi
+
+
+if [[ ${1:-} =~ -a ]];then
+    all_in_one=1
+fi
+
+if [  ${all_in_one:-} ];then
+   #if allinone we default everything we can
+   cookie=$cookie
+   sip_ip_address='$${local_ip_v4}'
+   kazoo_ip_address='0.0.0.0'   
+else
+   echo 
+   info "NOTE: You can type '${NC}?${blue}' in response to any question asked for a hint"
+   echo
+   interactive
+fi
+
+dbg "Applying Freeswitch configuration..."
+
+set_value cookie $cookie
+
+if ! [[ $sip_ip_address =~ local_ip ]]; then
+    set_value sip_ip_address $sip_ip_address
+fi
+
+if  [  "$kazoo_ip_address" != "0.0.0.0" ]; then
+   set_value kazoo_ip_address $kazoo_ip_address 
+fi
+
+clean_exit 

@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+
+declare install_list
+
+lockfile="/root/setup_kazoo.lockfile"
+. /opt/installtest/setup_common
+
+trap clean_exit SIGHUP SIGTERM 
+trap int_exit SIGINT SIGQUIT
+trap clean_exit EXIT
+
+dir="/opt/installtest/"
+
+all_in_one=""
+
+check_lock
+
+
+while getopts "ai:" opt;do
+    case $opt in
+        i)
+            echo "Installer requested setup of package $OPTARG"
+            install_list+=($OPTARG)
+            ;;
+        a)
+            echo "All in one selected, setting up all services."
+            all_in_one=1
+            ;;
+    esac
+done
+
+
+[ ${all_in_one:-} ] && generate_erlang_cookie
+
+for package in ${install_list[@]:-}; do
+    package_setup="${dir}setup_${package}"
+    if [[ -n $all_in_one ]]; then 
+       $package_setup -a
+    else
+       $package_setup 
+    fi
+done
+
+get_system_hostname
+
+#start services
+dbg "Restart Rsyslog"
+/sbin/service rsyslog restart
+
+dbg "Start EPMD"
+/usr/bin/epmd -daemon
+netstat -ptlen | grep epmd
+
+dbg "Createing symlink to use HA proxy config in /etc/kazoo/haproxy instead of /etc/haproxy"
+rm -rf /etc/haproxy/haproxy.cfg
+ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
+
+
+dbg "Restart Bigcouch to apply changes"
+/sbin/service bigcouch stop || echo "bc stop failed" 
+/sbin/service bigcouch start || echo "bc start failed"
+
+dbg "Restart HAProxy to apply changes"
+/sbin/service haproxy restart
+
+dbg "Start RabbitMQ"
+/sbin/service rabbitmq-server start
+
+dbg "Start FreeSWITCH"
+/sbin/service freeswitch stop
+/sbin/service freeswitch start
+
+dbg "Restart:wq
+ Kamailio to apply the changes"
+/sbin/service kamailio restart
+
+dbg "Start Whapps"
+/sbin/service kz-whistle_apps restart
+
+dbg "Start ecallmgr"
+/sbin/service kz-ecallmgr restart
+
+dbg "Wait for 30s and check on Whapps & ecallmgr status"
+
+sleep 30
+
+/sbin/service kz-whistle_apps status
+
+dbg "Attach ecallmgr to FreeSWITCH"
+/opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@$system_hostname
+
+dbg "Starting httpd"
+/sbin/service httpd start
+
+# Final prep
+dbg "Updating all Bigcouch views"
+/opt/kazoo/utils/sup/sup whapps_maintenance blocking_refresh
+
+dbg "Importing media files"
+/opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav 
+
+#restart whapps before create account
+dbg "Restarting kz-whistle_apps" 
+/sbin/service kz-whistle_apps restart
+
+sleep 30
+
+#Create new account
+dbg "Create test account"
+/opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin admin admin admin
+
+echo "INSTALL COMPLETE: WELCOME TO KAZOO!"
+
+exit

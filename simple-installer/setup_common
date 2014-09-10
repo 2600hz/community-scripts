@@ -1,0 +1,255 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+
+declare -a ip_addresses
+declare -a interfaces
+default_cookie=""
+system_hostname=""
+
+install_log="/var/log/kazoo_install.log"
+
+echo "Starting $0"
+
+#print formatting and logging func
+green='\e[0;32m'
+red='\e[0;31m'
+yellow='\e[0;33m'
+NC='\e[0m'
+blue='\e[0;36m'
+
+dbg(){
+    echo -e " - ${green}$* ${NC} "
+    echo -e " - ${green}$* ${NC} " >> $install_log
+}
+info(){
+    echo -e "${blue}$* ${NC} "
+    echo -e "${blue}$* ${NC} " >> $install_log
+}
+error(){
+    echo -e "${red}ERROR: $* ${NC} " 1>&2
+    echo -e "${red}ERROR: $* ${NC} " >> $install_log
+}
+warn(){
+    echo -e "${yellow}$* ${NC} ";
+    echo -e "${yellow}$* ${NC} " >> $install_log
+}
+
+cookie_file="/etc/kazoo/erlang.cookie"
+
+
+#Safety stuff (must be root, lockfile functions, trap and clean_exit function)
+
+#ensure this is all being run by root
+if [[ $EUID -ne 0 ]]; then
+   echo -e "${red}ERROR:${NC}"
+   echo -e "${yellow}This script must be executed by a ${red}root${yellow} or ${red}sudo user${NC}"
+   echo -e "${yellow}You can rerun the script as root by issuing  'su' or 'sudo ${0}'${NC}"
+   echo -e "${red}EXITING due to insufficent privileges${NC}"
+   exit 1
+fi
+
+#
+#  Lock file functions.
+#
+
+set_lock(){
+    touch $lockfile
+}
+
+clear_lock(){
+    if [ -e $lockfile ]; then
+        rm $lockfile
+    fi
+}
+
+check_lock(){
+    if [ -e $lockfile ]; then
+        error "Another instance of this script appears to be running, you can remove manually with 'rm ${lockfile}', EXITING!"
+        exit 1;
+    else
+        set_lock $lockfile
+    fi
+}
+
+#exit paths which clear lock
+clean_exit(){
+    echo "Completed $0"
+    clear_lock $lockfile
+    echo -e "${NC}"
+    trap - EXIT
+    exit 0;
+}
+
+error_exit(){
+    echo -e "${red}ERROR: exiting due to: ${@:-"unknown error"}${NC}"
+    echo -e "${yellow}see ${NC}/var/log/kazoo_install.log${yellow} for details${NC}"
+    echo -e "${yellow}you can restart this script manually with ${green}$0 ${NC} "
+    clear_lock $lockfile
+    echo -e "${NC}"
+    trap - EXIT
+    exit 1;
+
+}
+
+int_exit(){
+    echo -e "${yellow}EXITING: SIGINT|SIGQUIT (ctrl-C|ctrl-) received! ${NC}"
+    echo -e "${yellow}you can restart this script manually with ${green}$0 ${NC} "
+    clear_lock $lockfile
+    echo -e "${NC}"
+    trap - EXIT
+    exit 1;
+}
+
+
+#trap to ensure lockfile is removed
+#trap clean_exit SIGHUP SIGTERM SIGINT 
+
+#gets list of ethernet interfaces and puts in array interfaces
+get_interfaces(){
+    for interface in `ifconfig | grep Ethernet |cut -d" " -f1`;do
+        interfaces+=("$interface")
+    done
+}
+
+#gets list of ip addresses from interfaces list
+get_system_ip(){
+    for interface in ${interfaces[@]}; do
+        for ip_address in `ifconfig $interface | grep "inet addr" | cut -d: -f2 | cut -d" " -f1`;
+        do
+            ip_addresses+=("$ip_address")
+        done
+    done
+}
+ 
+get_system_hostname(){
+    system_hostname=$(hostname -f)
+}
+
+ask_ip_selection(){
+    local -a ip_addresses
+    local -a interfaces
+    get_interfaces
+    get_system_ip 
+
+    if [ ${#ip_addresses[@]:-} -eq 1 ];then
+        system_ip_address=${ip_addresses[0]}
+        return
+    elif [ ! ${#ip_addresses[@]:-} ];then
+        warn "NO ip addresses are configured!"
+        system_ip_address=""
+        local system_ip_address_question="Please enter a system ip address you will be assigning to this server"
+        local system_ip_address_re="[0-9]+\.[0-9]+\.[0-9]\.[0-9]+"
+        local system_ip_address_hint="Since you do not currently have an IP address, you can use this menu to add the IP you plan to assign after setup"
+        local system_ip_address_ref="system_ip_address"
+        ask system_ip_address
+        return 
+    fi
+
+    PS3="Please select the IP address to use:"
+    select opt in ${ip_addresses}; do
+        case $opt in
+           *)
+             system_ip_address=$opt     
+             break
+             ;;
+        esac
+    done
+}
+
+set_value(){
+    local name=$1
+    local value=$2
+
+    #use $name to find variables we want
+    local _debug=\$"${name}_dbg"
+    local _cmd=\$"${name}_cmd"
+
+    #dereference same
+    local debug=`eval "expr \"${_debug}\""`
+    local cmd=`eval "expr \"${_cmd}\""`
+    
+    #replace TOKEN with $value
+    local debug_final=${debug//TOKEN/$value}
+    local cmd_final=${cmd//TOKEN/$value}
+
+    #run command and log output to $install_log
+    dbg $debug_final
+    eval $cmd_final &> $install_log
+
+    #verify command returned success response, throw error if failed
+    if [[ $? -ne 0 ]];then
+        error "$cmd_final failed while $debug_final"
+    fi
+}
+
+#gets input for the user for $name parameter
+ask(){
+   local name=$1
+
+   #this is one of the major problems with bash
+   #we use the name object to "dereference" the variables we need for this function
+   #if these are not defined above, we will explode thanks to -o nounset
+   local _question=\$"${name}_question"
+   local _re=\$"${name}_re"
+   local _ref=\$"${name}_ref"
+   local _hint=\$"${name}_hint"
+   #dereference same
+   local question=`eval "expr \"${_question}\""`
+   local re=`eval "expr \"${_re}\""`
+   local ref=`eval "expr \"${_ref}\""`
+   local hint=`eval "expr \"${_hint}\""`
+
+   info $question
+   read ANSWER
+   
+   #if invalid answer, we show them the hint and call ourselves with our args
+   if ! [[ $ANSWER =~ $re ]];then
+      warn $hint
+      ask $@
+   fi
+   eval $ref="$ANSWER"
+}
+
+#
+# recursive function to get yes or no response for $question, 
+# will only accpet y|n as valid options, otherwise loops
+# You should define a local $answer in whatever function calls this. 
+
+confirm(){
+   question=$1
+   info $question
+   read answer
+
+   if [[ $answer =~ ^[yYnN] ]];then 
+       return
+   else 
+      warn "Unknown option $answer - please enter either '${red}y${yellow}' or '${red}n${yellow}'!" 
+      confirm $@
+   fi
+}
+
+
+# functions for handling erlang.cookie if required by script
+get_default_cookie(){
+    if [ -e $cookie_file ];then
+        default_cookie=$(<$cookie_file)
+    fi 
+    
+    if ! [  ${default_cookie:-} ];then
+        echo "NO COOKIE FOUND --- GENERATING"   
+        local answer
+        confirm "Do you want to generate a new erlang cookie? [y|n]"
+        if [[ $answer =~ ^[yY] ]];then
+            generate_erlang_cookie
+        fi
+    fi
+}
+
+generate_erlang_cookie(){
+    UUID=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)
+    echo -n $UUID > $cookie_file  
+    default_cookie=$UUID 
+}
+

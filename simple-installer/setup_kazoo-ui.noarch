@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+
+lockfile="/root/setup_kazoo-ui.lockfile"
+. /opt/installtest/setup_common
+
+trap clean_exit SIGHUP SIGTERM 
+trap int_exit SIGINT SIGQUIT
+trap clean_exit EXIT
+
+kazoo_ui_conf_js="/var/www/html/kazoo-ui/config/config.js"
+
+################################################################################
+# set_value NOTE:
+# *_cmd and *_dbg are access commands and debug statements for use in set_value
+# TOKEN is replaced using with the $value argument in set_value
+# using variable expansion substring replacement
+################################################################################
+#ask NOTE:
+# *_question, *_re, *_hint and *_ref are used by ask
+# for getting user input, this allows us to pass one name to ask and do all
+# defined actions requrired to provide help, get input, and save it to a var
+#### set_value variables #######################################################
+# *_dbg - print statement when setting parameter
+# *_cmd - command to execute
+#### ask variables #############################################################
+# *_question - the question to ask when getting the value from user
+# *_re       - the re to use to validate repsonse
+# *_hint     - the hint to provide in case of blank line, ? or invalid parameter
+# *_ref      - the ref to the variable used to store the user requested value
+################################################################################
+
+#KAZOO-UI URL
+url=""
+url_dbg="setting kazoo-ui URL address for accessing API - TOKEN"
+url_cmd="sed -i \"s|api_url: .*/v1|api_url: 'TOKEN/v1|g\" $kazoo_ui_conf_js"
+url_question="Please enter your api url (EXAMPLE: http://10.0.0.1:8000): "
+url_re="http[s]*://.*:[0-9]+"
+url_hint="Full URL for api, this IP should be the same as your kazoo server"
+url_ref="url"
+
+interactive() {
+    ask url
+}
+
+ask_ip_selection
+
+dbg " : configuring Kazoo-UI : "
+
+check_lock $lockfile
+
+if [[ ${1:-} =~ -a ]];then
+    all_in_one=1
+fi
+
+if [  ${all_in_one:-} ];then
+   #if allinone we default everything we can
+   url="http://${system_ip_address}:8000"
+else
+   info "NOTE: You can type '${NC}?${blue}' as a response to any question for a hint!"
+   interactive
+fi
+
+dbg "Applying Kazoo-UI configuration..."
+
+set_value url $url
+
+clean_exit $lockfile
+
+
+
+
+
+
+

@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+
+lockfile="/root/setup_haproxy.lockfile"
+
+. /opt/installtest/setup_common
+trap clean_exit SIGHUP SIGTERM
+trap int_exit SIGINT SIGQUIT
+trap clean_exit EXIT
+
+
+haproxy_config="/etc/kazoo/haproxy/haproxy.cfg"
+
+################################################################################
+# set_value NOTE:
+# *_cmd and *_dbg are access commands and debug statements for use in set_value
+# TOKEN is replaced using with the $value argument in set_value
+# using variable expansion substring replacement
+################################################################################
+#ask NOTE:
+# *_question, *_re, *_hint and *_ref are used by ask
+# for getting user input, this allows us to pass one name to ask and do all
+# defined actions requrired to provide help, get input, and save it to a var
+#### set_value variables #######################################################
+# *_dbg - print statement when setting parameter
+# *_cmd - command to execute
+#### ask variables ############################################################
+# *_question - the question to ask when getting the value from user
+# *_re       - the re to use to validate repsonse
+# *_hint     - the hint to provide in case of blank line, ? or invalid parameter
+# *_ref      - the ref to the variable used to store the user requested value
+################################################################################
+
+#HAPROXY PROXY ARRAYS (you gotta keep em seperated)
+declare -a proxies_data
+declare -a proxies_mgr
+
+
+fqdn=""
+fqdn_question="Please enter your bigcouch FQDN: "
+fqdn_re=".*"
+fqdn_hint="Fully qualified domain name for bigcouch HA proxy config"
+fqdn_ref="fqdn"
+
+
+backup=""
+backup_question="Do you want to make this server a backup? [y/n]: "
+backup_re="[yYnN]"
+backup_hint="Fully qualified domain name for bigcouch HA proxy config"
+backup_ref="backup"
+
+ask_proxies(){
+    while :; do
+        local fqdn
+        ask fqdn
+        local backup
+        ask backup
+
+        if [[ $backup =~ ^[Yy] ]];then 
+           backup="backup"        
+        else 
+           backup=""
+        fi         
+
+        config_data="    server $fqdn 127.0.0.1:5984 ${backup:-}"
+        config_mgr="    server $fqdn 127.0.0.1:5986 ${backup:-}"
+
+        proxies_data+=("$config_data")
+        proxies_mgr+=("$config_mgr")
+        local answer 
+        confirm "Do you want to add another bigcouch fqdn to proxy list? ['y' to add another server]"
+        if [[ $answer =~ ^[yY] ]];then
+            continue
+        else
+            break
+        fi
+    done
+}
+
+set_proxies(){
+    local tempfile="${haproxy_config}.tmp"
+    local mgr_flag=""
+    local data_flag=""   
+
+    #blank out tmp file just to be safe
+    >$tempfile
+
+    while read line ;do
+        if [[ $line =~ "listen bigcouch-data" ]];then
+            data_flag=1
+            echo $line >> $tempfile
+        elif [[ $line =~ "listen bigcouch-mgr" ]];then
+            mgr_flag=1
+            echo $line >> $tempfile
+        elif [[ $line =~ ^server ]];then
+            if [[  ${data_flag:-} ]];then 
+                for config in "${proxies_data[@]}";do
+                    info "Adding proxy line for data to $haproxy_config file - $config"
+                    echo "$config" >> $tempfile
+                done
+                data_flag=""
+            elif [[ ${mgr_flag:-} ]];then 
+                for config in "${proxies_mgr[@]}";do
+                    info "Adding proxy line for mgr to $haproxy_config file - $config"
+                    echo "$config" >> $tempfile
+                done
+                mgr_flag=""
+            fi
+        else
+            echo $line >> $tempfile 
+        fi
+    done < $haproxy_config
+    mv $tempfile $haproxy_config 
+}
+
+
+interactive() {
+    ask_proxies
+}
+
+dbg " : configuring Kazoo-UI : "
+
+check_lock $lockfile
+
+if [[ ${1:-} =~ -a ]];then
+    all_in_one=1
+fi
+
+if [  ${all_in_one:-} ];then
+   #if allinone we default everything we can
+   fqdn="127.0.0.1"
+   
+   config_data="    server $fqdn 127.0.0.1:5984"
+   config_mgr="    server $fqdn 127.0.0.1:5986"
+   proxies_data+=("$config_data")
+   proxies_mgr+=("$config_mgr")
+ 
+else
+   info "NOTE: You can type '${NC}?${blue}' as a response to any question for a hint!"
+   interactive
+fi
+
+dbg "Applying HAProxy configuration..."
+
+set_proxies
+
+clean_exit $lockfile
+
+

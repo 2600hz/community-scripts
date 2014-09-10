@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+
+#logfile
+install_log="/var/log/kazoo_install.log"
+#lock_file
+lockfile="/root/setup_kamailio.lockfile"
+
+#Files to edit
+kamailio_local_cfg="/etc/kazoo/kamailio/local.cfg"
+kamailio_dispatcher="/etc/kazoo/kamailio/dbtext/dispatcher"
+
+. /opt/installtest/setup_common
+trap clean_exit SIGHUP SIGTERM 
+trap int_exit SIGINT SIGQUIT
+trap clean_exit EXIT
+
+
+declare -a dispatch_list
+
+
+################################################################################
+# set_value NOTE:
+# *_cmd and *_dbg are access commands and debug statements for use in set_value
+# TOKEN is replaced using with the $value argument in set_value
+# using variable expansion substring replacement
+################################################################################
+#ask NOTE:
+# *_question, *_re, *_hint and *_ref are used by ask
+# for getting user input, this allows us to pass one name to ask and do all
+# defined actions requrired to provide help, get input, and save it to a var
+#### set_value variables #######################################################
+# *_dbg - print statement when setting parameter
+# *_cmd - command to execute
+#### ask variables #############################################################
+# *_question - the question to ask when getting the value from user
+# *_re       - the re to use to validate repsonse
+# *_hint     - the hint to provide in case of blank line, ? or invalid parameter
+# *_ref      - the ref to the variable used to store the user requested value
+################################################################################
+
+#KAMAILIO IP ADDRESS
+ip_address=""
+ip_address_dbg="setting $kamailio_local_cfg -  = TOKEN"
+ip_address_cmd="sed -i 's/!MY_IP_ADDRESS!.*!/!MY_IP_ADDRESS!TOKEN!/g' $kamailio_local_cfg"
+ip_address_question="Please enter the IP address that kamailio shoud use for sip: "
+ip_address_re=".*"
+ip_address_hint="IP ADDRESS!"
+ip_address_ref="ip_address"
+
+#KAMAILIO HOSTNAME
+system_hostname=""
+system_hostname_dbg="setting $kamailio_local_cfg -  = TOKEN"
+system_hostname_cmd="sed -i 's/!MY_HOSTNAME!.*!/!MY_HOSTNAME!TOKEN!/g' $kamailio_local_cfg"
+
+#KAMAILIO FREESWITCH DISPATCH IP ADDRESS, PORT, SETID
+dispatcher_ip_address=""
+dispatcher_ip_address_question="Please enter your dispatch server IP addresses"
+dispatcher_ip_address_re="[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"
+dispatcher_ip_address_hint="This should be your freeswitch IP"
+dispatcher_ip_address_ref="dispatcher_ip_address"
+
+dispatcher_port=""
+dispatcher_port_question="Please enter the the port for the selected dispatch IP"
+dispatcher_port_re="[0-9]+"
+dispatcher_port_hint="This is normally 11000"
+dispatcher_port_ref="dispatcher_port"
+
+dispatcher_setid=""
+dispatcher_setid_question="Please enter the value for setid 1=primary, 2=backup, 3=alternate, 10=Presence, 20=Registrar"
+dispatcher_setid_re="[0-9]+"
+dispatcher_setid_hint=$(cat << EOF 
+This is the dispatcher list, which tells kamailio where to route specific traffic,
+use ${red}1${NC}, ${red}2${NC} or ${red}3${NC} for freeswitch, use {$red}10-20${NC} if you have a kamailio or NKSip destination 
+you want to use for Presence/Registrar
+EOF
+)
+dispatcher_setid_ref="dispatcher_setid"
+
+set_dispatcher(){
+    local tempfile="${kamailio_dispatcher}.tmp"
+    while read line;do
+        if [[ $line =~ [[:digit:]]+[[:space:]]sip.* ]];then
+            for dispatch in "${dispatch_list[@]}";do
+                info "Adding dispatcher line to $kamailio_dispatcher file - ${dispatch}"
+                echo "${dispatch}" >> $tempfile
+            done
+            #dispatcher file ends with these entries
+            mv $tempfile $kamailio_dispatcher
+            return 
+        else
+            echo $line >> $tempfile 
+        fi
+    done < $kamailio_dispatcher
+}
+
+ask_dispatcher(){
+    local dispatcher_ip_address
+    ask dispatcher_ip_address
+    local dispatcher_port
+    ask dispatcher_port
+    local dispatcher_setid
+    ask dispatcher_setid
+    dispatch_list+=("${dispatcher_setid} sip:${dispatcher_ip_address}:${dispatcher_port} 1")
+   
+    local answer 
+    confirm "Do you want to add another freeswitch to dispatch list?"
+    if [[ $answer =~ ^[yY] ]];then
+        ask_dispatcher
+    fi
+}
+
+interactive(){
+    ask_dispatcher
+    ask ip_address
+}
+
+dbg " : configuring kamailio : "
+
+check_lock
+get_system_hostname
+ask_ip_selection
+
+if [[ ${1:-} =~ -a ]];then
+    all_in_one=1
+fi
+
+if [  ${all_in_one:-} ];then
+   #if allinone we default everything!
+   ip_address=$system_ip_address
+   hostname=$system_hostname
+   dispatch_list+=("1 sip:$system_ip_address:11000 1") 
+   ports+=("11000")
+   setids+=("1")
+else
+   info "NOTE: You can type '${NC}?${blue}' in response to any question for a hint"
+   interactive
+fi
+
+dbg "Applying Kamailio configuration..."
+
+if [[ ${system_ip_address:-} ]];then  
+    set_value ip_address $system_ip_address
+else
+    set_value ip_address $ip_address
+fi 
+
+set_value system_hostname $system_hostname
+
+set_dispatcher
+
+clean_exit 
