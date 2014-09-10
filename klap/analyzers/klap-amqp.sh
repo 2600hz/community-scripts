@@ -21,6 +21,7 @@ for FILE in $(listFiles $@); do
 	printStat "Bindings" $(countMatches " bound ")
 	printStat "Dropped Methods" $(countMatches " dropping method ")
 	printStat "Short Lived Channels" $(countMatches "short lived channel")
+        printStat "Connections" $(countMatches "connection to the AMQP broker")
 
 	zgrep " published to " $TMP_FILE | grep -Eo "routing key [^\)]+" | cut -c12- | sort | uniq -c | sort -nr | head | printTable "Most Frequent Routing Keys"
 done
