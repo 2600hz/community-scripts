@@ -79,8 +79,13 @@ countMatches() {
 }
 
 fileInfo() {
+	if [ "${1##*.}" = "gz" ]; then
         START_TIMEDATE=`zcat $1 | head -n 1 | grep -Po "^\w+\s+\d+\s+\d+:\d+:\d+"`
         END_TIMEDATE=`zcat $1 | tail -1 | grep -Po "^\w+\s+\d+\s+\d+:\d+:\d+"`
+	else
+        START_TIMEDATE=`cat $1 | head -n 1 | grep -Po "^\w+\s+\d+\s+\d+:\d+:\d+"`
+        END_TIMEDATE=`cat $1 | tail -1 | grep -Po "^\w+\s+\d+\s+\d+:\d+:\d+"`
+	fi
 
         START_EPOCH=`date -d "$START_TIMEDATE" "+%s"`
         END_EPOCH=`date -d "$END_TIMEDATE" "+%s"`
