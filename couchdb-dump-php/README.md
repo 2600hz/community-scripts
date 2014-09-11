@@ -6,7 +6,7 @@ The original dump tool authored by zebooka included supported incremental backup
 
 Although CouchDB's  `/_all_docs` function is more popular with DB backups that don't include attachments, this function doesn't support attachments. To download attachments, individual documents must be accessed.
 
-Rerence on CouchDB's  `/_all_docs` function [here ](http://docs.couchdb.org/en/latest/api/database/bulk-api.html) 
+Reference on CouchDB's  `/_all_docs` function [here ](http://docs.couchdb.org/en/latest/api/database/bulk-api.html) 
 
 ###Usage for BACKUP with `couchdb-dump.php`
 
