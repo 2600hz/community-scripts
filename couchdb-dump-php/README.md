@@ -1,10 +1,10 @@
 ###PHP-based CouchDB Dump/Restore Utility
 
-This tool was originally authored by [Anton Bondar](https://github.com/zebooka). Additional work to support inline base64 attachements was sponsored by [CloudPBX Inc.](http://cloudpbx.ca) and authored by [Miralem Mehic](https://github.com/mickeyze).
+This tool was originally authored by [Anton Bondar](https://github.com/zebooka). Additional work to support inline base64 attachments was sponsored by [CloudPBX Inc.](http://cloudpbx.ca) and authored by [Miralem Mehic](https://github.com/mickeyze).
 
-The original dump tool authored by zebooka included supported incremental backups. This made it much more feasible to add support to dump inline base64 attachements. 
+The original dump tool authored by zebooka included supported incremental backups. This made it much more feasible to add support to dump inline base64 attachments. 
 
-Although CouchDB's  `/_all_docs` function is more popular with DB backups that don't include attachements, this function doesn't support attachments. To download attachments, individual documents must be accessed.
+Although CouchDB's  `/_all_docs` function is more popular with DB backups that don't include attachments, this function doesn't support attachments. To download attachments, individual documents must be accessed.
 
 Rerence on CouchDB's  `/_all_docs` function [here ](http://docs.couchdb.org/en/latest/api/database/bulk-api.html) 
 
