@@ -7,9 +7,8 @@ lockfile="/var/lock/subsys/setup_kazoo.lockfile"
 
 . /opt/kazoo_install/setup_common
 
-trap clean_exit SIGHUP SIGTERM 
+trap clean_exit SIGHUP SIGTERM EXIT
 trap int_exit SIGINT SIGQUIT
-trap clean_exit EXIT
 
 
 kazoo_config="/etc/kazoo/config.ini"
@@ -48,7 +47,7 @@ ip_address=""
 ip_address_dbg="setting $kazoo_config - ip = TOKEN"
 ip_address_cmd="sed -i 's|ip = .*|ip = TOKEN|' $kazoo_config"
 ip_address_question="What IP should we use for kazoo?: "
-ip_address_re="[0-9]+\.[0-9]+\.[0-9]\.[0-9]+"
+ip_address_re="$ip_address_regex"
 ip_address_hint="This is the Kazoo application ip address" 
 ip_address_ref="ip_address"
 

@@ -2,8 +2,6 @@
 
 set -o nounset
 
-declare -a ip_addresses
-declare -a interfaces
 default_cookie=""
 system_hostname=""
 
@@ -36,6 +34,16 @@ warn(){
 }
 
 cookie_file="/etc/kazoo/erlang.cookie"
+ip_address_file="/etc/kazoo/kazoo.ip_address"
+
+#TODO: Add common definition for REGEX matches 
+#for valid url, IP address, port, hostname for use in setup scripts. 
+
+#validation regexes for use in ask 
+url_regex="^(https?:\/\/)?([0-9a-z\.-\.]+)([a-z\.]{2,6})?([:][0-9]+)?([\/\w\.-]*)*\/?$"
+ip_address_regex="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
+fqdn_regex='(?=^.{4,255}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}$)'
+ip_fqdn_regex="$ip_address_regex|$fqdn_regex"
 
 
 #Safety stuff (must be root, lockfile functions, trap and clean_exit function)
@@ -76,27 +84,27 @@ check_lock(){
 clean_exit(){
     echo "Completed $0"
     clear_lock $lockfile
-    echo -e "${NC}"
+    echo -e -n "${NC}"
     trap - EXIT
     exit 0;
 }
 
 error_exit(){
-    echo -e "${red}ERROR: exiting due to: ${@:-"unknown error"}${NC}"
-    echo -e "${yellow}see ${NC}/var/log/kazoo_install.log${yellow} for details${NC}"
-    echo -e "${yellow}you can restart this script manually with ${green}$0 ${NC} "
+    error "exiting due to: ${@:-"unknown error"}"
+    echo 
+    echo -e "NOTE: ${yellow}you can restart this script manually with ${green}$0 ${NC}"
     clear_lock $lockfile
-    echo -e "${NC}"
+    echo -e -n "${NC}"
     trap - EXIT
     exit 1;
 
 }
 
 int_exit(){
-    echo -e "${yellow}EXITING: SIGINT|SIGQUIT (ctrl-C|ctrl-) received! ${NC}"
+    echo -e "${yellow}EXITING: due to user interrupt (ctrl-C|ctrl-\)! ${NC}"
     echo -e "${yellow}you can restart this script manually with ${green}$0 ${NC} "
     clear_lock $lockfile
-    echo -e "${NC}"
+    echo -e -n "${NC}"
     trap - EXIT
     exit 1;
 }
@@ -129,32 +137,45 @@ get_system_hostname(){
 ask_ip_selection(){
     local -a ip_addresses
     local -a interfaces
+    
+    if [ -e $ip_address_file ];then
+        ip_address=$(<$ip_address_file)
+        if [[ $ip_address =~ $ip_address_regex ]]; then
+            system_ip_address=$ip_address 
+            return 
+        else 
+            warn "The system IP address in $ip_address_file is not a valid ip!"
+        fi 
+        
+    fi
+
     get_interfaces
     get_system_ip 
 
     if [ ${#ip_addresses[@]:-} -eq 1 ];then
         system_ip_address=${ip_addresses[0]}
-        return
     elif [ ! ${#ip_addresses[@]:-} ];then
         warn "NO ip addresses are configured!"
         system_ip_address=""
         local system_ip_address_question="Please enter a system ip address you will be assigning to this server"
-        local system_ip_address_re="[0-9]+\.[0-9]+\.[0-9]\.[0-9]+"
+        local system_ip_address_re="$ip_address_regex"
         local system_ip_address_hint="Since you do not currently have an IP address, you can use this menu to add the IP you plan to assign after setup"
         local system_ip_address_ref="system_ip_address"
         ask system_ip_address
-        return 
+    else
+      PS3="Please select the IP address to use:"
+      select opt in ${ip_addresses}; do
+          case $opt in
+             *)
+               system_ip_address=$opt     
+               break
+               ;;
+          esac
+      done
     fi
+    
+    echo -n $system_ip_address >> $ip_address_file
 
-    PS3="Please select the IP address to use:"
-    select opt in ${ip_addresses}; do
-        case $opt in
-           *)
-             system_ip_address=$opt     
-             break
-             ;;
-        esac
-    done
 }
 
 set_value(){
@@ -175,7 +196,7 @@ set_value(){
 
     #run command and log output to $install_log
     dbg $debug_final
-    eval $cmd_final &> $install_log
+    eval $cmd_final &> $install_log || error_exit "Command $cmd_final failed"
 
     #verify command returned success response, throw error if failed
     if [[ $? -ne 0 ]];then
@@ -183,13 +204,18 @@ set_value(){
     fi
 }
 
+check_re(){
+   val=$1
+   re=$2
+   echo $val | grep -P "$re" &> $install_log || return 1
+   return 
+}
+
 #gets input for the user for $name parameter
 ask(){
    local name=$1
 
-   #this is one of the major problems with bash
-   #we use the name object to "dereference" the variables we need for this function
-   #if these are not defined above, we will explode thanks to -o nounset
+   #we use the name value to "dereference" the variables we need for this function
    local _question=\$"${name}_question"
    local _re=\$"${name}_re"
    local _ref=\$"${name}_ref"
@@ -204,10 +230,11 @@ ask(){
    read ANSWER
    
    #if invalid answer, we show them the hint and call ourselves with our args
-   if ! [[ $ANSWER =~ $re ]];then
+   if ! check_re $ANSWER $re ; then
       warn $hint
       ask $@
    fi
+
    eval $ref="$ANSWER"
 }
 
@@ -237,7 +264,6 @@ get_default_cookie(){
     fi 
     
     if ! [  ${default_cookie:-} ];then
-        echo "NO COOKIE FOUND --- GENERATING"   
         local answer
         confirm "Do you want to generate a new erlang cookie? [y|n]"
         if [[ $answer =~ ^[yY] ]];then

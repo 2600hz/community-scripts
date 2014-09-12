@@ -7,9 +7,8 @@ declare -A install_list
 lockfile="/var/lock/subsys/setup_kazoo.lockfile"
 . /opt/kazoo_install/setup_common
 
-trap clean_exit SIGHUP SIGTERM 
+trap error_exit SIGHUP SIGTERM EXIT
 trap int_exit SIGINT SIGQUIT
-trap clean_exit EXIT
 
 dir="/opt/kazoo_install/"
 
@@ -55,11 +54,11 @@ handle_args(){
 do_setup(){
     for package in ${!install_list[@]}; do
         package_setup="${dir}setup_${package}"
-        dbg "Running ${NC} $package_setup ${green} for ${NC} $package"
+        dbg "Running ${NC} $package_setup ${green}for package${NC} $package"
         if [[ -n $all_in_one ]]; then 
-           $package_setup -a
+           $package_setup -a || error_exit "package setup failed for $package in script: ${NC}$package_setup"
         else
-           $package_setup 
+           $package_setup || error_exit "package setup failed for $package in script: ${NC}$package_setup"
         fi
     done
 }
@@ -70,42 +69,43 @@ do_final_steps(){
         rm -rf /etc/haproxy/haproxy.cfg
         ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
         dbg "Restart HAProxy to apply changes with: ${NC} service haproxy restart"
-        /sbin/service haproxy restart
+        /sbin/service haproxy restart || error_exit "haproxy restart failed"
     fi 
 
     #TODO: SETUP IP TABLES PER SERVICE!!!!!!
     warn "Dude, We are stopping IP tables, that means your shields are down brother, might wanna do something about it!!"
-    service iptables stop
+    service iptables stop 
 
     #start services
     dbg "Restart Rsyslog"
-    /sbin/service rsyslog restart
+    /sbin/service rsyslog restart || error "rsyslon failed to start"
 
 
-    if [[ ${install_list['bigcouch']:-}  || ${install_list['kazoo']:-}  || ${install_list['bigcouch']:-} ]];then
+    if [[ ${install_list['freeswitch']:-} ]];then
         dbg "Start EPMD with: ${NC} /usr/bin/epmd -daemon"
-        /usr/bin/epmd -daemon
+        /usr/bin/epmd -daemon || error_exit "epmd daemon failed to start"
+        dbg "Epmd status is: "
         netstat -ptlen | grep epmd
     fi 
 
     if [[ ${install_list['bigcouch']:-} ]];then 
         dbg "Restart Bigcouch to apply changes with:${NC} service bigcouch restart"
-        /sbin/service bigcouch restart
+        /sbin/service bigcouch restart || error_exit "Bigcouch restart failed"
     fi 
 
     if [[ ${install_list['rabbitmq']:-} ]];then 
-        dbg "Start RabbitMQ with: ${NC} service rabbitmq-server start"
-        /sbin/service rabbitmq-server restart
+        dbg "Start RabbitMQ with: ${NC} service rabbitmq-server restart"
+        /sbin/service rabbitmq-server restart || error_exit "Rabbitqm restart failed"
     fi 
 
     if [[ ${install_list['freeswitch']:-} ]];then 
         dbg "Start FreeSWITCH with: ${NC} service freeswitch restart"
-        /sbin/service freeswitch restart
+        /sbin/service freeswitch restart || error_exit "Freeswitch restart failed"
     fi 
 
     if [[ ${install_list['bigcouch']:-} ]];then 
         dbg "Restart Kamailio to apply the changes with: ${NC} service kamailio restart"
-        /sbin/service kamailio restart
+        /sbin/service kamailio restart || error_exit "Kamailio restart failed"
     fi
 
     if [[ ${install_list['kazoo']:-} ]];then 
@@ -113,12 +113,12 @@ do_final_steps(){
         /sbin/service kz-whistle_apps restart
 
         dbg "Start ecallmgr with: ${NC} service kz-ecallmgr restart"
-        /sbin/service kz-ecallmgr restart
+        /sbin/service kz-ecallmgr restart || error_exit "kz-ecallmgr restart failed"
 
         wait_apps_running
 
         dbg "Displaying whistle_apps status with: ${NC} service kz-whistle_apps status "
-        /sbin/service kz-whistle_apps status
+        /sbin/service kz-whistle_apps status 
     fi  
 
 
@@ -127,36 +127,36 @@ do_final_steps(){
 
     if [[ ${install_list['kazoo']:-} ]];then 
         dbg "Starting httpd"
-        /sbin/service httpd start
+        /sbin/service httpd restart || error_exit "httpd restart failed"
     fi
 
 
     if [[ ${install_list['bigcouch']:-} ]];then 
         dbg "Updating all Bigcouch views with: ${NC} sup whapps_maintenance blocking_refresh"
-        /opt/kazoo/utils/sup/sup whapps_maintenance blocking_refresh
+        /opt/kazoo/utils/sup/sup whapps_maintenance blocking_refresh || error_exit "sup whapps_maintenance blocking_refresh failed!"
 
         dbg "Importing media files with: ${NC} /opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav "
-        /opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav 
+        /opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav || error_exit "media import command failed"
 
         #Create new account
-        dbg "Create admin account with: ${NC} sup crossbar_maintenance create_account admin sip.${system_hostname} admin admin"
-        /opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin "sip.${system_hostname}" admin admin
+        dbg "Created admin account with: ${NC} sup crossbar_maintenance create_account admin sip.${system_hostname} admin admin"
+        /opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin "sip.${system_hostname}" admin admin || error_exit "Account creation failed"
     fi 
     
-    
-
-    echo "INSTALL COMPLETE: WELCOME TO KAZOO!"
+    if [[ ${install_list['kazoo-ui']:-} ]]; then
+        echo "You can access the kazoo-ui by going to http://$system_ip_address/kazoo-ui"
+    fi
 
 }
 
 check_lock
 handle_args $@
+ask_ip_selection
+get_system_hostname
 [ ${all_in_one:-} ] && generate_erlang_cookie
 do_setup
-get_system_hostname
 do_final_steps
-
-
+echo "INSTALL COMPLETE!"
 clean_exit
 
 
