@@ -8,7 +8,7 @@ Public Scripts from the 2600hz Community
 ### large_shards.sh <size>
 Finds DB shards exceeding `size` and provides the SUP command to compact
 
-```
+```bash
 [root@db002-dev BigCouch]# ./large_shards.sh 10M
 sup couch_compactor_fsm compact_db "bigcouch@db002-dev.2600hz.com" "services"
 sup couch_compactor_fsm compact_db "bigcouch@db002-dev.2600hz.com" "ratedeck"
@@ -22,9 +22,9 @@ sup couch_compactor_fsm compact_db "bigcouch@db002-dev.2600hz.com" "ratedeck"
 ### shard_ratio.sh <size>
 Returns the ratio of disk to data size for all shards exceeding `size`.
 
-_Note:_ Requires bc - `yum install -y bc`
+_Note:_ Requires bc `yum install -y bc`
 
-```
+```bash
 [root@db002-dev BigCouch]# ./shard_ratio.sh 10M
 13154786 signups
 8253836 ratedeck
@@ -42,7 +42,7 @@ _Note:_ Requires bc - `yum install -y bc`
 
 ### user_agents.sh <path>
 Show the number of times unique user-agents occur in a FreeSWITCH debug log.
-```
+```bash
 [root@fs001-dev FreeSWITCH]# ./user_agents.sh /var/log/freeswitch/debug.log.1 
       4    User-Agent: PolycomVVX-VVX_500-UA/5.0.0.6874
      16    User-Agent: 2600hz
@@ -53,7 +53,7 @@ The FreeSWITCH debug log does not include the call-id on the lines with the SIP 
 
 _Note:_ This can consume large amounts of memory, and impact the running system.  Use with caution.
 
-```
+```bash
 [root@fs001-dev FreeSWITCH]# ./sipify.sh /var/log/freeswitch/debug.log.1 | grep 46a1fe62-20f73e9-1c6e7dbc@10.26.0.199                                 
 46a1fe62-20f73e9-1c6e7dbc@10.26.0.199 recv 1141 bytes from udp/[10.26.0.81]:5060 at 19:34:41.657063:
 46a1fe62-20f73e9-1c6e7dbc@10.26.0.199    ------------------------------------------------------------------------
@@ -92,13 +92,15 @@ Erlang tool to copy all databases from one Bigcouch cluster to another, with opt
 
 ### Usage
 Edit `src/clone_tools.hrl`:
+```erlang
 -define(TARGET, "http://127.0.0.1:15984/"). %%URL of HAProxy for the new database cluster
 -define(SOURCE, "http://127.0.0.1:15984/"). %%A single bigcouch node in the old (current) database cluster.
+```
 
 Optionally change MAX_CR_AGE and MAX_VM_AGE. These control the maximum age (in days) for CDRs and voicemail messages, respectively.  Setting the value to 0 will copy all documents of the indicated type. Setting to any positive integer will copy all documents of that type up to that number of days prior to the execution of the clone tool.  You can also set the value to 'none' to skip all documents of the respective type.
 
 In the clone_tools directory run:
-```
+```bash
 make clean;make;./clone.sh
 ```
 
@@ -135,7 +137,7 @@ Runs all the analyzers on kazoo log(s).
 
 _Note:_ Each analyzer can be run individually.
 
-```
+```bash
 [root@apps001-dev klap]# ./stats.sh /var/log/2600hz/kazoo.log 
 /var/log/2600hz/kazoo.log
   Start                    : Sep 12 00:26:36
