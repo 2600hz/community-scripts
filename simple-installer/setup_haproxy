@@ -3,10 +3,10 @@
 set -e
 set -o nounset
 
-lockfile="/root/setup_haproxy.lockfile"
+lockfile="/var/lock/subsys/setup_haproxy.lockfile"
 
-. /opt/installtest/setup_common
-trap clean_exit SIGHUP SIGTERM
+. /opt/kazoo_install/setup_common
+trap error_exit SIGHUP SIGTERM ERR
 trap int_exit SIGINT SIGQUIT
 trap clean_exit EXIT
 
@@ -124,13 +124,15 @@ dbg " : configuring Kazoo-UI : "
 
 check_lock $lockfile
 
+get_system_hostname
+
 if [[ ${1:-} =~ -a ]];then
     all_in_one=1
 fi
 
 if [  ${all_in_one:-} ];then
    #if allinone we default everything we can
-   fqdn="127.0.0.1"
+   fqdn=$system_hostname
    
    config_data="    server $fqdn 127.0.0.1:5984"
    config_mgr="    server $fqdn 127.0.0.1:5986"

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
 set -o nounset
 
 declare -a ip_addresses

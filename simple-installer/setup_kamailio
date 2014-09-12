@@ -6,13 +6,13 @@ set -o nounset
 #logfile
 install_log="/var/log/kazoo_install.log"
 #lock_file
-lockfile="/root/setup_kamailio.lockfile"
+lockfile="/var/lock/subsys/setup_kamailio.lockfile"
 
 #Files to edit
 kamailio_local_cfg="/etc/kazoo/kamailio/local.cfg"
 kamailio_dispatcher="/etc/kazoo/kamailio/dbtext/dispatcher"
 
-. /opt/installtest/setup_common
+. /opt/kazoo_install/setup_common
 trap clean_exit SIGHUP SIGTERM 
 trap int_exit SIGINT SIGQUIT
 trap clean_exit EXIT

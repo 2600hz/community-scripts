@@ -7,14 +7,14 @@ set -o nounset
 install_log="/var/log/kazoo_install.log"
 
 #lock_file MUST BE DEFINED!
-lockfile="/root/setup_bigcouch.lockfile"
+lockfile="/var/lock/subsys/setup_bigcouch.lockfile"
 
 #
 # VARS
 #
 
 #Import common which has all the goodies for handling configuration/questions
-. /opt/installtest/setup_common
+. /opt/kazoo_install/setup_common
 
 trap clean_exit SIGHUP SIGTERM 
 trap int_exit SIGINT SIGQUIT

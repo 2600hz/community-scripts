@@ -5,9 +5,9 @@ set -o nounset
 
 #logfile
 #lock_file
-lockfile="/root/setup_freeswitch.lockfile"
+lockfile="/var/lock/subsys/setup_freeswitch.lockfile"
 
-. /opt/installtest/setup_common
+. /opt/kazoo_install/setup_common
 
 trap clean_exit SIGHUP SIGTERM 
 trap int_exit SIGINT SIGQUIT

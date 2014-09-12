@@ -1,19 +1,63 @@
 #!/usr/bin/env bash
 
-set -e
-#set -x
+set -o nounset
 
+DEBUG="0"
+default_repo_url="http://repo.2600hz.com/2600hz.repo"
+
+#global values for menu selection
 install_source=""
-install_repo="http://repo.2600hz.com/2600hz.repo"
-install_release="local"
-install_base="local"
+install_repo_url=""
+package_flag=""
+install_release=""
+install_base=""
 all_in_one=""
 
+#re
+hostname_check_re="(?=^.{4,255}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}$)"
+
+#repo names
+stable_release="2600hz_R15B"
+stable_base="2600hz_base"
+staging_release="2600hz_R15B_staging"
+staging_base="2600hz_base_staging"
+latest_release="2600hz_R15B_staging"
+
+#release info for menus
+stable_version=""
+staging_version=""
+latest_version=""
+install_version=""
+
+#package arrays
+declare -A selected_packages
+declare -A packages
+
+#yum package names
+kazoo_package="kazoo-R15B.x86_64"
+freeswitch_package="kazoo-freeswitch-R15B.x86_64"
+kamailio_package="kazoo-kamailio.x86_64"
+bigcouch_package="kazoo-bigcouch-R15B.x86_64"
+kazoo_ui_package="kazoo-ui.noarch"
+haproxy_package="haproxy.x86_64"
+rabbitmq_package=""
+
+#Assign package names to packages Associative array for use in menus
+packages['kazoo']=$kazoo_package
+packages['freeswitch']=$freeswitch_package
+packages['kamailio']=$kamailio_package
+packages['bigcouch']=$bigcouch_package
+packages['kazoo-ui']=$kazoo_ui_package
+packages['haproxy']=$haproxy_package
+packages['rabbitmq']=$rabbitmq_package
+
+
+#filenames
 install_log="/var/log/kazoo_install.log"
 lockfile="/root/kazoo_install.lockfile"
 
-declare -a selected
 
+#color and Debug printing funcs
 green='\e[0;32m'
 red='\e[0;31m'
 yellow='\e[0;33m'
@@ -37,6 +81,8 @@ warn(){
     echo -e "${yellow}WARNING: $* ${NC} " >> $install_log 
 }
 
+
+#You must be root to run this script!
 if [[ $EUID -ne 0 ]]; then
    echo -e "${red}ERROR:${NC}" 
    echo -e "${yellow}This script must be executed by a root or sudo user${NC}"
@@ -44,10 +90,6 @@ if [[ $EUID -ne 0 ]]; then
    echo -e "${red}EXITING due to insufficent privileges${NC}"
    exit 1
 fi
-
-
-my_date=`date +"%F %T"`
-echo "Starting install $my_date" >> $install_log
 
 #lock set, clear, check functions to ensure only one instance of the script is running
 set_lock(){
@@ -95,18 +137,19 @@ clean_exit(){
 }
 
 
-trap error_exit SIGTERM
+#traps to catch errors 
+trap "error_exit $LINENO " SIGTERM ERR
 trap clean_exit EXIT 
 trap int_exit SIGINT SIGQUIT
 
 
-
 banner(){
 reset
-printf "\n\n" 
+echo 
+echo -e ${blue}
 cat <<"EOT"
-Welcome to the 
-  ___   _____ ____  ____  __  __   
+
+   ___   _____ ____  ____  __  __   
   |__ \ / ___// __ \/ __ \/ / / /___
   __/ // __ \/ / / / / / / /_/ /_  /
  / __// /_/ / /_/ / /_/ / __  / / /_
@@ -120,19 +163,114 @@ Welcome to the
 
 
 EOT
-printf "\n\n"
+echo -e ${NC}
+echo
  
+}
+
+usage(){
+    echo "USAGE: $1"
+    echo "$0 <options>"
+    echo "-v enables verbose printing"
+    echo "-s <local|repo>"
+    echo "-u <repo URL>"
+    echo "-r <Stable|Staging|Latest>"
+    echo "-p <all_in_one|kazoo|kamailio|freeswitch|bigcouch|kazoo-ui|haproxy>"
+    echo "-h <hostname>"
+    error_exit $1
+}
+
+#common functions for validating / setting global variables
+# these can be set interactively through the menus or via the 
+# command line switch arguments
+
+set_package(){
+    local pack=$1
+    if [[ $pack = "all_in_one" ]];then
+       all_in_one=1
+       for package in ${!packages[@]};do
+           selected_packages["$package"]=${packages["$package"]}
+       done 
+    elif [[ ${packages[$pack]:-} ]];then
+       selected_packages["$pack"]=${packages["$pack"]}
+    else 
+       usage "Invalid release argument specified!"
+    fi
+
+    package_flag=1
+
+}
+
+
+set_release(){
+    release_version=$1
+
+    if [[ $release_version =~ [Ss]table ]];then
+      install_release=$stable_release
+      install_base=$stable_base
+      install_version=$stable_version
+    elif  [[ $release_version =~ [Ss]taging ]];then
+      install_release=$staging_release
+      install_base=$staging_base
+      install_version=$staging_version
+    elif [[ $release_version =~ [Ll]atest ]];then
+      install_release=$latest_release
+      install_base=$latest_base
+      install_version=$latest_version
+    else
+      usage "Invalid release specified"
+    fi 
+
+}
+
+set_repo_url(){
+    url=$1
+    #TODO: ERROR HANDLING
+    install_repo_url=$url
+}
+
+set_install_source(){
+    if [[ "$OPTARG" == "repo" ]];then
+       install_source=$OPTARG 
+    elif [[ "$OPTARG" =~ "latest" ]];then
+       install_source=$OPTARG
+    else 
+       usage "Invalid source specified -s $OPTARG"
+    fi
+}
+
+handle_args(){
+  while getopts vs:u:r:p:h: opt; do
+      case $opt in
+           v) DEBUG=$OPTARG ;;
+           s) set_install_source $OPTARG ;;
+           u) set_repo_url $OPTARG ;;
+           r) set_release $OPTARG ;;
+           p) set_package $OPTARG ;;
+           h) system_hostname=$OPTARG ;;
+           *) usage "Unknown option $opt selected cannot continue!"
+              ;;
+      esac
+  done
+
+}
+
+check_hostname(){
+   echo "$1" | grep -P $hostname_check_re &> $install_log || return 1
+   return 
 }
 
 set_hostname(){
     #warn user and get permission to delete database information
     dbg "Checking system for fully qualified hostname (FQDN)" 
 
-    system_hostname=$(hostname -f)
-    echo "system hostname is $system_hostname"
-    hostname_check=$(echo "$system_hostname" | grep -P '(?=^.{4,255}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}$)')|| echo "unable to find hostname"
-    echo "system hostname is $hostname_check"
-    if [[ $hostname_check ]];then
+    fqdn=""
+
+    current_system_hostname=$(hostname -f)
+    dbg "Current system hostname is $current_system_hostname"
+    
+    check_hostname $current_system_hostname
+    if [[ $? -eq 0 ]];then
         return
     else
         echo "Uh oh! This system does not yet have a fully qualified hostname."
@@ -140,19 +278,24 @@ set_hostname(){
         echo "please set a fully qualified domain name for the hostname."
         echo "example: test.2600hz.com" 
     fi
-    
-    valid=false
-    while [ $valid == false ]
-    do
-        echo "Enter Fully Qualified Domain Name: "
-        read fqdn
-        fqdn_check=$(echo "$fqdn" | grep -P '(?=^.{4,255}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}$)')
-        if [[ "$fqdn_check" ]];then
-            valid=true
-        else
-            error "You have entered an invalid FQDN: $fqdn\n"
-        fi
-    done
+
+    if [[ ${system_hostname:-} ]];then
+        echo "Setting system_hostname to $system_hostname"
+        fqdn=$system_hostname
+    else
+      valid=false
+      while [ $valid == false ]
+      do
+          echo "Enter Fully Qualified Domain Name: "
+          read fqdn
+          check_hostname $fqdn 
+          if [ $?  -eq 0 ];then
+              valid=true
+          else
+              error "You have entered an invalid FQDN: $fqdn\n"
+          fi
+      done
+    fi
 
     #set the new hostname
     hostname $fqdn
@@ -161,17 +304,18 @@ set_hostname(){
     sed -i "s/HOSTNAME=.*/HOSTNAME=$fqdn/g" /etc/sysconfig/network
     echo "$fqdn" > /etc/hostname
 
-    echo "rebooting system due to hostname change!"
+    echo "Rebooting system due to hostname change, brb!"
+    clear_lock
     reboot 
+    exit
+
 }
 
 
 ping_test(){
    repo_url = $1
    
-   repo_host=$()
-
-
+   repo_host=$(repo_url/%.*\/)
    if ping -c 1 $1 >> $install_log ; then
        return 
    else 
@@ -180,39 +324,34 @@ ping_test(){
        echo ""
        read -p "do you want to exit and fix your network connection before contiuting [Y/N]: " answer
        case $answer in 
-           [yY]*)
-               clean_exit;
-               ;;
-           [nN]*)
-               return 
-               ;;
-           *)
-               ping_test
-               ;;
-           
+           [yY]*) clean_exit ;;
+           [nN]*) return ;;
+           *) ping_test ;;
        esac
    fi
 }
 
 
 main_menu(){
-    echo  "================================================================================="
     printf "\n"
-    PS3='Please choose source to use for kazoo installation: '
-    options=("local" "network" "quit" )
+    echo  "=========================: Installation Source :=================================="
+    printf "\n"
+    echo "Please choose a source to use for your kazoo installation."
+    PS3='Source: '
+    local options=("Local" "Network" "Quit" )
     select opt in "${options[@]}"; do
         case $opt in
-            "local")
+            "Local")
                 dbg "Local Repository will be used for installation"
                 install_source="local"
                 break
                 ;;
-            "network")
+            "Network")
                 install_source="repo"
                 dbg "Remote yum repo will be used for installation"
                 break
                 ;;
-            "quit")
+            "Quit")
                 clean_exit
                 ;;
             *)
@@ -222,20 +361,20 @@ main_menu(){
     done
 }
 
-repo_ask(){
-    echo "Please enter the yum .repo file url for your repo\nor hit enter for default [http://repo.2600hz.com/2600hz.repo]:"
-    read selected_repo
 
-    if ! [[ ${selected:-} ]];then
-        echo "default repo $install_repo will be used"
-        return    
-    elif [[ ${selected:-}_repo =~ [a-zA-Z0-9]+.repo ]];then
-        install_repo=$selected_repo
+repo_ask(){
+    echo "Please enter the yum .repo file url for your repo or hit enter for default: "
+    read  -p "[$default_repo_url]: " selected_repo
+
+    if ! [[ ${selected_repo:-} ]];then
+        install_repo_url=$default_repo_url
+    elif [[ ${selected_repo:-} =~ [a-zA-Z0-9]+.repo ]];then
+        install_repo_url=$selected_repo
     else 
         repo_ask
     fi
 
-    info "Selected $install_repo for installation source" 
+    info "Selected $install_repo_url for installation source" 
 }
 
 repo_disable(){
@@ -250,39 +389,61 @@ repo_add(){
     if [ -e /etc/yum.repos.d/$1 ];then
         rm /etc/yum.repos.d/$1
     fi 
+
     yum-config-manager --add-repo $1 &> $install_log
 }
+
 repo_enable(){
     info "Enabling repo $1"
     yum-config-manager --enable $1 &> $install_log
 }
 
+repo_list_version(){
+    version=""
+    list_package=$1
+    list_status=$2
+    list_repo=$3
+    dbg "Getting version info for $list_repo release for package $list_package"
+    release_version=`yum --disablerepo="*" --enablerepo="$list_repo" list $list_status | grep $list_package | awk '{print $2}'`
+    version=$release_version    
+}
+
+get_available_versions(){
+    local version
+ 
+    repo_list_version $kazoo_package "available" $stable_release
+    stable_version=$version
+    
+    repo_list_version $kazoo_package "available" $staging_release
+    staging_version=$version
+    
+    repo_list_version $kazoo_package "available" $latest_release
+    latest_version=$version
+
+}
 
 repo_menu(){
     printf "\n"
     echo  "=========================: Version Selection :=================================="
     printf "\n"
-    PS3='Please choose the version to install on this server: '
-    options=("repo_stable" "repo_latest" "repo_staging" )
+    echo 'Please choose the release version to install. '
+
+    PS3='release: '
+    local options=("Stable ($stable_version)" "Staging ($staging_version)" "Latest ($latest_version) - not recommended"  )
     select opt in "${options[@]}"; do
         case $opt in
-            "repo_stable")
-                install_release="2600hz_R15B"
-                install_base="2600hz_base"
-                all_in_one=1
+            Stable*)
+                set_release "Stable"
                 break
                 ;;
-            "repo_staging")
-                install_release="2600hz_base_staging"
-                install_base="2600hz_R15B_staging"
+            Staging*)
+                set_release "Staging"
                 break
                 ;;
-           #latest is not currently a valid choice
-           # "repo_latest")
-           #     install_release="2600hz_R15B_latest"
-           #     install_base="2600hz_base_latest"  
-           #     break
-           #     ;;
+            Latest*)
+                set_release "Latest"
+                break
+                ;;
             *)
                 echo "invalid option"
                 ;;
@@ -290,61 +451,51 @@ repo_menu(){
     done
 
     info "Selected version $install_release, $install_base for installation"
-    printf "\n"
 }
 
 
 package_menu(){
-    printf "\n"
+    echo 
     echo  "===========================: Package Selection :=================================="
-    printf "\n"
-    PS3='Please choose the services to install on this server, one per line, select done when complete: '
-    options=("all_in_one" "Kazoo_Server" "Freeswitch_Server" "Kamailio_Server" "BigCouch_Server" "HAProxy_Server" "kazoo_ui" "done" )
+    echo 
+    
+    local -a options
+
+    options+=("all_in_one" )
+    
+    for package in ${!packages[@]};do
+        options+=($package)
+    done
+
+    options+=("done")
+
+    echo "Please choose the services to install on this server."
+    PS3="enter one pacakge number per line, select option for done when complete: "
+   
+    echo "${options[@]}"
+
     select opt in "${options[@]}"; do
         case $opt in
-            "all_in_one")
+            all_in_one)
                 echo "all in one chosen, completed package selection"
-                all_in_one=1
-                selected+=("kazoo-R15B.x86_64")
-                selected+=("kazoo-freeswitch-R15B.x86_64")
-                selected+=("kazoo-kamailio.x86_64")
-                selected+=("kazoo-bigcouch-R15B.x86_64") 
-                selected+=("kazoo-ui.noarch")
-                selected+=("haproxy.x86_64")
-                #selected+=("httpd")
+                set_package $opt
                 break  
                 ;;
-            "Kazoo_Server")
-                selected+=("kazoo-R15B.x86_64")
-                ;;
-            "Freeswitch_Server")
-                selected+=("kazoo-freeswitch-R15B.x86_64")
-                ;;
-            "Kamailio_Server")
-                selected+=("kazoo-kamailio.x86_64")
-                ;;
-            "BigCouch_Server")
-                selected+=("kazoo-bigcouch-R15B.x86_64")
-                ;;
-            "HAProxy_Server")
-                selected+=("haproxy.x86_64")
-                ;;
-            "kazoo_ui")
-                selected+=("kazoo-ui.noarch")
-                #selected+=("httpd")
-                ;;
-            "done")
-                echo "completed package selection"
+            done) 
                 break
                 ;;
             *)
-                echo "invalid option"
+                if [ ${packages["$opt"]:-} ];then
+                    set_package $opt
+                else
+                    error "invalid option $opt"
+                fi
                 ;;
         esac
     done
     
     info "Package install list:"
-    for pack in ${selected[@]}; 
+    for pack in ${selected_packages[@]}; 
     do
         info "Package $pack will be installed"
     done
@@ -352,66 +503,99 @@ package_menu(){
 }
  
 install_prereqs(){
-   dbg "installing prerequisite packages"
-   yum install -y yum-utils curl sed rsyslog httpd &> $install_log
+   dbg "Installing prerequisite packages."
+   yum install -y yum-utils curl sed rsyslog &> $install_log
 }
 
 
 install_packages(){
-   if [[ "$install_source" == "local" ]];then
-      cwd=`pwd`
-      cd /opt/localrepo
-   fi
 
-   for pack in ${selected[@]};
-   do
-       dbg "installing package $pack" 
-       yum install -y $pack >> $install_log
-   done
+    echo "Installing packages, this can take a while depending on the system and network..."
 
-   if [[ $cwd ]]; then
-       cd $cwd
-   fi
+    for pack in ${selected_packages[@]};
+    do
+        if [ -z "${pack:-}" ];then
+            continue 
+        fi
+
+        dbg "installing package $pack" 
+        #yum install -y $pack >> $install_log
+        echo 1
+        if [ $? -ne 0 ];then
+            error_exit "$pack install failed, exiting!"
+        fi 
+    done
+
+    if [[ ${selected_packages['kazoo-ui']:-} ]];then
+        dbg "Installing httpd to support kazoo-ui"
+        #yum install -y httpd >> $install_log
+        if [ $? -ne 0 ];then
+            error_exit "httpd install failed, exiting!"
+        fi 
+    fi 
 }
 
+#
+# End functions
+#
+
+my_date=`date +"%F %T"`
+echo "Starting install $my_date" >> $install_log
+
+handle_args $@
 check_lock
 banner
 set_hostname
 install_prereqs
-main_menu
+
+if ! [[ ${install_source:-} ]];then
+    main_menu
+fi
 
 if [[ "$install_source" == "repo" ]];then
-    repo_ask 
-    repo_add $install_repo
-    repo_menu 
+    if ! [[ ${install_repo_url:-}  ]];then
+        repo_ask 
+    fi
+
+    repo_add $install_repo_url
+    get_available_versions
+    
+    if ! [[ ${package:-}  ]];then
+        repo_menu 
+    fi
+    
     repo_disable 
     repo_enable $install_release
     repo_enable $install_base
 elif [[ "$install_source" == "local" ]];then
     repo_disable
+    repo_enable "2600hz.local"
 fi  
-package_menu 
+
+if ! [[ ${package_flag:-} ]];then
+    package_menu 
+fi 
+
 install_packages 
 
-dbg "installed kazoo for $selected using version [$install_release, $install_base] from $install_repo"
-dbg "starting setup..."
+dbg "Installed kazoo using version ${install_version:-} [$install_release, $install_base] from $install_repo_url"
+dbg "Starting setup..."
 
 arg=""
 if [[ $all_in_one ]];then
-    dbg "Using all in one config for setup"
     arg="-a"
 fi
 
-for item in ${selected[@]};do
-   arg="$arg -i $item"
+for item in ${!selected_packages[@]};do
+   dbg "setting up package $item"
+   arg="$arg -i $item "
 done
 
-dbg "running ./opt/kazoo/installer/setup_kazoo $arg"
+dbg "running ./opt/kazoo_install/setup_packages $arg"
 
-/opt/installtest/setup_kazoo $arg 
+/opt/kazoo_install/setup_packages $arg 
 
-sed -i "s|.*install_kazoo||" /root/.bashrc 
+sed -i "s|.*install_kazoo.*||" /root/.bashrc 
+#sed -i "s|.*install_kazoo.*||" /etc/init.d/rc.local 
 
-clean_exit; 
-
-
+clean_exit 

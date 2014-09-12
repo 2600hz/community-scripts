@@ -3,14 +3,22 @@
 set -e
 set -o nounset
 
-lockfile="/root/setup_kazoo-ui.lockfile"
-. /opt/installtest/setup_common
+#logfile
+install_log="/var/log/kazoo_install.log"
+#lock_file
+lockfile="/var/lock/subsys/setup_rabbitmq.lockfile"
 
+#Files to edit
+rabbitmq_env_conf="/etc/kazoo/rabbitmq/rabbitmq-env.conf"
+
+. /opt/kazoo_install/setup_common
 trap clean_exit SIGHUP SIGTERM 
 trap int_exit SIGINT SIGQUIT
 trap clean_exit EXIT
 
-kazoo_ui_conf_js="/var/www/html/kazoo-ui/config/config.js"
+
+
+
 
 ################################################################################
 # set_value NOTE:
@@ -32,46 +40,40 @@ kazoo_ui_conf_js="/var/www/html/kazoo-ui/config/config.js"
 # *_ref      - the ref to the variable used to store the user requested value
 ################################################################################
 
-#KAZOO-UI URL
-url=""
-url_dbg="setting kazoo-ui URL address for accessing API - TOKEN"
-url_cmd="sed -i \"s|api_url: .*/v1|api_url: 'TOKEN/v1|g\" $kazoo_ui_conf_js"
-url_question="Please enter your api url (EXAMPLE: http://10.0.0.1:8000): "
-url_re="http[s]*://.*:[0-9]+"
-url_hint="Full URL for api, this IP should be the same as your kazoo server"
-url_ref="url"
+#KAMAILIO IP ADDRESS
+ip_address=""
+ip_address_dbg="setting $rabbitmq_env_conf -  = TOKEN"
+ip_address_cmd="sed -i 's|NODE_IP_ADDRESS=.*|NODE_IP_ADDRESS=TOKEN|' $rabbitmq_env_conf"
+ip_address_question="Please enter the IP address that rabbitmq-server shoud use for listening: "
+ip_address_re=".*"
+ip_address_hint="IP ADDRESS!"
+ip_address_ref="ip_address"
 
-interactive() {
-    ask url
+interactive(){
+    ask ip_address
 }
 
-ask_ip_selection
+dbg " : configuring rabbitmq : "
 
-dbg " : configuring Kazoo-UI : "
-
-check_lock $lockfile
+check_lock
 
 if [[ ${1:-} =~ -a ]];then
     all_in_one=1
 fi
 
 if [  ${all_in_one:-} ];then
-   #if allinone we default everything we can
-   url="http://${system_ip_address}:8000"
+   #if allinone we default everything!
+   ip_address="0.0.0.0"
 else
-   info "NOTE: You can type '${NC}?${blue}' as a response to any question for a hint!"
+   info "NOTE: You can type '${NC}?${blue}' in response to any question for a hint"
    interactive
 fi
 
-dbg "Applying Kazoo-UI configuration..."
-
-set_value url $url
-
-clean_exit $lockfile
+dbg "Applying rabbitmq configuration..."
 
 
+set_value ip_address $ip_address
 
+set_dispatcher
 
-
-
-
+clean_exit 

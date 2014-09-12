@@ -3,115 +3,133 @@
 set -e
 set -o nounset
 
-declare install_list
+lockfile="/var/lock/subsys/setup_kazoo.lockfile"
 
-lockfile="/root/setup_kazoo.lockfile"
-. /opt/installtest/setup_common
+. /opt/kazoo_install/setup_common
 
 trap clean_exit SIGHUP SIGTERM 
 trap int_exit SIGINT SIGQUIT
 trap clean_exit EXIT
 
-dir="/opt/installtest/"
 
-all_in_one=""
+kazoo_config="/etc/kazoo/config.ini"
 
-check_lock
+################################################################################
+# set_value NOTE:
+# *_cmd and *_dbg are access commands and debug statements for use in set_value
+# TOKEN is replaced using with the $value argument in set_value
+# using variable expansion substring replacement
+################################################################################
+#ask NOTE:
+# *_question, *_re, *_hint and *_ref are used by ask
+# for getting user input, this allows us to pass one name to ask and do all
+# defined actions requrired to provide help, get input, and save it to a var
+#### set_value variables #######################################################
+# *_dbg - print statement when setting parameter
+# *_cmd - command to execute
+#### ask variables #############################################################
+# *_question - the question to ask when getting the value from user
+# *_re       - the re to use to validate repsonse
+# *_hint     - the hint to provide in case of blank line, ? or invalid parameter
+# *_ref      - the ref to the variable used to store the user requested value
+################################################################################
+
+#KAZOO COOKIE
+cookie=""
+cookie_dbg="setting $kazoo_config - setcookie = TOKEN"
+cookie_cmd="sed -i 's|cookie = .*|cookie = TOKEN|' $kazoo_config"
+cookie_question="Please enter your erlang cookie (string): "
+cookie_re=".*"
+cookie_hint="Cookie should be longish, like 32 chars at least"
+cookie_ref="ip_address"
+
+#KAZOO IP
+ip_address=""
+ip_address_dbg="setting $kazoo_config - ip = TOKEN"
+ip_address_cmd="sed -i 's|ip = .*|ip = TOKEN|' $kazoo_config"
+ip_address_question="What IP should we use for kazoo?: "
+ip_address_re="[0-9]+\.[0-9]+\.[0-9]\.[0-9]+"
+ip_address_hint="This is the Kazoo application ip address" 
+ip_address_ref="ip_address"
+
+####KAZOO AMQP CONFIG
+amqp_string=""
+amqp_string_dbg="setting amqp config in $kazoo_config - TOKEN"
+amqp_string_cmd="sed -i 's|\"amqp://.*\"|\"amqp://TOKEN\"|' $kazoo_config"  
+
+#AMQP USER
+amqp_user=""
+amqp_user_question="What username do you want to use for your AMQP config"
+amqp_user_re="[A-Za-z0-9]+"
+amqp_user_hint="This is the username you define in your rabbit server"
+amqp_user_ref="amqp_user"
+
+#AMQP PASS
+amqp_pass=""
+amqp_pass_question="What password do you want to use for your AMQP config"
+amqp_pass_re=".*"
+amqp_pass_hint="This is the password for amqp"
+amqp_pass_ref="amqp_pass"
+
+#AMQP IP
+amqp_ip=""
+amqp_ip_question="What is your AMQP server IP address"
+amqp_ip_re="[0-9]+\.[0-9]+\.[0-9]\.[0-9]+"
+amqp_ip_hint="This is the AMQP server ip address, what more can be said?"
+amqp_ip_ref="amqp_ip"
+
+#AMQP port
+amqp_port=""
+amqp_port_question="What is your AMQP server port? (5672)"
+amqp_port_re="[0-9]+"
+amqp_port_hint="This is the port for AMQP, you best have a really good reason for not using defautl value of 5672"
+amqp_port_ref="amqp_port"
+
+ask_amqp_config(){
+    ask amqp_ip
+    ask amqp_user
+    ask amqp_pass
+    ask amqp_port
+    amqp_string="${amqp_user}:${amqp_pass}@${amqp_ip}:${amqp_port}"
+}
+
+interactive(){
+    ask_amqp_config 
+    ask ip_address
+}
+
+get_default_cookie
+
+if [  ${default_cookie:-} ];then
+    cookie="$default_cookie"
+else
+    ask cookie
+fi
 
 
-while getopts "ai:" opt;do
-    case $opt in
-        i)
-            echo "Installer requested setup of package $OPTARG"
-            install_list+=($OPTARG)
-            ;;
-        a)
-            echo "All in one selected, setting up all services."
-            all_in_one=1
-            ;;
-    esac
-done
+set_value cookie $default_cookie
+
+if [[ ${1:-} =~ -a ]];then
+    all_in_one=1
+fi
+
+if [  ${all_in_one:-} ];then
+   #if allinone we default everything we can
+   amqp_string="guest:guest@127.0.0.1:5672"
+   ip_address="127.0.0.1"
+else
+   info "NOTE: You can type '${NC}?${blue}' in response to any question for a hint"
+   interactive
+fi
+
+dbg "Applying Kazoo configuration..."
+
+set_value amqp_string $amqp_string
+set_value cookie $cookie
+set_value ip_address $ip_address
+
+clean_exit $lockfile
 
 
-[ ${all_in_one:-} ] && generate_erlang_cookie
-
-for package in ${install_list[@]:-}; do
-    package_setup="${dir}setup_${package}"
-    if [[ -n $all_in_one ]]; then 
-       $package_setup -a
-    else
-       $package_setup 
-    fi
-done
-
-get_system_hostname
-
-#start services
-dbg "Restart Rsyslog"
-/sbin/service rsyslog restart
-
-dbg "Start EPMD"
-/usr/bin/epmd -daemon
-netstat -ptlen | grep epmd
-
-dbg "Createing symlink to use HA proxy config in /etc/kazoo/haproxy instead of /etc/haproxy"
-rm -rf /etc/haproxy/haproxy.cfg
-ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
 
 
-dbg "Restart Bigcouch to apply changes"
-/sbin/service bigcouch stop || echo "bc stop failed" 
-/sbin/service bigcouch start || echo "bc start failed"
-
-dbg "Restart HAProxy to apply changes"
-/sbin/service haproxy restart
-
-dbg "Start RabbitMQ"
-/sbin/service rabbitmq-server start
-
-dbg "Start FreeSWITCH"
-/sbin/service freeswitch stop
-/sbin/service freeswitch start
-
-dbg "Restart:wq
- Kamailio to apply the changes"
-/sbin/service kamailio restart
-
-dbg "Start Whapps"
-/sbin/service kz-whistle_apps restart
-
-dbg "Start ecallmgr"
-/sbin/service kz-ecallmgr restart
-
-dbg "Wait for 30s and check on Whapps & ecallmgr status"
-
-sleep 30
-
-/sbin/service kz-whistle_apps status
-
-dbg "Attach ecallmgr to FreeSWITCH"
-/opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@$system_hostname
-
-dbg "Starting httpd"
-/sbin/service httpd start
-
-# Final prep
-dbg "Updating all Bigcouch views"
-/opt/kazoo/utils/sup/sup whapps_maintenance blocking_refresh
-
-dbg "Importing media files"
-/opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav 
-
-#restart whapps before create account
-dbg "Restarting kz-whistle_apps" 
-/sbin/service kz-whistle_apps restart
-
-sleep 30
-
-#Create new account
-dbg "Create test account"
-/opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin admin admin admin
-
-echo "INSTALL COMPLETE: WELCOME TO KAZOO!"
-
-exit
