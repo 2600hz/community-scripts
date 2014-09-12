@@ -99,7 +99,7 @@ Edit `src/clone_tools.hrl`:
 
 Optionally change MAX_CR_AGE and MAX_VM_AGE. These control the maximum age (in days) for CDRs and voicemail messages, respectively.  Setting the value to 0 will copy all documents of the indicated type. Setting to any positive integer will copy all documents of that type up to that number of days prior to the execution of the clone tool.  You can also set the value to 'none' to skip all documents of the respective type.
 
-In the clone_tools directory run:
+In the clone tools directory run:
 ```bash
 make clean;make;./clone.sh
 ```
@@ -115,15 +115,15 @@ This will start a clone, it will take a very long time (possibly days) and to en
 ### How it works
 * It reads all databases on the SOURCE system and starts cloning the list
 * If the current db being cloned IS NOT an account/XX/XX/XXXXX db
-** It will get a list of all document IDs in both the SOURCE and TARGET.  It will then clone any IDs that only exist on the SOURCE
+  * It will get a list of all document IDs in both the SOURCE and TARGET.  It will then clone any IDs that only exist on the SOURCE
 * If the current db being cloned IS an account/XX/XX/XXXX db then it will (in detail):
-** create the database on the TARGET
-** add a view to the SOURCE db
-** copy all views to the TARGET (including the newly added "clone" view)
-** query the clone view for a list of all document IDs that are NOT cdrs, acdc_stats, credit, debit, or vmbox on both SOURCE and TARGET.  It will then clone any IDs that only exist on the SOURCE
-** query the clone view for a list of all documents with attachments on both SOURCE and TARGET.  The results of the view also includes the total size of all attachements on each document.  If this differs then the attachments are copied from the SOURCE to the TARGET
-** find all vmboxes in SOURCE and OVERWRITE them on the TARGET.  This ensures if a voicemail was left while the clone ran, you can re-run it just prior to the cut over to ensure it is present.  However, this also means if you run this script after a voicemail is left via the TARGET it will be lost.  The proper use case is to run the script, then re-run it immediately BEFORE switching Kazoo to use the TARGET, but NEVER after :)
-** query the current available credit in the db and create one transaction on the TARGET to "roll-up" (represent) all the transaction history on the SOURCE.  Note, this is a single document representing the available credit at the time of the clone so the history is lost but since we dont expose it currently this is not an issue unless the client has written a tool to use it themselfs.
+  * create the database on the TARGET
+  * add a view to the SOURCE db
+  * copy all views to the TARGET (including the newly added "clone" view)
+  * query the clone view for a list of all document IDs that are NOT cdrs, acdc_stats, credit, debit, or vmbox on both SOURCE and TARGET.  It will then clone any IDs that only exist on the SOURCE
+  * query the clone view for a list of all documents with attachments on both SOURCE and TARGET.  The results of the view also includes the total size of all attachements on each document.  If this differs then the attachments are copied from the SOURCE to the TARGET
+  * find all vmboxes in SOURCE and OVERWRITE them on the TARGET.  This ensures if a voicemail was left while the clone ran, you can re-run it just prior to the cut over to ensure it is present.  However, this also means if you run this script after a voicemail is left via the TARGET it will be lost.  The proper use case is to run the script, then re-run it immediately BEFORE switching Kazoo to use the TARGET, but NEVER after :)
+  * query the current available credit in the db and create one transaction on the TARGET to "roll-up" (represent) all the transaction history on the SOURCE.  Note, this is a single document representing the available credit at the time of the clone so the history is lost but since we dont expose it currently this is not an issue unless the client has written a tool to use it themselfs.
 
 ## sipp
 
