@@ -5,7 +5,7 @@ Public Scripts from the 2600hz Community
 
 ## Bigcouch
 
-### large_shards.sh <size>
+### large_shards.sh \<size\>
 Finds DB shards exceeding `size` and provides the SUP command to compact
 
 ```bash
