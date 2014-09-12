@@ -19,7 +19,7 @@ sup couch_compactor_fsm compact_db "bigcouch@db002-dev.2600hz.com" "accounts"
 sup couch_compactor_fsm compact_db "bigcouch@db002-dev.2600hz.com" "ratedeck"
 ```
 
-### shard_ratio.sh <size>
+### shard_ratio.sh \<size\>
 Returns the ratio of disk to data size for all shards exceeding `size`.
 
 _Note:_ Requires bc `yum install -y bc`
@@ -40,7 +40,7 @@ _Note:_ Requires bc `yum install -y bc`
 
 ## FreeSWITCH
 
-### user_agents.sh <path>
+### user_agents.sh \<path\>
 Show the number of times unique user-agents occur in a FreeSWITCH debug log.
 ```bash
 [root@fs001-dev FreeSWITCH]# ./user_agents.sh /var/log/freeswitch/debug.log.1 
@@ -48,7 +48,7 @@ Show the number of times unique user-agents occur in a FreeSWITCH debug log.
      16    User-Agent: 2600hz
 ```
 
-### sipify.sh <path>
+### sipify.sh \<path\>
 The FreeSWITCH debug log does not include the call-id on the lines with the SIP headers.  This script will add them so they are included in when grep'd or otherwise searched.  
 
 _Note:_ This can consume large amounts of memory, and impact the running system.  Use with caution.
@@ -132,7 +132,7 @@ This is a collection of SIPp templates and scripts.
 ## klap
 Kazoo Log Analysis Program
 
-### stats.sh <path>
+### stats.sh \<path\>
 Runs all the analyzers on kazoo log(s). 
 
 _Note:_ Each analyzer can be run individually.
