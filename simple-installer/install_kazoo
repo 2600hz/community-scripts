@@ -519,8 +519,7 @@ install_packages(){
         fi
 
         dbg "installing package $pack" 
-        #yum install -y $pack >> $install_log
-        echo 1
+        yum install -y $pack >> $install_log
         if [ $? -ne 0 ];then
             error_exit "$pack install failed, exiting!"
         fi 
@@ -528,7 +527,7 @@ install_packages(){
 
     if [[ ${selected_packages['kazoo-ui']:-} ]];then
         dbg "Installing httpd to support kazoo-ui"
-        #yum install -y httpd >> $install_log
+        yum install -y httpd >> $install_log
         if [ $? -ne 0 ];then
             error_exit "httpd install failed, exiting!"
         fi 
