@@ -1,0 +1,16 @@
+{
+    "name": "zebooka/couchdb-dump",
+    "description": "PHP scripts to dump and restore CouchDB databases.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Anton Bondar",
+            "email": "anton@zebooka.com"
+        }
+    ],
+    "bin": [ "bin/couchdb-dump.php", "bin/couchdb-restore.php" ],
+    "minimum-stability": "dev",
+    "require": {
+
+    }
+}
