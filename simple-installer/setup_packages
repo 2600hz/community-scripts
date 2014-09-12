@@ -4,7 +4,7 @@ set -o nounset
 
 declare -A install_list
 
-lockfile="/var/lock/subsys/setup_kazoo.lockfile"
+lockfile="/var/lock/subsys/setup_packages.lockfile"
 . /opt/kazoo_install/setup_common
 
 trap error_exit SIGHUP SIGTERM EXIT

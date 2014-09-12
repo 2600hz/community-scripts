@@ -56,6 +56,7 @@ check_root(){
      exit 1
   fi
 }
+
 #
 #  Lock file functions.
 #
@@ -65,6 +66,7 @@ set_lock(){
 }
 
 clear_lock(){
+    lockfile=$1
     if [ -e $lockfile ]; then
         rm $lockfile
     fi
@@ -72,7 +74,10 @@ clear_lock(){
 
 check_lock(){
     if [ -e $lockfile ]; then
-        error_exit "Another instance of this script appears to be running, you can remove manually with 'rm ${lockfile}', EXITING!"
+        error "Another instance of this script appears to be running, you can remove manually with 'rm ${lockfile}', EXITING!"
+        #we shoudlnt clear the lock if we exit here. 
+        trap - EXIT
+        exit 1
     else
         set_lock $lockfile
     fi
