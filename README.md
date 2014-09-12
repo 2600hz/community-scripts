@@ -19,7 +19,7 @@ sup couch_compactor_fsm compact_db "bigcouch@db002-dev.2600hz.com" "accounts"
 sup couch_compactor_fsm compact_db "bigcouch@db002-dev.2600hz.com" "ratedeck"
 ```
 
-### ./shard_ratio.sh <size>
+### shard_ratio.sh <size>
 Returns the ratio of disk to data size for all shards exceeding `size`.
 
 _Note:_ Requires bc - `yum install -y bc`
