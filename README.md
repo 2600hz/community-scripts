@@ -91,15 +91,13 @@ Kazoo install tool that can be used to set up an all-in-one server or assist wit
 Erlang tool to copy all databases from one Bigcouch cluster to another, with options for CDRs and voicemails
 
 ### Usage
-Edit `src/clone_tools.hrl`:
-```erlang
--define(TARGET, "http://127.0.0.1:15984/"). %%URL of HAProxy for the new database cluster
--define(SOURCE, "http://127.0.0.1:15984/"). %%A single bigcouch node in the old (current) database cluster.
-```
+Edit [src/clone_tools.hrl](CloneTools/src/clone_tools.hrl) and update the URLs for TARGET and SOURCE.
 
-Optionally change MAX_CR_AGE and MAX_VM_AGE. These control the maximum age (in days) for CDRs and voicemail messages, respectively.  Setting the value to 0 will copy all documents of the indicated type. Setting to any positive integer will copy all documents of that type up to that number of days prior to the execution of the clone tool.  You can also set the value to 'none' to skip all documents of the respective type.
+_(optional)_ Change MAX_CR_AGE and MAX_VM_AGE. These control the maximum age (in days) for CDRs and voicemail messages, respectively. Setting the value to 0 will copy all documents of the indicated type. Setting to any positive integer will copy all documents of that type up to that number of days prior to the execution of the clone tool.  You can also set the value to 'none' to skip all documents of the respective type.
 
-In the clone tools directory run:
+_(optional)_ Change DEAD_ACCOUNT_IDS. This can be set to a list of account ids that may still be in the hierarchy after removing the accounts.  This will blindly remove any id in the list from any pvt_tree.
+
+Save the clone_tools.hrl file and in the [clone tools directory](CloneTools/) run:
 ```bash
 make clean;make;./clone.sh
 ```
