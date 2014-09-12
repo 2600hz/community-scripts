@@ -86,6 +86,7 @@ interactive() {
 
 dbg " : configuring freeswitch : "
 
+check_root
 check_lock
 get_default_cookie
 

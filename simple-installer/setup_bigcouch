@@ -121,6 +121,7 @@ interactive() {
 
 dbg " : configuring bigcouch : "
 
+check_root
 check_lock $lockfile
 get_default_cookie
 

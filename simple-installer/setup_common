@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -o nounset
-
 default_cookie=""
 system_hostname=""
 
@@ -49,14 +47,15 @@ ip_fqdn_regex="$ip_address_regex|$fqdn_regex"
 #Safety stuff (must be root, lockfile functions, trap and clean_exit function)
 
 #ensure this is all being run by root
-if [[ $EUID -ne 0 ]]; then
-   echo -e "${red}ERROR:${NC}"
-   echo -e "${yellow}This script must be executed by a ${red}root${yellow} or ${red}sudo user${NC}"
-   echo -e "${yellow}You can rerun the script as root by issuing  'su' or 'sudo ${0}'${NC}"
-   echo -e "${red}EXITING due to insufficent privileges${NC}"
-   exit 1
-fi
-
+check_root(){
+  if [[ $EUID -ne 0 ]]; then
+     error "insufficient permissions"
+     warn "This script must be executed by a ${red}root${yellow} or a ${red}sudo user${NC}"
+     warn "You can rerun the script as root by issuing  'su' or 'sudo ${0}'${NC}"
+     warn "EXITING due to insufficent privileges"
+     exit 1
+  fi
+}
 #
 #  Lock file functions.
 #
@@ -73,8 +72,7 @@ clear_lock(){
 
 check_lock(){
     if [ -e $lockfile ]; then
-        error "Another instance of this script appears to be running, you can remove manually with 'rm ${lockfile}', EXITING!"
-        exit 1;
+        error_exit "Another instance of this script appears to be running, you can remove manually with 'rm ${lockfile}', EXITING!"
     else
         set_lock $lockfile
     fi
@@ -82,7 +80,7 @@ check_lock(){
 
 #exit paths which clear lock
 clean_exit(){
-    echo "Completed $0"
+    echo "$0 Successfully completed run"
     clear_lock $lockfile
     echo -e -n "${NC}"
     trap - EXIT

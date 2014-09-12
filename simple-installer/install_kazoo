@@ -104,7 +104,7 @@ clear_lock(){
 
 check_lock(){
     if [ -e $lockfile ]; then
-        error "Another instance of this script appears to be running, found lockfile at $lockx  file, EXITING!"
+        error "Another instance of this script appears to be running, found lockfile at $lockfile, EXITING!"
         exit; 
     else 
         set_lock
@@ -203,7 +203,7 @@ set_package(){
 
 
 set_release(){
-    release_version=$1
+    local release_version=$1
 
     if [[ $release_version =~ [Ss]table ]];then
       install_release=$stable_release
@@ -308,7 +308,7 @@ set_hostname(){
     sed -i "s/HOSTNAME=.*/HOSTNAME=$fqdn/g" /etc/sysconfig/network
     echo "$fqdn" > /etc/hostname
 
-    echo "Rebooting system due to hostname change, brb!"
+    warn "Rebooting system due to hostname change, brb!"
     clear_lock
     reboot 
     exit
@@ -385,12 +385,12 @@ repo_ask(){
 }
 
 repo_disable(){
-    info "Disabling all repos for 2600hz*"
+    dbg "Disabling all repos for 2600hz*"
     yum-config-manager --disable 2600hz* &> $install_log || error_exit "repo_disable failed!"
 }
 
 repo_add(){
-    info "Adding 2600hz repo from $1"
+    dbg "Adding 2600hz repo from $1"
     repo_file=$(echo -n $1| sed -n "s|.*/\(.*.repo\)|\1|p")
    
     [ -e /etc/yum.repos.d/$1 ] && rm /etc/yum.repos.d/$1 
@@ -399,7 +399,7 @@ repo_add(){
 }
 
 repo_enable(){
-    info "Enabling repo $1"
+    dbg "Enabling repo $1"
     yum-config-manager --enable $1 &> $install_log || error_exit "repo_enable failed enabling repo $1"
 }
 
@@ -552,14 +552,13 @@ install_prereqs
 ! [[ ${install_source:-} ]] && main_menu
 
 
-if [[ "$install_source" == "repo" ]];then
-    
+if [[ "$install_source" == "repo" ]];then   
     ! [[ ${install_repo_url:-}  ]] && repo_ask 
-  
+    
     repo_add $install_repo_url
     get_available_versions
     
-    ! [[ ${package:-}  ]] && repo_menu 
+    ! [[ ${install_release:-}  ]] && repo_menu 
     
     repo_disable 
     repo_enable $install_release
@@ -574,16 +573,15 @@ fi
 
 install_packages 
 
-dbg "Installed kazoo using version ${install_version:-} [$install_release, $install_base] from $install_repo_url"
+info "Installed kazoo using version ${install_version:-} [$install_release, $install_base] from $install_repo_url"
 dbg "Starting setup..."
 
 arg=""
 
 [[ ${all_in_one:-} ]] && arg="-a"
 
-
 for item in ${!selected_packages[@]};do
-   dbg "setting up package $item"
+   info "Going to setup package $item"
    arg="$arg -i $item "
 done
 

@@ -87,7 +87,7 @@ set_dispatcher(){
     while read line;do
         if [[ $line =~ [[:digit:]]+[[:space:]]sip.* ]];then
             for dispatch in "${dispatch_list[@]}";do
-                info "Adding dispatcher line to $kamailio_dispatcher file - ${dispatch}"
+                dbg "Adding dispatcher line to $kamailio_dispatcher file - ${dispatch}"
                 echo "${dispatch}" >> $tempfile
             done
             #dispatcher file ends with these entries
@@ -121,7 +121,7 @@ interactive(){
 }
 
 dbg " : configuring kamailio : "
-
+check_root
 check_lock
 get_system_hostname
 ask_ip_selection

@@ -15,7 +15,7 @@ dir="/opt/kazoo_install/"
 all_in_one=""
 
 wait_apps_running(){
-    dbg "Waiting for Whapps and ecallmgr to start by polling: ${NC}/opt/kazoo/utils/sup/sup whapps_controller list_apps"
+    dbg "Waiting for whapps to start by polling: ${NC}/opt/kazoo/utils/sup/sup whapps_controller list_apps"
 
     while
     /opt/kazoo/utils/sup/sup whapps_controller list_apps &> /dev/null
@@ -24,7 +24,7 @@ wait_apps_running(){
         continue
     done
 
-    dbg "Waiting for Whapps and ecallmgr to start by polling: ${NC}/opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes"
+    dbg "Waiting for ecallmgr to start by polling: ${NC}/opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes"
 
     while
     /opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes &> /dev/null
@@ -39,7 +39,7 @@ handle_args(){
     while getopts "ai:" opt;do
         case $opt in
             i)
-                echo "Installer requested setup of package $OPTARG"
+                dbg "Installer requested setup of package $OPTARG"
                 install_list["$OPTARG"]=1
                 ;;
             a)
@@ -72,7 +72,7 @@ do_final_steps(){
         /sbin/service haproxy restart || error_exit "haproxy restart failed"
     fi 
 
-    #TODO: SETUP IP TABLES PER SERVICE!!!!!!
+    #TODO: SETUP BASIC IP TABLES ENTRIES PER SERVICE!!!!!!
     warn "Dude, We are stopping IP tables, that means your shields are down brother, might wanna do something about it!!"
     service iptables stop 
 
@@ -144,11 +144,11 @@ do_final_steps(){
     fi 
     
     if [[ ${install_list['kazoo-ui']:-} ]]; then
-        echo "You can access the kazoo-ui by going to http://$system_ip_address/kazoo-ui"
+        info "You can access the kazoo-ui by going to http://$system_ip_address/kazoo-ui"
     fi
 
 }
-
+check_root
 check_lock
 handle_args $@
 ask_ip_selection
@@ -156,7 +156,7 @@ get_system_hostname
 [ ${all_in_one:-} ] && generate_erlang_cookie
 do_setup
 do_final_steps
-echo "INSTALL COMPLETE!"
+info "INSTALL COMPLETE!"
 clean_exit
 
 

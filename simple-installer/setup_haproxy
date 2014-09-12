@@ -106,13 +106,13 @@ set_proxies(){
         elif [[ $line =~ ^server ]];then
             if [[  ${data_flag:-} ]];then 
                 for config in "${proxies_data[@]}";do
-                    info "Adding proxy line for data to $haproxy_config file - $config"
+                    dbg "Adding proxy line for data to $haproxy_config file - $config"
                     echo "$config" >> $tempfile
                 done
                 data_flag=""
             elif [[ ${mgr_flag:-} ]];then 
                 for config in "${proxies_mgr[@]}";do
-                    info "Adding proxy line for mgr to $haproxy_config file - $config"
+                    dbg "Adding proxy line for mgr to $haproxy_config file - $config"
                     echo "$config" >> $tempfile
                 done
                 mgr_flag=""
@@ -130,8 +130,8 @@ interactive() {
 }
 
 dbg " : configuring Kazoo-UI : "
-
-check_lock $lockfile
+check_root
+check_lock 
 
 get_system_hostname
 
@@ -157,6 +157,6 @@ dbg "Applying HAProxy configuration..."
 
 set_proxies
 
-clean_exit $lockfile
+clean_exit 
 
 

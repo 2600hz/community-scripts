@@ -50,11 +50,11 @@ interactive() {
     ask url
 }
 
-ask_ip_selection
-
 dbg " : configuring Kazoo-UI : "
+check_root
+check_lock 
 
-check_lock $lockfile
+ask_ip_selection
 
 if [[ ${1:-} =~ -a ]];then
     all_in_one=1
@@ -72,7 +72,7 @@ dbg "Applying Kazoo-UI configuration..."
 
 set_value url $url
 
-clean_exit $lockfile
+clean_exit
 
 
 

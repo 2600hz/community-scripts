@@ -50,6 +50,7 @@ interactive(){
 
 dbg " : configuring rabbitmq : "
 
+check_root
 check_lock
 
 if [[ ${1:-} =~ -a ]];then
