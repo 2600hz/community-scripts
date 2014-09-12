@@ -163,19 +163,19 @@ cat <<"EOT"
 
 
 EOT
+
 echo -e ${NC}
 echo
  
 }
 
 usage(){
-    echo "USAGE: $1"
-    echo "$0 <options>"
+    error "${1:-}"
+    echo "USAGE: $0 <options>"
     echo "-v enables verbose printing"
     echo "-s <local|repo>"
     echo "-u <repo URL>"
     echo "-r <Stable|Staging|Latest>"
-    echo "-p <all_in_one|kazoo|kamailio|freeswitch|bigcouch|kazoo-ui|haproxy>"
     echo "-h <hostname>"
     error_exit $1
 }
@@ -194,7 +194,7 @@ set_package(){
     elif [[ ${packages[$pack]:-} ]];then
        selected_packages["$pack"]=${packages["$pack"]}
     else 
-       usage "Invalid release argument specified!"
+       usage "Invalid package argument specified!"
     fi
 
     package_flag=1
@@ -251,6 +251,9 @@ handle_args(){
            *) usage "Unknown option $opt selected cannot continue!"
               ;;
       esac
+      #only all in one is supported for this type install. 
+      set_package all_in_one
+
   done
 
 }
