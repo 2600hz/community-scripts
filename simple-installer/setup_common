@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 
-<<<<<<< Updated upstream
-=======
-set -o nounset
-
->>>>>>> Stashed changes
 default_cookie=""
 system_hostname=""
 
