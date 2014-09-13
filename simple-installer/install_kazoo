@@ -13,6 +13,8 @@ install_release=""
 install_base=""
 all_in_one=""
 
+auto_pilot=""
+
 #re
 hostname_check_re="(?=^.{4,255}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}$)"
 
@@ -253,10 +255,25 @@ handle_args(){
       esac
       #only all in one is supported for this type install. 
       set_package all_in_one
+      auto_pilot=1
 
   done
 
 }
+
+confirm(){
+   question=$1
+   echo -e "${blue}$question${NC}"
+   read answer
+
+   if [[ $answer =~ ^[yYnN] ]];then 
+       return
+   else 
+      warn "Unknown option $answer - please enter either '${red}y${yellow}' or '${red}n${yellow}'!" 
+      confirm $@
+   fi
+}
+
 
 check_hostname(){
    echo "$1" | grep -P $hostname_check_re &> $install_log || return 1
@@ -276,11 +293,11 @@ set_hostname(){
     if [[ $? -eq 0 ]];then
         return
     else
-        echo "Uh oh! This system does not yet have a fully qualified hostname."
-        echo "This must be a valid FQDN for kazoo to work properly."
-        echo "please set a fully qualified domain name for the hostname."
-        echo "this step requires a system reboot"
-        echo "example: test.2600hz.com" 
+        warn "Uh oh! This system does not yet have a fully qualified hostname."
+        warn "This must be a valid FQDN for kazoo to work properly."
+        warn "please set a fully qualified domain name for the hostname."
+        warn "this step requires a system reboot"
+        warn "example: test.2600hz.com" 
     fi
 
     if [[ ${system_hostname:-} ]];then
@@ -307,6 +324,12 @@ set_hostname(){
     sed -i "s/^::1 .*/::1  $fqdn localhost localhost.localdomain localhost6 localhost6.localdomain6/" /etc/hosts
     sed -i "s/HOSTNAME=.*/HOSTNAME=$fqdn/g" /etc/sysconfig/network
     echo "$fqdn" > /etc/hostname
+    
+    if ! [[  ${auto_pilot} ]];then 
+        local answer=""
+        confirm  "Do you want to reboot? [y|n]"
+        [[ ${answer:-} =~ [nN] ]] && return
+    fi
 
     warn "Rebooting system due to hostname change, brb!"
     clear_lock
