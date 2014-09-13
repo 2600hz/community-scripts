@@ -104,11 +104,7 @@ clear_lock(){
 
 check_lock(){
     if [ -e $lockfile ]; then
-<<<<<<< Updated upstream
         error "Another instance of this script appears to be running, found lockfile at $lockfile, EXITING!"
-=======
-        error "Another instance of this script appears to be running, found lockfile at $lockx  file, EXITING!"
->>>>>>> Stashed changes
         exit; 
     else 
         set_lock
