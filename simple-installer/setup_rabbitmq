@@ -12,13 +12,8 @@ lockfile="/var/lock/subsys/setup_rabbitmq.lockfile"
 rabbitmq_env_conf="/etc/kazoo/rabbitmq/rabbitmq-env.conf"
 
 . /opt/kazoo_install/setup_common
-trap clean_exit SIGHUP SIGTERM 
+trap error_exit SIGHUP SIGTERM EXIT
 trap int_exit SIGINT SIGQUIT
-trap clean_exit EXIT
-
-
-
-
 
 ################################################################################
 # set_value NOTE:
@@ -40,13 +35,13 @@ trap clean_exit EXIT
 # *_ref      - the ref to the variable used to store the user requested value
 ################################################################################
 
-#KAMAILIO IP ADDRESS
+#Rabbit IP ADDRESS
 ip_address=""
 ip_address_dbg="setting $rabbitmq_env_conf -  = TOKEN"
 ip_address_cmd="sed -i 's|NODE_IP_ADDRESS=.*|NODE_IP_ADDRESS=TOKEN|' $rabbitmq_env_conf"
 ip_address_question="Please enter the IP address that rabbitmq-server shoud use for listening: "
-ip_address_re=".*"
-ip_address_hint="IP ADDRESS!"
+ip_address_re="$ip_address_regex"
+ip_address_hint="This is typically 0.0.0.0 to listen on all IP addresses"
 ip_address_ref="ip_address"
 
 interactive(){
@@ -55,6 +50,7 @@ interactive(){
 
 dbg " : configuring rabbitmq : "
 
+check_root
 check_lock
 
 if [[ ${1:-} =~ -a ]];then
@@ -73,7 +69,5 @@ dbg "Applying rabbitmq configuration..."
 
 
 set_value ip_address $ip_address
-
-set_dispatcher
 
 clean_exit 

@@ -6,11 +6,14 @@ set -o nounset
 lockfile="/var/lock/subsys/setup_haproxy.lockfile"
 
 . /opt/kazoo_install/setup_common
-trap error_exit SIGHUP SIGTERM ERR
+trap error_exit SIGHUP SIGTERM ERR EXIT
 trap int_exit SIGINT SIGQUIT
-trap clean_exit EXIT
 
+#
+# VARS
+#
 
+#File to edit
 haproxy_config="/etc/kazoo/haproxy/haproxy.cfg"
 
 ################################################################################
@@ -32,6 +35,12 @@ haproxy_config="/etc/kazoo/haproxy/haproxy.cfg"
 # *_hint     - the hint to provide in case of blank line, ? or invalid parameter
 # *_ref      - the ref to the variable used to store the user requested value
 ################################################################################
+# some regexes are provided for conveniance and readability in the setup_common lib
+#  url_regex - matches valid http and https urls with optional port specified
+#  ip_address_regex - matches valid ip addresses
+#  fqdn_regex - matches fully qualified domain names
+#  ip_fqdn_regex - matches ip OR fully qualified domain names
+##################################################################################
 
 #HAPROXY PROXY ARRAYS (you gotta keep em seperated)
 declare -a proxies_data
@@ -40,7 +49,7 @@ declare -a proxies_mgr
 
 fqdn=""
 fqdn_question="Please enter your bigcouch FQDN: "
-fqdn_re=".*"
+fqdn_re="$fqdn_regex"
 fqdn_hint="Fully qualified domain name for bigcouch HA proxy config"
 fqdn_ref="fqdn"
 
@@ -70,7 +79,7 @@ ask_proxies(){
         proxies_data+=("$config_data")
         proxies_mgr+=("$config_mgr")
         local answer 
-        confirm "Do you want to add another bigcouch fqdn to proxy list? ['y' to add another server]"
+        confirm "Do you want to add another bigcouch fqdn to proxy list? [y|n]?"
         if [[ $answer =~ ^[yY] ]];then
             continue
         else
@@ -97,13 +106,13 @@ set_proxies(){
         elif [[ $line =~ ^server ]];then
             if [[  ${data_flag:-} ]];then 
                 for config in "${proxies_data[@]}";do
-                    info "Adding proxy line for data to $haproxy_config file - $config"
+                    dbg "Adding proxy line for data to $haproxy_config file - $config"
                     echo "$config" >> $tempfile
                 done
                 data_flag=""
             elif [[ ${mgr_flag:-} ]];then 
                 for config in "${proxies_mgr[@]}";do
-                    info "Adding proxy line for mgr to $haproxy_config file - $config"
+                    dbg "Adding proxy line for mgr to $haproxy_config file - $config"
                     echo "$config" >> $tempfile
                 done
                 mgr_flag=""
@@ -121,8 +130,8 @@ interactive() {
 }
 
 dbg " : configuring Kazoo-UI : "
-
-check_lock $lockfile
+check_root
+check_lock 
 
 get_system_hostname
 
@@ -148,6 +157,6 @@ dbg "Applying HAProxy configuration..."
 
 set_proxies
 
-clean_exit $lockfile
+clean_exit 
 
 

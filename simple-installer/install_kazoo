@@ -13,6 +13,8 @@ install_release=""
 install_base=""
 all_in_one=""
 
+auto_pilot=""
+
 #re
 hostname_check_re="(?=^.{4,255}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}$)"
 
@@ -104,7 +106,7 @@ clear_lock(){
 
 check_lock(){
     if [ -e $lockfile ]; then
-        error "Another instance of this script appears to be running, found lockfile at $locfile, EXITING!"
+        error "Another instance of this script appears to be running, found lockfile at $lockfile, EXITING!"
         exit; 
     else 
         set_lock
@@ -163,19 +165,19 @@ cat <<"EOT"
 
 
 EOT
+
 echo -e ${NC}
 echo
  
 }
 
 usage(){
-    echo "USAGE: $1"
-    echo "$0 <options>"
+    error "${1:-}"
+    echo "USAGE: $0 <options>"
     echo "-v enables verbose printing"
     echo "-s <local|repo>"
     echo "-u <repo URL>"
     echo "-r <Stable|Staging|Latest>"
-    echo "-p <all_in_one|kazoo|kamailio|freeswitch|bigcouch|kazoo-ui|haproxy>"
     echo "-h <hostname>"
     error_exit $1
 }
@@ -194,7 +196,7 @@ set_package(){
     elif [[ ${packages[$pack]:-} ]];then
        selected_packages["$pack"]=${packages["$pack"]}
     else 
-       usage "Invalid release argument specified!"
+       usage "Invalid package argument specified!"
     fi
 
     package_flag=1
@@ -203,7 +205,7 @@ set_package(){
 
 
 set_release(){
-    release_version=$1
+    local release_version=$1
 
     if [[ $release_version =~ [Ss]table ]];then
       install_release=$stable_release
@@ -227,6 +229,7 @@ set_repo_url(){
     url=$1
     #TODO: ERROR HANDLING
     install_repo_url=$url
+
 }
 
 set_install_source(){
@@ -240,20 +243,37 @@ set_install_source(){
 }
 
 handle_args(){
-  while getopts vs:u:r:p:h: opt; do
+  while getopts vs:u:r:h: opt; do
       case $opt in
            v) DEBUG=$OPTARG ;;
            s) set_install_source $OPTARG ;;
            u) set_repo_url $OPTARG ;;
            r) set_release $OPTARG ;;
-           p) set_package $OPTARG ;;
-           h) system_hostname=$OPTARG ;;
+           h) system_hostname=$OPTARG ;; 
            *) usage "Unknown option $opt selected cannot continue!"
               ;;
       esac
+      #only all in one is supported for this type install. 
+      set_package all_in_one
+      auto_pilot=1
+
   done
 
 }
+
+confirm(){
+   question=$1
+   echo -e "${blue}$question${NC}"
+   read answer
+
+   if [[ $answer =~ ^[yYnN] ]];then 
+       return
+   else 
+      warn "Unknown option $answer - please enter either '${red}y${yellow}' or '${red}n${yellow}'!" 
+      confirm $@
+   fi
+}
+
 
 check_hostname(){
    echo "$1" | grep -P $hostname_check_re &> $install_log || return 1
@@ -273,10 +293,11 @@ set_hostname(){
     if [[ $? -eq 0 ]];then
         return
     else
-        echo "Uh oh! This system does not yet have a fully qualified hostname."
-        echo "This must be a valid FQDN for kazoo to work properly."
-        echo "please set a fully qualified domain name for the hostname."
-        echo "example: test.2600hz.com" 
+        warn "Uh oh! This system does not yet have a fully qualified hostname."
+        warn "This must be a valid FQDN for kazoo to work properly."
+        warn "please set a fully qualified domain name for the hostname."
+        warn "this step requires a system reboot"
+        warn "example: test.2600hz.com" 
     fi
 
     if [[ ${system_hostname:-} ]];then
@@ -303,8 +324,14 @@ set_hostname(){
     sed -i "s/^::1 .*/::1  $fqdn localhost localhost.localdomain localhost6 localhost6.localdomain6/" /etc/hosts
     sed -i "s/HOSTNAME=.*/HOSTNAME=$fqdn/g" /etc/sysconfig/network
     echo "$fqdn" > /etc/hostname
+    
+    if ! [[  ${auto_pilot} ]];then 
+        local answer=""
+        confirm  "Do you want to reboot? [y|n]"
+        [[ ${answer:-} =~ [nN] ]] && return
+    fi
 
-    echo "Rebooting system due to hostname change, brb!"
+    warn "Rebooting system due to hostname change, brb!"
     clear_lock
     reboot 
     exit
@@ -313,10 +340,11 @@ set_hostname(){
 
 
 ping_test(){
-   repo_url = $1
-   
-   repo_host=$(repo_url/%.*\/)
-   if ping -c 1 $1 >> $install_log ; then
+   repo_url=$1
+
+   repo_host=$(echo $repo_url | sed -n "s|^https*://\(.*\)/.*|\1|p")
+   if ping -q -c 5 $repo_host ; then
+       dbg "host $repo_host is reachable"
        return 
    else 
        error "You do not appear to be able to reach the server repo.2600hz.com from this server"
@@ -324,7 +352,7 @@ ping_test(){
        echo ""
        read -p "do you want to exit and fix your network connection before contiuting [Y/N]: " answer
        case $answer in 
-           [yY]*) clean_exit ;;
+           [yY]*) error_exit "Exiting script due user input, good hunting!" ;;
            [nN]*) return ;;
            *) ping_test ;;
        esac
@@ -374,28 +402,28 @@ repo_ask(){
         repo_ask
     fi
 
+    ping_test $install_repo_url
+
     info "Selected $install_repo_url for installation source" 
 }
 
 repo_disable(){
-    info "Disabling all repos for 2600hz*"
-    yum-config-manager --disable 2600hz* &> $install_log
+    dbg "Disabling all repos for 2600hz*"
+    yum-config-manager --disable 2600hz* &> $install_log || error_exit "repo_disable failed!"
 }
 
 repo_add(){
-    info "Adding 2600hz repo from $1"
+    dbg "Adding 2600hz repo from $1"
     repo_file=$(echo -n $1| sed -n "s|.*/\(.*.repo\)|\1|p")
    
-    if [ -e /etc/yum.repos.d/$1 ];then
-        rm /etc/yum.repos.d/$1
-    fi 
-
-    yum-config-manager --add-repo $1 &> $install_log
+    [ -e /etc/yum.repos.d/$1 ] && rm /etc/yum.repos.d/$1 
+    
+    yum-config-manager --add-repo $1 &> $install_log || error_exit "repo_add failed to add $1!"
 }
 
 repo_enable(){
-    info "Enabling repo $1"
-    yum-config-manager --enable $1 &> $install_log
+    dbg "Enabling repo $1"
+    yum-config-manager --enable $1 &> $install_log || error_exit "repo_enable failed enabling repo $1"
 }
 
 repo_list_version(){
@@ -464,6 +492,9 @@ package_menu(){
     options+=("all_in_one" )
     
     for package in ${!packages[@]};do
+        
+        [[ "$package" == "rabbitmq" ]] && continue
+
         options+=($package)
     done
 
@@ -471,8 +502,6 @@ package_menu(){
 
     echo "Please choose the services to install on this server."
     PS3="enter one pacakge number per line, select option for done when complete: "
-   
-    echo "${options[@]}"
 
     select opt in "${options[@]}"; do
         case $opt in
@@ -504,7 +533,7 @@ package_menu(){
  
 install_prereqs(){
    dbg "Installing prerequisite packages."
-   yum install -y yum-utils curl sed rsyslog &> $install_log
+   yum install -y yum-utils curl sed rsyslog &> $install_log || error_exit "install prereqs failed!"
 }
 
 
@@ -514,20 +543,16 @@ install_packages(){
 
     for pack in ${selected_packages[@]};
     do
-        if [ -z "${pack:-}" ];then
-            continue 
-        fi
+        [ -z "${pack:-}" ] && continue 
+        
 
         dbg "installing package $pack" 
-        yum install -y $pack >> $install_log
-        if [ $? -ne 0 ];then
-            error_exit "$pack install failed, exiting!"
-        fi 
+        yum install -y $pack >> $install_log || error_exit "yum install $pack failed"
     done
 
     if [[ ${selected_packages['kazoo-ui']:-} ]];then
         dbg "Installing httpd to support kazoo-ui"
-        yum install -y httpd >> $install_log
+        yum install -y httpd >> $install_log || error_exit "yum install httpd failed"
         if [ $? -ne 0 ];then
             error_exit "httpd install failed, exiting!"
         fi 
@@ -547,21 +572,16 @@ banner
 set_hostname
 install_prereqs
 
-if ! [[ ${install_source:-} ]];then
-    main_menu
-fi
+! [[ ${install_source:-} ]] && main_menu
 
-if [[ "$install_source" == "repo" ]];then
-    if ! [[ ${install_repo_url:-}  ]];then
-        repo_ask 
-    fi
 
+if [[ "$install_source" == "repo" ]];then   
+    ! [[ ${install_repo_url:-}  ]] && repo_ask 
+    
     repo_add $install_repo_url
     get_available_versions
     
-    if ! [[ ${package:-}  ]];then
-        repo_menu 
-    fi
+    ! [[ ${install_release:-}  ]] && repo_menu 
     
     repo_disable 
     repo_enable $install_release
@@ -571,22 +591,20 @@ elif [[ "$install_source" == "local" ]];then
     repo_enable "2600hz.local"
 fi  
 
-if ! [[ ${package_flag:-} ]];then
-    package_menu 
-fi 
+! [[ ${package_flag:-} ]] && package_menu 
+
 
 install_packages 
 
-dbg "Installed kazoo using version ${install_version:-} [$install_release, $install_base] from $install_repo_url"
+info "Installed kazoo using version ${install_version:-} [$install_release, $install_base] from $install_repo_url"
 dbg "Starting setup..."
 
 arg=""
-if [[ $all_in_one ]];then
-    arg="-a"
-fi
+
+[[ ${all_in_one:-} ]] && arg="-a"
 
 for item in ${!selected_packages[@]};do
-   dbg "setting up package $item"
+   info "Going to setup package $item"
    arg="$arg -i $item "
 done
 
@@ -594,7 +612,8 @@ dbg "running ./opt/kazoo_install/setup_packages $arg"
 
 /opt/kazoo_install/setup_packages $arg 
 
-sed -i "s|.*install_kazoo.*||" /root/.bashrc 
-#sed -i "s|.*install_kazoo.*||" /etc/init.d/rc.local 
+[ -e /root/.bashrc ] && sed -i "s|.*install_kazoo.*||" /root/.bashrc 
+
+[ -e /etc/init.d/rc.local ] && sed -i "s|.*install_kazoo.*||" /etc/init.d/rc.local 
 
 clean_exit 

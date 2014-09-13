@@ -6,9 +6,8 @@ set -o nounset
 lockfile="/var/lock/subsys/setup_kazoo-ui.lockfile"
 . /opt/kazoo_install/setup_common
 
-trap clean_exit SIGHUP SIGTERM 
+trap clean_exit SIGHUP SIGTERM EXIT
 trap int_exit SIGINT SIGQUIT
-trap clean_exit EXIT
 
 kazoo_ui_conf_js="/var/www/html/kazoo-ui/config/config.js"
 
@@ -31,13 +30,19 @@ kazoo_ui_conf_js="/var/www/html/kazoo-ui/config/config.js"
 # *_hint     - the hint to provide in case of blank line, ? or invalid parameter
 # *_ref      - the ref to the variable used to store the user requested value
 ################################################################################
+# some regexes are provided for conveniance and readability in the setup_common lib
+#  url_regex - matches valid http and https urls with optional port specified
+#  ip_address_regex - matches valid ip addresses
+#  fqdn_regex - matches fully qualified domain names
+#  ip_fqdn_regex - matches ip OR fully qualified domain names
+##################################################################################
 
 #KAZOO-UI URL
 url=""
 url_dbg="setting kazoo-ui URL address for accessing API - TOKEN"
 url_cmd="sed -i \"s|api_url: .*/v1|api_url: 'TOKEN/v1|g\" $kazoo_ui_conf_js"
 url_question="Please enter your api url (EXAMPLE: http://10.0.0.1:8000): "
-url_re="http[s]*://.*:[0-9]+"
+url_re="$url_regex"
 url_hint="Full URL for api, this IP should be the same as your kazoo server"
 url_ref="url"
 
@@ -45,11 +50,11 @@ interactive() {
     ask url
 }
 
-ask_ip_selection
-
 dbg " : configuring Kazoo-UI : "
+check_root
+check_lock 
 
-check_lock $lockfile
+ask_ip_selection
 
 if [[ ${1:-} =~ -a ]];then
     all_in_one=1
@@ -67,7 +72,7 @@ dbg "Applying Kazoo-UI configuration..."
 
 set_value url $url
 
-clean_exit $lockfile
+clean_exit
 
 
 
