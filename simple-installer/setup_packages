@@ -135,7 +135,7 @@ do_final_steps(){
         chkconfig rabbitmq-server on    || error "failed to enable rabbitmq chkconfig"
         chkconfig kz-whistle_apps on    || error "failed to enable rabbitmq-server to chkconfig"
         chkconfig kz-ecallmgr on        || error "failed to enable rabbitmq-to chkconfig"
-    fi
+    fi  
     [[ ${install_list['bigcouch']:-} ]] && chkconfig bigcouch on || error "failed to enable bigcouch in chkconfig"
     [[ ${install_list['haproxy']:-} ]]  && chkconfig haproxy on  || error "failed to enable haproxy in chkconfig"
     [[ ${install_list['kazoo-ui']:-} ]] && chkconfig httpd on    || error "failed to enable httpd in chkconfig"

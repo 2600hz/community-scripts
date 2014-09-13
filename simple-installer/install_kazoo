@@ -104,7 +104,11 @@ clear_lock(){
 
 check_lock(){
     if [ -e $lockfile ]; then
+<<<<<<< Updated upstream
         error "Another instance of this script appears to be running, found lockfile at $lockfile, EXITING!"
+=======
+        error "Another instance of this script appears to be running, found lockfile at $lockx  file, EXITING!"
+>>>>>>> Stashed changes
         exit; 
     else 
         set_lock
@@ -385,7 +389,11 @@ repo_ask(){
 }
 
 repo_disable(){
+<<<<<<< Updated upstream
     dbg "Disabling all repos for 2600hz*"
+=======
+    info "Disabling all repos for 2600hz*"
+>>>>>>> Stashed changes
     yum-config-manager --disable 2600hz* &> $install_log || error_exit "repo_disable failed!"
 }
 
@@ -399,7 +407,11 @@ repo_add(){
 }
 
 repo_enable(){
+<<<<<<< Updated upstream
     dbg "Enabling repo $1"
+=======
+    info "Enabling repo $1"
+>>>>>>> Stashed changes
     yum-config-manager --enable $1 &> $install_log || error_exit "repo_enable failed enabling repo $1"
 }
 
@@ -552,6 +564,7 @@ install_prereqs
 ! [[ ${install_source:-} ]] && main_menu
 
 
+<<<<<<< Updated upstream
 if [[ "$install_source" == "repo" ]];then   
     ! [[ ${install_repo_url:-}  ]] && repo_ask 
     
@@ -559,6 +572,16 @@ if [[ "$install_source" == "repo" ]];then
     get_available_versions
     
     ! [[ ${install_release:-}  ]] && repo_menu 
+=======
+if [[ "$install_source" == "repo" ]];then
+    
+    ! [[ ${install_repo_url:-}  ]] && repo_ask 
+  
+    repo_add $install_repo_url
+    get_available_versions
+    
+    ! [[ ${package:-}  ]] && repo_menu 
+>>>>>>> Stashed changes
     
     repo_disable 
     repo_enable $install_release
@@ -579,6 +602,10 @@ dbg "Starting setup..."
 arg=""
 
 [[ ${all_in_one:-} ]] && arg="-a"
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 
 for item in ${!selected_packages[@]};do
    info "Going to setup package $item"
