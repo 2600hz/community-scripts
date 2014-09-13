@@ -130,6 +130,16 @@ do_final_steps(){
         /sbin/service httpd restart || error_exit "httpd restart failed"
     fi
 
+      dbg "setting services to start on boot"
+    if [[ ${install_list['kazoo']:-} ]];then
+        chkconfig rabbitmq-server on    || error "failed to enable rabbitmq chkconfig"
+        chkconfig kz-whistle_apps on    || error "failed to enable rabbitmq-server to chkconfig"
+        chkconfig kz-ecallmgr on        || error "failed to enable rabbitmq-to chkconfig"
+    fi
+    [[ ${install_list['bigcouch']:-} ]] && chkconfig bigcouch on || error "failed to enable bigcouch in chkconfig"
+    [[ ${install_list['haproxy']:-} ]]  && chkconfig haproxy on  || error "failed to enable haproxy in chkconfig"
+    [[ ${install_list['kazoo-ui']:-} ]] && chkconfig httpd on    || error "failed to enable httpd in chkconfig"
+   
 
     if [[ ${install_list['bigcouch']:-} ]];then 
         dbg "Updating all Bigcouch views with: ${NC} sup whapps_maintenance blocking_refresh"
@@ -146,7 +156,6 @@ do_final_steps(){
     if [[ ${install_list['kazoo-ui']:-} ]]; then
         info "You can access the kazoo-ui by going to http://$system_ip_address/kazoo-ui"
     fi
-
 }
 check_root
 check_lock
