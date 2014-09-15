@@ -85,7 +85,7 @@ check_lock(){
 
 #exit paths which clear lock
 clean_exit(){
-    echo "$0 Successfully completed run"
+    #echo "$0 Successfully completed run"
     clear_lock $lockfile
     echo -e -n "${NC}"
     trap - EXIT

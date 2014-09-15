@@ -150,19 +150,19 @@ do_final_steps(){
         /opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav || error_exit "media import command failed"
 
         #Create new account
-        dbg "Created admin account with: ${NC} sup crossbar_maintenance create_account admin sip.${system_hostname} admin admin"
+        dbg "Creating admin account with: ${NC} sup crossbar_maintenance create_account admin sip.${system_hostname} admin admin"
         /opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin "sip.${system_hostname}" admin admin || error_exit "Account creation failed"
         
         info "Created admin account for kazoo with credentials:" 
-        info "Username: admin"
-        info "Password: admin"
-        info "Account:  admin"
-        info "Realm:    sip.${system_hostname}"
+        info "Username: ${green}admin"
+        info "Password: ${green}admin"
+        info "Account:  ${green}admin"
+        info "Realm:    ${green}sip.${system_hostname}"
 
     fi 
     
     if [[ ${install_list['kazoo-ui']:-} ]]; then
-        info "You can access the kazoo-ui by going to http://$system_ip_address/kazoo-ui"
+        info "You can access the kazoo-ui by going to ${green}http://$system_ip_address/kazoo-ui"
     fi
 }
 
@@ -176,7 +176,8 @@ get_system_hostname
 
 do_setup
 do_final_steps
-info "INSTALL COMPLETE!"
+echo 
+info "Installation completed successfully! Welcome to Kazoo!"
 clean_exit
 
 

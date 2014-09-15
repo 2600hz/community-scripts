@@ -163,6 +163,9 @@ cat <<"EOT"
 /_/ |_\__,_/ /___/\____/\____/  /___//____/\____/  
 
 
+Welcome to the kazoo installation script! This script will guide you through the options 
+to configure an all in one kazoo system or any of the kazoo cluster subcompnents. 
+
 EOT
 
 echo -e ${NC}
@@ -482,15 +485,15 @@ repo_menu(){
     select opt in "${options[@]}"; do
         case $opt in
             Stable*)
-                set_release "Stable"
+                set_install_release "Stable"
                 break
                 ;;
             Staging*)
-                set_release "Staging"
+                set_install_release "Staging"
                 break
                 ;;
             Latest*)
-                set_release "Latest"
+                set_install_release "Latest"
                 break
                 ;;
             *)
@@ -560,7 +563,7 @@ install_packages(){
     do
         [ -z "${pack:-}" ] && continue 
 
-        dbg "installing package $pack" 
+        dbg "Installing package $pack" 
         yum install -y $pack >> $install_log || error_exit "yum install $pack failed"
     done
 
