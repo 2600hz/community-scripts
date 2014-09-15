@@ -20,17 +20,17 @@ kazoo_ui_conf_js="/var/www/html/kazoo-ui/config/config.js"
 #ask NOTE:
 # *_question, *_re, *_hint and *_ref are used by ask
 # for getting user input, this allows us to pass one name to ask and do all
-# defined actions requrired to provide help, get input, and save it to a var
+# defined actions required to provide help, get input, and save it to a var
 #### set_value variables #######################################################
 # *_dbg - print statement when setting parameter
 # *_cmd - command to execute
 #### ask variables #############################################################
 # *_question - the question to ask when getting the value from user
-# *_re       - the re to use to validate repsonse
+# *_re       - the re to use to validate response
 # *_hint     - the hint to provide in case of blank line, ? or invalid parameter
 # *_ref      - the ref to the variable used to store the user requested value
 ################################################################################
-# some regexes are provided for conveniance and readability in the setup_common lib
+# some regexes are provided for convenience and readability in the setup_common lib
 #  url_regex - matches valid http and https urls with optional port specified
 #  ip_address_regex - matches valid ip addresses
 #  fqdn_regex - matches fully qualified domain names

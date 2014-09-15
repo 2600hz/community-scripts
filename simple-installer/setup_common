@@ -52,7 +52,7 @@ check_root(){
      error "insufficient permissions"
      warn "This script must be executed by a ${red}root${yellow} or a ${red}sudo user${NC}"
      warn "You can rerun the script as root by issuing  'su' or 'sudo ${0}'${NC}"
-     warn "EXITING due to insufficent privileges"
+     warn "EXITING due to insufficient privileges"
      exit 1
   fi
 }
@@ -243,7 +243,7 @@ ask(){
 
 #
 # recursive function to get yes or no response for $question, 
-# will only accpet y|n as valid options, otherwise loops
+# will only accept y|n as valid options, otherwise loops
 # You should define a local $answer in whatever function calls this. 
 
 confirm(){
