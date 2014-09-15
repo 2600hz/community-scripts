@@ -16,9 +16,9 @@ lockfile="/var/lock/subsys/setup_bigcouch.lockfile"
 #Import common which has all the goodies for handling configuration / questions
 . /opt/kazoo_install/setup_common
 
-trap clean_exit SIGHUP SIGTERM 
+trap error_exit SIGHUP SIGTERM ERR EXIT
 trap int_exit SIGINT SIGQUIT
-trap clean_exit EXIT
+ 
 
 #Files to edit via this script
 bigcouch_local_ini="/etc/kazoo/bigcouch/local.ini"

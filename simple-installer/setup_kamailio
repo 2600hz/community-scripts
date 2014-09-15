@@ -13,7 +13,7 @@ kamailio_local_cfg="/etc/kazoo/kamailio/local.cfg"
 kamailio_dispatcher="/etc/kazoo/kamailio/dbtext/dispatcher"
 
 . /opt/kazoo_install/setup_common
-trap error_exit SIGHUP SIGTERM EXIT
+trap error_exit SIGHUP SIGTERM ERR EXIT
 trap int_exit SIGINT SIGQUIT
 
 declare -a dispatch_list

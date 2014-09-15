@@ -6,7 +6,7 @@ set -o nounset
 lockfile="/var/lock/subsys/setup_kazoo-ui.lockfile"
 . /opt/kazoo_install/setup_common
 
-trap clean_exit SIGHUP SIGTERM EXIT
+trap clean_exit SIGHUP SIGTERM ERR EXIT
 trap int_exit SIGINT SIGQUIT
 
 kazoo_ui_conf_js="/var/www/html/kazoo-ui/config/config.js"

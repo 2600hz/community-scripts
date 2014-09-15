@@ -7,7 +7,7 @@ declare -A install_list
 lockfile="/var/lock/subsys/setup_packages.lockfile"
 . /opt/kazoo_install/setup_common
 
-trap error_exit SIGHUP SIGTERM EXIT
+trap error_exit SIGHUP SIGTERM ERR EXIT
 trap int_exit SIGINT SIGQUIT
 
 dir="/opt/kazoo_install/"

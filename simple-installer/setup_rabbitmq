@@ -12,7 +12,7 @@ lockfile="/var/lock/subsys/setup_rabbitmq.lockfile"
 rabbitmq_env_conf="/etc/kazoo/rabbitmq/rabbitmq-env.conf"
 
 . /opt/kazoo_install/setup_common
-trap error_exit SIGHUP SIGTERM EXIT
+trap error_exit SIGHUP SIGTERM ERR EXIT
 trap int_exit SIGINT SIGQUIT
 
 ################################################################################

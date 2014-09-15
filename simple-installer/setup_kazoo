@@ -7,7 +7,7 @@ lockfile="/var/lock/subsys/setup_kazoo.lockfile"
 
 . /opt/kazoo_install/setup_common
 
-trap clean_exit SIGHUP SIGTERM EXIT
+trap clean_exit SIGHUP SIGTERM ERR EXIT
 trap int_exit SIGINT SIGQUIT
 
 
