@@ -64,6 +64,9 @@ do_setup(){
 }
 
 do_final_steps(){
+    
+    info "Completing installation steps and restarting services!"
+
     if  [[ ${install_list['haproxy']:-} ]]; then
         dbg "Creating symlink to use HA proxy config in /etc/kazoo/haproxy instead of /etc/haproxy"
         rm -rf /etc/haproxy/haproxy.cfg
