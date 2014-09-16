@@ -111,10 +111,6 @@ int_exit(){
     exit 1;
 }
 
-
-#trap to ensure lockfile is removed
-#trap clean_exit SIGHUP SIGTERM SIGINT 
-
 #gets list of ethernet interfaces and puts in array interfaces
 get_interfaces(){
     for interface in `ifconfig | grep Ethernet |cut -d" " -f1`;do
@@ -198,7 +194,7 @@ set_value(){
 
     #run command and log output to $install_log
     dbg $debug_final
-    eval $cmd_final &> $install_log || error_exit "Command $cmd_final failed"
+    eval $cmd_final &>> $install_log || error_exit "Command $cmd_final failed"
 
     #verify command returned success response, throw error if failed
     if [[ $? -ne 0 ]];then
@@ -209,7 +205,7 @@ set_value(){
 check_re(){
    val=$1
    re=$2
-   echo $val | grep -P "$re" &> $install_log || return 1
+   echo $val | grep -P "$re" &>> $install_log || return 1
    return 
 }
 
@@ -240,7 +236,6 @@ ask(){
    eval $ref="$ANSWER"
 }
 
-#
 # recursive function to get yes or no response for $question, 
 # will only accept y|n as valid options, otherwise loops
 # You should define a local $answer in whatever function calls this. 
