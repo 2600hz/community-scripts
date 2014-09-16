@@ -256,7 +256,7 @@ handle_args(){
 }
 
 check_hostname(){
-   echo "$1" | grep -P $hostname_check_re &> $install_log || return 1
+   echo "$1" | grep -P $hostname_check_re &>> $install_log || return 1
    return 
 }
 
@@ -379,7 +379,7 @@ repo_ask(){
 
 repo_disable(){
     info "Disabling all repos for 2600hz*"
-    yum-config-manager --disable 2600hz* &> $install_log
+    yum-config-manager --disable 2600hz* &>> $install_log
 }
 
 repo_add(){
@@ -390,12 +390,12 @@ repo_add(){
         rm /etc/yum.repos.d/$1
     fi 
 
-    yum-config-manager --add-repo $1 &> $install_log
+    yum-config-manager --add-repo $1 &>> $install_log
 }
 
 repo_enable(){
     info "Enabling repo $1"
-    yum-config-manager --enable $1 &> $install_log
+    yum-config-manager --enable $1 &>> $install_log
 }
 
 repo_list_version(){
@@ -504,7 +504,7 @@ package_menu(){
  
 install_prereqs(){
    dbg "Installing prerequisite packages."
-   yum install -y yum-utils curl sed rsyslog &> $install_log
+   yum install -y yum-utils curl sed rsyslog &>> $install_log
 }
 
 

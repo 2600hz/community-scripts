@@ -175,7 +175,7 @@ set_value(){
 
     #run command and log output to $install_log
     dbg $debug_final
-    eval $cmd_final &> $install_log
+    eval $cmd_final &>> $install_log
 
     #verify command returned success response, throw error if failed
     if [[ $? -ne 0 ]];then

@@ -4,6 +4,8 @@ set -o nounset
 
 declare -A install_list
 
+! [[ $HOME ]] && HOME=/root
+
 lockfile="/var/lock/subsys/setup_kazoo.lockfile"
 . /opt/kazoo_install/setup_common
 
@@ -19,7 +21,7 @@ wait_apps_running(){
     dbg "Waiting for Whapps and ecallmgr to start by polling: ${NC}/opt/kazoo/utils/sup/sup whapps_controller list_apps"
 
     while
-    /opt/kazoo/utils/sup/sup whapps_controller list_apps &> /dev/null
+    /opt/kazoo/utils/sup/sup whapps_controller list_apps &>> /dev/null
     (( $? != 0 ))
     do
         continue
@@ -28,7 +30,7 @@ wait_apps_running(){
     dbg "Waiting for Whapps and ecallmgr to start by polling: ${NC}/opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes"
 
     while
-    /opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes &> /dev/null
+    /opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes &>> /dev/null
     (( $? != 0 ))
     do
         continue
