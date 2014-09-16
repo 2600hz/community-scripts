@@ -13,7 +13,7 @@ kamailio_local_cfg="/etc/kazoo/kamailio/local.cfg"
 kamailio_dispatcher="/etc/kazoo/kamailio/dbtext/dispatcher"
 
 . /opt/kazoo_install/setup_common
-trap error_exit SIGHUP SIGTERM EXIT
+trap error_exit SIGHUP SIGTERM ERR EXIT
 trap int_exit SIGINT SIGQUIT
 
 declare -a dispatch_list
@@ -27,17 +27,17 @@ declare -a dispatch_list
 #ask NOTE:
 # *_question, *_re, *_hint and *_ref are used by ask
 # for getting user input, this allows us to pass one name to ask and do all
-# defined actions requrired to provide help, get input, and save it to a var
+# defined actions required to provide help, get input, and save it to a var
 #### set_value variables #######################################################
 # *_dbg - print statement when setting parameter
 # *_cmd - command to execute
 #### ask variables #############################################################
 # *_question - the question to ask when getting the value from user
-# *_re       - the re to use to validate repsonse
+# *_re       - the re to use to validate response
 # *_hint     - the hint to provide in case of blank line, ? or invalid parameter
 # *_ref      - the ref to the variable used to store the user requested value
 ################################################################################
-# some regexes are provided for conveniance and readability in the setup_common lib
+# some regexes are provided for convenience and readability in the setup_common lib
 #  url_regex - matches valid http and https urls with optional port specified
 #  ip_address_regex - matches valid ip addresses
 #  fqdn_regex - matches fully qualified domain names
@@ -48,7 +48,7 @@ declare -a dispatch_list
 ip_address=""
 ip_address_dbg="setting $kamailio_local_cfg - !MY_IP_ADDRESS!TOKEN"
 ip_address_cmd="sed -i 's/!MY_IP_ADDRESS!.*!/!MY_IP_ADDRESS!TOKEN!/g' $kamailio_local_cfg"
-ip_address_question="Please enter the IP address that kamailio shoud use for sip (ip_address): "
+ip_address_question="Please enter the IP address that kamailio should use for sip (ip_address): "
 ip_address_re="$ip_address_regex"
 ip_address_hint="IP ADDRESS!"
 ip_address_ref="ip_address"

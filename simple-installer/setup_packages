@@ -7,7 +7,7 @@ declare -A install_list
 lockfile="/var/lock/subsys/setup_packages.lockfile"
 . /opt/kazoo_install/setup_common
 
-trap error_exit SIGHUP SIGTERM EXIT
+trap error_exit SIGHUP SIGTERM ERR EXIT
 trap int_exit SIGINT SIGQUIT
 
 dir="/opt/kazoo_install/"
@@ -64,8 +64,11 @@ do_setup(){
 }
 
 do_final_steps(){
+    
+    info "Completing installation steps and restarting services!"
+
     if  [[ ${install_list['haproxy']:-} ]]; then
-        dbg "Createing symlink to use HA proxy config in /etc/kazoo/haproxy instead of /etc/haproxy"
+        dbg "Creating symlink to use HA proxy config in /etc/kazoo/haproxy instead of /etc/haproxy"
         rm -rf /etc/haproxy/haproxy.cfg
         ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
         dbg "Restart HAProxy to apply changes with: ${NC} service haproxy restart"
@@ -94,25 +97,25 @@ do_final_steps(){
     fi 
 
     if [[ ${install_list['rabbitmq']:-} ]];then 
-        dbg "Start RabbitMQ with: ${NC} service rabbitmq-server restart"
+        dbg "Restart RabbitMQ with: ${NC} service rabbitmq-server restart"
         /sbin/service rabbitmq-server restart || error_exit "Rabbitqm restart failed"
     fi 
 
     if [[ ${install_list['freeswitch']:-} ]];then 
-        dbg "Start FreeSWITCH with: ${NC} service freeswitch restart"
+        dbg "Restart FreeSWITCH with: ${NC} service freeswitch restart"
         /sbin/service freeswitch restart || error_exit "Freeswitch restart failed"
     fi 
 
-    if [[ ${install_list['bigcouch']:-} ]];then 
+    if [[ ${install_list['kamailio']:-} ]];then 
         dbg "Restart Kamailio to apply the changes with: ${NC} service kamailio restart"
         /sbin/service kamailio restart || error_exit "Kamailio restart failed"
     fi
 
     if [[ ${install_list['kazoo']:-} ]];then 
-        dbg "Start Whapps with: ${NC} service kz-whistle_apps restart"
+        dbg "Retart Whapps with: ${NC} service kz-whistle_apps restart"
         /sbin/service kz-whistle_apps restart
 
-        dbg "Start ecallmgr with: ${NC} service kz-ecallmgr restart"
+        dbg "restart ecallmgr with: ${NC} service kz-ecallmgr restart"
         /sbin/service kz-ecallmgr restart || error_exit "kz-ecallmgr restart failed"
 
         wait_apps_running
@@ -121,16 +124,17 @@ do_final_steps(){
         /sbin/service kz-whistle_apps status 
     fi  
 
+    if [[ ${install_list['freeswitch']:-} ]];then 
+        dbg "Attach ecallmgr to FreeSWITCH with: ${NC} sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@${system_hostname}"
+        /opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@${system_hostname}
+    fi 
 
-    dbg "Attach ecallmgr to FreeSWITCH with: ${NC} sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@${system_hostname}"
-    /opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@${system_hostname}
-
-    if [[ ${install_list['kazoo']:-} ]];then 
+    if [[ ${install_list['kazoo-ui']:-} ]];then 
         dbg "Starting httpd"
         /sbin/service httpd restart || error_exit "httpd restart failed"
     fi
 
-      dbg "setting services to start on boot"
+    dbg "Setting services to start on boot"
     if [[ ${install_list['kazoo']:-} ]];then
         chkconfig rabbitmq-server on    || error "failed to enable rabbitmq chkconfig"
         chkconfig kz-whistle_apps on    || error "failed to enable rabbitmq-server to chkconfig"
@@ -149,23 +153,34 @@ do_final_steps(){
         /opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav || error_exit "media import command failed"
 
         #Create new account
-        dbg "Created admin account with: ${NC} sup crossbar_maintenance create_account admin sip.${system_hostname} admin admin"
+        dbg "Creating admin account with: ${NC} sup crossbar_maintenance create_account admin sip.${system_hostname} admin admin"
         /opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin "sip.${system_hostname}" admin admin || error_exit "Account creation failed"
+        
+        info "Created admin account for kazoo with credentials:" 
+        info "Username: ${green}admin"
+        info "Password: ${green}admin"
+        info "Account:  ${green}admin"
+        info "Realm:    ${green}sip.${system_hostname}"
+
     fi 
     
     if [[ ${install_list['kazoo-ui']:-} ]]; then
-        info "You can access the kazoo-ui by going to http://$system_ip_address/kazoo-ui"
+        info "You can access the kazoo-ui by going to ${green}http://$system_ip_address/kazoo-ui"
     fi
 }
+
 check_root
 check_lock
 handle_args $@
 ask_ip_selection
 get_system_hostname
+#auto generate erlang cookie on all-in-one installs
 [ ${all_in_one:-} ] && generate_erlang_cookie
+
 do_setup
 do_final_steps
-info "INSTALL COMPLETE!"
+echo 
+info "Installation completed successfully! Welcome to Kazoo!"
 clean_exit
 
 
