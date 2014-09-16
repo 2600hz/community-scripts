@@ -594,7 +594,7 @@ dbg "running ./opt/kazoo_install/setup_packages $arg"
 
 /opt/kazoo_install/setup_packages $arg 
 
-sed -i "s|.*install_kazoo.*||" /root/.bashrc 
-#sed -i "s|.*install_kazoo.*||" /etc/init.d/rc.local 
+[[ -e /root/.bashrc ]] && sed -i "s|.*install_kazoo.*||" /root/.bashrc 
+[[ -e /etc/rc.d/rc.local ]] && sed -i "s|.*install_kazoo.*||" /etc/rc.d/rc.local 
 
 clean_exit 
