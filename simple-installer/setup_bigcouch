@@ -13,12 +13,12 @@ lockfile="/var/lock/subsys/setup_bigcouch.lockfile"
 # VARS
 #
 
-#Import common which has all the goodies for handling configuration/questions
+#Import common which has all the goodies for handling configuration / questions
 . /opt/kazoo_install/setup_common
 
-trap clean_exit SIGHUP SIGTERM 
+trap error_exit SIGHUP SIGTERM ERR EXIT
 trap int_exit SIGINT SIGQUIT
-trap clean_exit EXIT
+ 
 
 #Files to edit via this script
 bigcouch_local_ini="/etc/kazoo/bigcouch/local.ini"
@@ -35,16 +35,22 @@ default_cookie=""
 #ask NOTE:
 # *_question, *_re, *_hint and *_ref are used by ask
 # for getting user input, this allows us to pass one name to ask and do all
-# defined actions requrired to provide help, get input, and save it to a var
+# defined actions required to provide help, get input, and save it to a var
 #### set_value variables #######################################################
 # *_dbg - print statement when setting parameter
 # *_cmd - command to execute
 #### ask variables #############################################################
 # *_question - the question to ask when getting the value from user
-# *_re       - the re to use to validate repsonse
+# *_re       - the re to use to validate response
 # *_hint     - the hint to provide in case of blank line, ? or invalid parameter
 # *_ref      - the ref to the variable used to store the user requested value
 ################################################################################
+# some regexes are provided for convenience and readability in the setup_common lib
+#  url_regex - matches valid http and https urls with optional port specified
+#  ip_address_regex - matches valid ip addresses
+#  fqdn_regex - matches fully qualified domain names
+#  ip_fqdn_regex - matches ip OR fully qualified domain names
+##################################################################################
 
 #BIGCOUCH COOKIE
 cookie=""
@@ -119,7 +125,7 @@ interactive() {
     ask q
 }
 
-dbg " : configuring bigcouch : "
+info " : Configuring bigcouch : "
 
 check_root
 check_lock $lockfile

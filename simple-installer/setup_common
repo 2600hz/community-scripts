@@ -5,7 +5,11 @@ system_hostname=""
 
 install_log="/var/log/kazoo_install.log"
 
-echo "Starting $0"
+declare -a errors_encountered
+
+args_save=$(printf '"%s" '  "$@") 
+echo "ARGS: $0 $args_save"
+
 
 #print formatting and logging func
 green='\e[0;32m'
@@ -18,14 +22,20 @@ dbg(){
     echo -e " - ${green}$* ${NC} "
     echo -e " - ${green}$* ${NC} " >> $install_log
 }
+
 info(){
     echo -e "${blue}$* ${NC} "
     echo -e "${blue}$* ${NC} " >> $install_log
 }
+
 error(){
-    echo -e "${red}ERROR: $* ${NC} " 1>&2
-    echo -e "${red}ERROR: $* ${NC} " >> $install_log
+    error_msg="$*"
+    error="${red}ERROR: ${error_msg} ${NC} "
+    echo -e "$error" 1>&2
+    echo -e "$error" >> $install_log
+    errors_encountered+=("$error")   
 }
+
 warn(){
     echo -e "${yellow}$* ${NC} ";
     echo -e "${yellow}$* ${NC} " >> $install_log
@@ -52,7 +62,7 @@ check_root(){
      error "insufficient permissions"
      warn "This script must be executed by a ${red}root${yellow} or a ${red}sudo user${NC}"
      warn "You can rerun the script as root by issuing  'su' or 'sudo ${0}'${NC}"
-     warn "EXITING due to insufficent privileges"
+     warn "EXITING due to insufficient privileges"
      exit 1
   fi
 }
@@ -85,7 +95,13 @@ check_lock(){
 
 #exit paths which clear lock
 clean_exit(){
-    echo "$0 Successfully completed run"
+    if [ ${#errors_encountered[@]:-0} -gt 0 ];then
+        echo -e "${red}NOTE: ${#errors_encountered[@]} errors were encountered during kazoo setup${NC}"
+        for error in "${errors_encountered[@]}"; do
+            echo -e "$error"                                  
+        done      
+    fi
+
     clear_lock $lockfile
     echo -e -n "${NC}"
     trap - EXIT
@@ -95,7 +111,7 @@ clean_exit(){
 error_exit(){
     error "exiting due to: ${@:-"unknown error"}"
     echo 
-    echo -e "NOTE: ${yellow}you can restart this script manually with ${green}$0 ${NC}"
+    echo -e "NOTE: ${yellow}you can restart this script manually with ${green}$0 ${args_save}${NC}"
     clear_lock $lockfile
     echo -e -n "${NC}"
     trap - EXIT
@@ -104,8 +120,9 @@ error_exit(){
 }
 
 int_exit(){
-    echo -e "${yellow}EXITING: due to user interrupt (ctrl-C|ctrl-\)! ${NC}"
-    echo -e "${yellow}you can restart this script manually with ${green}$0 ${NC} "
+    echo 
+    echo -e "${yellow}EXITING: due to user interrupt! ${NC}"
+    echo -e "${yellow}you can restart this script manually with ${green}$0 ${args_save} ${NC} "
     clear_lock $lockfile
     echo -e -n "${NC}"
     trap - EXIT
@@ -243,7 +260,7 @@ ask(){
 
 #
 # recursive function to get yes or no response for $question, 
-# will only accpet y|n as valid options, otherwise loops
+# will only accept y|n as valid options, otherwise loops
 # You should define a local $answer in whatever function calls this. 
 
 confirm(){
