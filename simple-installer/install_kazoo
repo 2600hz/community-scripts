@@ -195,7 +195,7 @@ usage(){
 check_re(){
    check_val=$1
    re=$2
-   echo "$check_val" | grep -P $re &> $install_log || return 1
+   echo "$check_val" | grep -P $re &>> $install_log || return 1
    return 
 }
 
@@ -371,7 +371,7 @@ repo_ask(){
 
 repo_disable(){
     dbg "Disabling all repos for 2600hz*"
-    yum-config-manager --disable 2600hz* &> $install_log || error_exit "repo_disable failed!"
+    yum-config-manager --disable 2600hz* &>> $install_log || error_exit "repo_disable failed!"
 }
 
 repo_add(){
@@ -380,12 +380,12 @@ repo_add(){
    
     [ -e /etc/yum.repos.d/$1 ] && rm /etc/yum.repos.d/$1 
     
-    yum-config-manager --add-repo $1 &> $install_log || error_exit "repo_add failed to add $1!"
+    yum-config-manager --add-repo $1 &>> $install_log || error_exit "repo_add failed to add $1!"
 }
 
 repo_enable(){
     dbg "Enabling repo $1"
-    yum-config-manager --enable $1 &> $install_log || error_exit "repo_enable failed enabling repo $1"
+    yum-config-manager --enable $1 &>> $install_log || error_exit "repo_enable failed enabling repo $1"
 }
 
 repo_list_version(){
@@ -551,7 +551,7 @@ package_menu(){
  
 install_prereqs(){
    dbg "Installing prerequisite packages."
-   yum install -y yum-utils curl sed rsyslog &> $install_log || error_exit "install prerequisite failed!"
+   yum install -y yum-utils curl sed rsyslog &>> $install_log || error_exit "install prerequisite failed!"
 }
 
 
@@ -628,7 +628,6 @@ dbg "running ./opt/kazoo_install/setup_packages $arg"
 /opt/kazoo_install/setup_packages $arg 
 
 [ -e /root/.bashrc ] && sed -i "s|.*install_kazoo.*||" /root/.bashrc 
-
-[ -e /etc/init.d/rc.local ] && sed -i "s|.*install_kazoo.*||" /etc/init.d/rc.local 
+[ -e /etc/rc.d/rc.local ] && sed -i "s|.*install_kazoo.*||" /etc/rc.d/rc.local 
 
 clean_exit 
