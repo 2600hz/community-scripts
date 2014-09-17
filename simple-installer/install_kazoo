@@ -365,11 +365,11 @@ set_hostname(){
 
 repo_ask(){
     local answer
-    confirm "Do you want to use repo.2600hz.com for your repo [y|n]?" 
+    confirm "Do you want to install from repo.2600hz.com ('n' to use your own repo) [y|n]?" 
 
     if [[ $answer =~ [nN] ]]; then 
-        echo "Please enter the yum .repo file url for your repo or hit enter for default: "
-        read  -p "[$default_repo_url]: " selected_repo
+        echo "Please enter the yum .repo file url for your repo or hit enter for default. "
+        read  -p "For example \"$default_repo_url\": " selected_repo
         set_repo_url $selected_repo
         [ $? -ne 0 ] && repo_ask
     else 
