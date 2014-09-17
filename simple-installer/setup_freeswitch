@@ -51,7 +51,7 @@ cookie_file="/etc/kazoo/erlang.cookie"
 
 #MOD-KAZOO COOKIE
 cookie=""
-cookie_dbg="Setting freeswitch mod-kazoo erl $freeswitch_kazoo_conf - cookie value = TOKEN"
+cookie_dbg="Setting freeswitch mod-kazoo $freeswitch_kazoo_conf - cookie value = TOKEN"
 cookie_cmd="sed -i 's|<param name=\"cookie\" value=\".*\"|<param name=\"cookie\" value=\"TOKEN\"|' $freeswitch_kazoo_conf"
 cookie_question="Please enter the erlang cookie for kazoo"
 cookie_re=".*"
@@ -84,7 +84,7 @@ interactive() {
    ask sip_ip_address 
 }
 
-dbg " : configuring freeswitch : "
+info " : Configuring FreeSWITCH : "
 
 check_root
 check_lock

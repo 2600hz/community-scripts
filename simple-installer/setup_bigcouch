@@ -125,7 +125,7 @@ interactive() {
     ask q
 }
 
-dbg " : configuring bigcouch : "
+info " : Configuring bigcouch : "
 
 check_root
 check_lock $lockfile

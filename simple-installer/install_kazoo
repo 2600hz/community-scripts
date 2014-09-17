@@ -70,19 +70,21 @@ dbg(){
     echo -e " - ${green}$* ${NC} " 
     echo -e " - ${green}$* ${NC} " >> $install_log 
 }
+
 info(){ 
     echo -e "${blue}$* ${NC} "; 
     echo -e "${blue}$* ${NC} " >> $install_log
 }
+
 error(){ 
     echo -e "${red}ERROR: $* ${NC} "; 
     echo -e "${red}ERROR: $* ${NC} " >> $install_log 
 }
+
 warn(){ 
     echo -e "${yellow}$* ${NC} "; 
     echo -e "${yellow}$* ${NC} " >> $install_log 
 }
-
 
 #You must be root to run this script!
 if [[ $EUID -ne 0 ]]; then
@@ -166,6 +168,8 @@ cat <<"EOT"
 Welcome to the kazoo installation script! This script will guide you through the options 
 to configure an all in one kazoo system or any of the kazoo cluster subcompnents. 
 
+======================================================================================== 
+
 EOT
 
 echo -e ${NC}
@@ -178,9 +182,9 @@ usage(){
     echo " $0 -a <options> - for auto pilot install"
     echo " $0 <options>    - interactive installation"
     echo "options:"
-    echo "-a                         - auto-pilot install, requires -s -u -r and -f arguments"
+    echo "-a                         - auto-pilot install, requires -s -r and -f arguments"
     echo "-s <local|network>         - The source for the kazoo install media"
-    echo "-u <yum repository URL>    - The yum repository  URL to use for installation "
+    echo "-u <yum repository URL>    - Optionally specify a custom yum repository  URL to use for installation"
     echo "-r <Stable|Staging|Latest> - The release version to select on the repo"
     echo "-f <hostname>              - The system hostname to set during install"
     echo "-h                         - displays this menu"
@@ -201,7 +205,7 @@ check_re(){
 
 confirm(){
    question=$1
-   echo -e "${blue}$question${NC}"
+   info "$question"
    read answer
 
    if [[ $answer =~ ^[yYnN] ]];then 
@@ -214,16 +218,18 @@ confirm(){
 
 ping_test(){
    repo_url=$1
-
    repo_host=$(echo $repo_url | sed -n "s|^https*://\(.*\)/.*|\1|p")
-   if ping -q -c 5 $repo_host ; then
+ 
+   dbg "pinging $repo_host to verify it is reacable"   
+
+   if ping -q -c 5 $repo_host &>> $install_log; then
        dbg "host $repo_host is reachable"
        return 
    else 
        warn "You do not appear to be able to reach the server $repo_host from this server!"
        echo ""
        local answer
-       confirm "do you want to exit and fix your network connection before continuing [Y/N]: " 
+       
        case $answer in 
            [yY]*) error_exit "Exiting script due user input, good hunting!" ;;
            [nN]*) return ;;
@@ -306,11 +312,12 @@ set_hostname(){
     if [ $? -eq 0 ];then
         return
     else
-        warn "Uh oh! This system does not yet have a fully qualified hostname."
+        warn "This system has hostname ${red}$current_system_hostname"
+        warn "This is not a fuly qualified domain name!"
         warn "This must be a valid FQDN for kazoo to work properly."
-        warn "please set a fully qualified domain name for the hostname."
-        warn "this step requires a system reboot"
-        warn "example: test.2600hz.com" 
+        warn "example FQDN: test.2600hz.com" 
+        warn "Please set a fully qualified domain name for the hostname."
+        warn "Upon completion of this step a system reboot is recommended"
     fi
 
     if [[ ${system_hostname:-} ]];then
@@ -320,7 +327,7 @@ set_hostname(){
       valid=false
       while [ $valid == false ]
       do
-          echo "Enter Fully Qualified Domain Name: "
+          info "Please enter fully qualified domain name (FQDN) for this server: "
           read fqdn
           check_re $fqdn $hostname_check_re
           if [ $? -eq 0 ];then
@@ -357,12 +364,17 @@ set_hostname(){
 #
 
 repo_ask(){
-    echo "Please enter the yum .repo file url for your repo or hit enter for default: "
-    read  -p "[$default_repo_url]: " selected_repo
+    local answer
+    confirm "Do you want to install from repo.2600hz.com ('n' to use your own repo) [y|n]?" 
 
-    set_repo_url $selected_repo
-    
-    [ $? -ne 0 ] && repo_ask
+    if [[ $answer =~ [nN] ]]; then 
+        echo "Please enter the yum .repo file url for your repo or hit enter for default. "
+        read  -p "For example \"$default_repo_url\": " selected_repo
+        set_repo_url $selected_repo
+        [ $? -ne 0 ] && repo_ask
+    else 
+        set_repo_url $default_repo_url
+    fi 
 
     ping_test $install_repo_url
 
@@ -508,7 +520,7 @@ repo_menu(){
 
 package_menu(){
     echo 
-    info "===========================: Package Selection :=================================="
+    info "==========================: Package Selection :=================================="
     echo 
     
     local -a options
@@ -530,7 +542,7 @@ package_menu(){
     select opt in "${options[@]}"; do
         case $opt in
             all_in_one)
-                info "all in one chosen, completed package selection"
+                info "all_in_one selected, all packages will be installed"
                 set_package $opt
                 break  
                 ;;

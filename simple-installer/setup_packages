@@ -45,7 +45,7 @@ handle_args(){
                 install_list["$OPTARG"]=1
                 ;;
             a)
-                echo "All in one selected, setting up all services."
+                dbg "All in one selected, setting up all services."
                 all_in_one=1
                 ;;
         esac
@@ -56,7 +56,8 @@ handle_args(){
 do_setup(){
     for package in ${!install_list[@]}; do
         package_setup="${dir}setup_${package}"
-        dbg "Running ${NC} $package_setup ${green}for package${NC} $package"
+        dbg "Running setup script: ${NC} $package_setup ${green}for package:${NC} $package"
+ 
         if [[ -n $all_in_one ]]; then 
            $package_setup -a || error_exit "package setup failed for $package in script: ${NC}$package_setup"
         else
@@ -67,73 +68,76 @@ do_setup(){
 
 do_final_steps(){
     
-    info "Completing installation steps and restarting services!"
+    info " : Restarting services : "
 
     if  [[ ${install_list['haproxy']:-} ]]; then
         dbg "Creating symlink to use HA proxy config in /etc/kazoo/haproxy instead of /etc/haproxy"
         rm -rf /etc/haproxy/haproxy.cfg
-        ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg
-        dbg "Restart HAProxy to apply changes with: ${NC} service haproxy restart"
-        /sbin/service haproxy restart || error_exit "haproxy restart failed"
+        ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg \
+             || error "create symlink failed, you can manually create with: ${NC}ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg" 
+        dbg "Restart HAProxy to apply changes with: ${NC}service haproxy restart"
+        /sbin/service haproxy restart || error "haproxy restart failed, restart with: ${NC}service haproxy restart"
     fi 
 
     #TODO: SETUP BASIC IP TABLES ENTRIES PER SERVICE!!!!!!
-    warn "Dude, We are stopping IP tables, that means your shields are down brother, might wanna do something about it!!"
+    warn "WARNING:  Stopping IP tables, that means your shields are down! You might wanna do something about it!!"
     service iptables stop 
 
     #start services
-    dbg "Restart Rsyslog"
-    /sbin/service rsyslog restart || error "rsyslon failed to start"
+    dbg "Restart rsyslog with: ${NC}service rsyslog restart"
+    /sbin/service rsyslog restart || error "rsyslog failed to start, restart with: ${NC}service rsyslog restart"
 
 
     if [[ ${install_list['freeswitch']:-} ]];then
         dbg "Start EPMD with: ${NC} /usr/bin/epmd -daemon"
-        /usr/bin/epmd -daemon || error_exit "epmd daemon failed to start"
+        /usr/bin/epmd -daemon || error "epmd daemon failed to start, retstart with: ${NC}/usr/bin/epmd -daemon"
         dbg "Epmd status is: "
         netstat -ptlen | grep epmd
     fi 
 
     if [[ ${install_list['bigcouch']:-} ]];then 
-        dbg "Restart Bigcouch to apply changes with:${NC} service bigcouch restart"
-        /sbin/service bigcouch restart || error_exit "Bigcouch restart failed"
+        dbg "Restart Bigcouch to apply changes with: ${NC}service bigcouch restart"
+        /sbin/service bigcouch restart || error "Bigcouch restart failed, restart with: /sbin/service bigcouch restart"
     fi 
 
     if [[ ${install_list['rabbitmq']:-} ]];then 
         dbg "Restart RabbitMQ with: ${NC} service rabbitmq-server restart"
-        /sbin/service rabbitmq-server restart || error_exit "Rabbitqm restart failed"
+        /sbin/service rabbitmq-server restart || error "Rabbitqm restart failed, restart with:  ${NC}service rabbitmq-server restart"
     fi 
 
     if [[ ${install_list['freeswitch']:-} ]];then 
-        dbg "Restart FreeSWITCH with: ${NC} service freeswitch restart"
-        /sbin/service freeswitch restart || error_exit "Freeswitch restart failed"
+        dbg "Restart FreeSWITCH with: ${NC}service freeswitch restart"
+        /sbin/service freeswitch restart || error "Freeswitch restart failed, restart with: ${NC}service freeswitch restart"
     fi 
 
     if [[ ${install_list['kamailio']:-} ]];then 
-        dbg "Restart Kamailio to apply the changes with: ${NC} service kamailio restart"
-        /sbin/service kamailio restart || error_exit "Kamailio restart failed"
+        dbg "Restart Kamailio to apply the changes with: ${NC}service kamailio restart"
+        /sbin/service kamailio restart || error "Kamailio restart failed, restart with: ${NC}service kamailio restart"
     fi
 
     if [[ ${install_list['kazoo']:-} ]];then 
-        dbg "Retart Whapps with: ${NC} service kz-whistle_apps restart"
-        /sbin/service kz-whistle_apps restart
+        dbg "Restarting Whapps with: ${NC}service kz-whistle_apps restart"
+        /sbin/service kz-whistle_apps restart || error "kz-whistle_apps restart failed, restart with: ${NC}service kz-whistle_apps restart" 
 
-        dbg "restart ecallmgr with: ${NC} service kz-ecallmgr restart"
-        /sbin/service kz-ecallmgr restart || error_exit "kz-ecallmgr restart failed"
-
+        dbg "Restarting ecallmgr with: ${NC}service kz-ecallmgr restart"
+        /sbin/service kz-ecallmgr restart || error "kz-ecallmgr restart failed, restart with: ${NC}service kz-ecallmgr restart"
         wait_apps_running
 
-        dbg "Displaying whistle_apps status with: ${NC} service kz-whistle_apps status "
+        dbg "Displaying whistle_apps status with: ${NC}service kz-whistle_apps status "
         /sbin/service kz-whistle_apps status 
     fi  
 
-    if [[ ${install_list['freeswitch']:-} ]];then 
+    if [[ ${install_list['freeswitch']:-} &&  ${install_list['kazoo']:-} ]];then 
         dbg "Attach ecallmgr to FreeSWITCH with: ${NC} sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@${system_hostname}"
-        /opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@${system_hostname}
+        /opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@${system_hostname} \
+            || error "Attach ecallmgr failed, rerun with: ${NC}sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@${system_hostname}"
+    elif [[ ${install_list['freeswitch']:-} ]];then
+        info "Attach this freeswitch to your cluster from any apps sever by running: ${NC}sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@${system_hostname}" 
     fi 
 
     if [[ ${install_list['kazoo-ui']:-} ]];then 
-        dbg "Starting httpd"
-        /sbin/service httpd restart || error_exit "httpd restart failed"
+        dbg "Starting httpd with: ${NC}service httpd restart"
+        /sbin/service httpd restart || error "httpd restart failed, restart with: ${NC}service httpd restart"
     fi
 
     dbg "Setting services to start on boot"
@@ -145,18 +149,20 @@ do_final_steps(){
     [[ ${install_list['bigcouch']:-} ]] && chkconfig bigcouch on || error "failed to enable bigcouch in chkconfig"
     [[ ${install_list['haproxy']:-} ]]  && chkconfig haproxy on  || error "failed to enable haproxy in chkconfig"
     [[ ${install_list['kazoo-ui']:-} ]] && chkconfig httpd on    || error "failed to enable httpd in chkconfig"
-   
 
     if [[ ${install_list['bigcouch']:-} ]];then 
         dbg "Updating all Bigcouch views with: ${NC} sup whapps_maintenance blocking_refresh"
-        /opt/kazoo/utils/sup/sup whapps_maintenance blocking_refresh || error_exit "sup whapps_maintenance blocking_refresh failed!"
+        /opt/kazoo/utils/sup/sup whapps_maintenance blocking_refresh \
+            || error "whapps blocking_refresh failed! rerun with: ${NC} sup whapps_maintenance blocking_refresh"
 
         dbg "Importing media files with: ${NC} /opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav "
-        /opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav || error_exit "media import command failed"
+        /opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav \
+            || error "media import failed rerun with: /opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav"
 
         #Create new account
         dbg "Creating admin account with: ${NC} sup crossbar_maintenance create_account admin sip.${system_hostname} admin admin"
-        /opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin "sip.${system_hostname}" admin admin || error_exit "Account creation failed"
+        /opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin "sip.${system_hostname}" admin admin \
+            || error "Account creation failed, you can create an account with:  ${NC} sup crossbar_maintenance create_account admin sip.${system_hostname} admin admin"
         
         info "Created admin account for kazoo with credentials:" 
         info "Username: ${green}admin"
@@ -182,7 +188,7 @@ get_system_hostname
 do_setup
 do_final_steps
 echo 
-info "Installation completed successfully! Welcome to Kazoo!"
+info "Installation completed! Welcome to Kazoo!"
 clean_exit
 
 

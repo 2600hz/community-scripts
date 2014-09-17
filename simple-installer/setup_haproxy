@@ -129,7 +129,7 @@ interactive() {
     ask_proxies
 }
 
-dbg " : configuring Kazoo-UI : "
+info " : Configuring Kazoo-UI : "
 check_root
 check_lock 
 

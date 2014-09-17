@@ -103,7 +103,7 @@ interactive(){
     ask ip_address
 }
 
-
+info " : Configuring Kazoo : "
 check_root
 check_lock
 get_default_cookie
