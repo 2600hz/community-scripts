@@ -7,9 +7,7 @@ install_log="/var/log/kazoo_install.log"
 
 declare -a errors_encountered
 
-args_save=$(printf '"%s" '  "$@") 
-echo "ARGS: $0 $args_save"
-
+args_save=$(printf '%s '  "$@") 
 
 #print formatting and logging func
 green='\e[0;32m'
