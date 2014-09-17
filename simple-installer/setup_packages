@@ -4,7 +4,7 @@ set -o nounset
 
 declare -A install_list
 
-! [[ $HOME ]] && HOME=/root
+! [[ ${HOME:-} ]] && HOME=/root
 
 lockfile="/var/lock/subsys/setup_packages.lockfile"
 . /opt/kazoo_install/setup_common
@@ -82,6 +82,8 @@ do_final_steps(){
     #TODO: SETUP BASIC IP TABLES ENTRIES PER SERVICE!!!!!!
     warn "WARNING:  Stopping IP tables, that means your shields are down! You might wanna do something about it!!"
     service iptables stop 
+    chkconfig iptables off 
+
 
     #start services
     dbg "Restart rsyslog with: ${NC}service rsyslog restart"
