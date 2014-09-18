@@ -348,9 +348,9 @@ set_hostname(){
     shortname=${fqdn%%\.*}
 
     sed -i "s/^127.0.0.1 .*/127.0.0.1  $fqdn $shortname localhost localhost.localdomain localhost4 localhost4.localdomain4/" /etc/hosts
-    sed -i "s/^::1 .*/::1  $fqdn localhost localhost.localdomain localhost6 localhost6.localdomain6/" /etc/hosts
+    sed -i "s/^::1 .*/::1  $fqdn $shortname localhost localhost.localdomain localhost6 localhost6.localdomain6/" /etc/hosts
     sed -i "s/HOSTNAME=.*/HOSTNAME=$fqdn/g" /etc/sysconfig/network
-    echo "$fqdn" > /etc/hostname
+    echo "$shortname" > /etc/hostname
     
     #if we are not auto-pilot, ask user if it is ok to reboot
     if ! [[  ${all_in_one} ]];then 
