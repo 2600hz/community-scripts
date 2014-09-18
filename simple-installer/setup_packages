@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 set -o nounset
+ceol=`tput el`
+
 
 declare -A install_list
 
@@ -124,9 +126,9 @@ update_bigcouch_views_dbg="Updating all Bigcouch views with: ${NC}sup whapps_mai
 update_bigcouch_views_cmd="/opt/kazoo/utils/sup/sup whapps_maintenance blocking_refresh"
 update_bigcouch_views_error="whapps blocking_refresh failed! rerun with: ${NC}sup whapps_maintenance blocking_refresh"
 
-import_media_files_dbg="Importing media files with: ${NC}/opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/\*.wav "
-import_media_files_cmd="/opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav"
-import_media_files_error="media import failed rerun with: /opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/\  *.wav"
+import_media_files_dbg="Importing media files with: ${NC}sup whistle_media_maintenance import_prompts /opt/kazoo/system_media/ en-us "
+import_media_files_cmd="sup whistle_media_maintenance import_prompts /opt/kazoo/system_media/ en-us"
+import_media_files_error="Media prompt import failed with: ${NC}sup whistle_media_maintenance import_prompts /opt/kazoo/system_media/ en-us"
 
 create_account_dbg="Creating admin account with: ${NC}sup crossbar_maintenance create_account admin sip.TOKEN admin admin"
 create_account_cmd="/opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin \"sip.TOKEN\:39\" admin admin"
@@ -210,7 +212,11 @@ run_cmd(){
 
     #run command and log output to $install_log
     dbg $debug_final
-    eval $cmd_final &>> $install_log || error "$error"
+
+    while read line; do 
+        echo -en "\r${ceol}${line:-}"
+    done < <(eval $cmd_final 2> $install_log || error "$error")
+     echo
 
 }
 

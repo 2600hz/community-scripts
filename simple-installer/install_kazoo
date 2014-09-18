@@ -3,6 +3,8 @@
 set -o nounset
 
 DEBUG="0"
+ceol=`tput el`
+
 default_repo_url="http://repo.2600hz.com/2600hz.repo"
 
 #global values for menu selection
@@ -85,6 +87,9 @@ warn(){
     echo -e "${yellow}$* ${NC} "; 
     echo -e "${yellow}$* ${NC} " >> $install_log 
 }
+
+
+
 
 #You must be root to run this script!
 if [[ $EUID -ne 0 ]]; then
@@ -220,7 +225,7 @@ ping_test(){
    repo_url=$1
    repo_host=$(echo $repo_url | sed -n "s|^https*://\(.*\)/.*|\1|p")
  
-   dbg "pinging $repo_host to verify it is reacable"   
+   dbg "pinging $repo_host to verify it is reachable"   
 
    if ping -q -c 5 $repo_host &>> $install_log; then
        dbg "host $repo_host is reachable"
@@ -304,7 +309,7 @@ set_hostname(){
 
     fqdn=""
 
-    current_system_hostname=$(hostname -f)
+    current_system_hostname=$(hostname -f || echo unknown)
     dbg "Current system hostname is $current_system_hostname"
     
     check_re $current_system_hostname $hostname_check_re
@@ -340,7 +345,9 @@ set_hostname(){
 
     #set the new hostname
     hostname $fqdn
-    sed -i "s/^127.0.0.1 .*/127.0.0.1  $fqdn localhost localhost.localdomain localhost4 localhost4.localdomain4/" /etc/hosts
+    shortname=${fqdn%%\.*}
+
+    sed -i "s/^127.0.0.1 .*/127.0.0.1  $fqdn $shortname localhost localhost.localdomain localhost4 localhost4.localdomain4/" /etc/hosts
     sed -i "s/^::1 .*/::1  $fqdn localhost localhost.localdomain localhost6 localhost6.localdomain6/" /etc/hosts
     sed -i "s/HOSTNAME=.*/HOSTNAME=$fqdn/g" /etc/sysconfig/network
     echo "$fqdn" > /etc/hostname
@@ -561,11 +568,22 @@ package_menu(){
 
 }
  
-install_prereqs(){
-   dbg "Installing prerequisite packages."
-   yum install -y yum-utils curl sed rsyslog &>> $install_log || error_exit "install prerequisite failed!"
+yum_loop(){
+    pack="$1"
+    ret=0
+    while read line; do
+        echo -en "\r${ceol}$line"         
+    done < <(yum install -y $pack )
+    ret=$?
+    echo
+    
+ 
 }
 
+install_prereqs(){
+    dbg "Installing prerequisite packages."
+    yum_loop "yum-utils curl sed rsyslog" || error_exit "install prerequisite failed!"
+}
 
 install_packages(){
 
@@ -574,17 +592,14 @@ install_packages(){
     for pack in ${selected_packages[@]};
     do
         [ -z "${pack:-}" ] && continue 
-
+        
         dbg "Installing package $pack" 
-        yum install -y $pack >> $install_log || error_exit "yum install $pack failed"
+        yum_loop $pack || error_exit "Package install failed for $pack"
     done
 
     if [[ ${selected_packages['kazoo-ui']:-} ]];then
         dbg "Installing httpd to support kazoo-ui"
-        yum install -y httpd >> $install_log || error_exit "yum install httpd failed"
-        if [ $? -ne 0 ];then
-            error_exit "httpd install failed, exiting!"
-        fi 
+        yum_loop "httpd" || error_exit "Package install failed for http"
     fi 
 }
 
