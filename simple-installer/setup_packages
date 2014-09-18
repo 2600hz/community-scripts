@@ -4,7 +4,7 @@ set -o nounset
 
 declare -A install_list
 
-! [[ ${HOME:-} ]] && HOME=/root
+! [[ ${HOME:-} ]] && export HOME=/root
 
 lockfile="/var/lock/subsys/setup_packages.lockfile"
 . /opt/kazoo_install/setup_common
