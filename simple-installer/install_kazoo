@@ -573,11 +573,10 @@ yum_loop(){
     ret=0
     while read line; do
         echo -en "\r${ceol}$line"         
-    done < <(yum install -y $pack )
-    ret=$?
+    done < <(yum install -y $pack 2> $install_log || ret=1  )
     echo
-    
- 
+   
+    return $ret   
 }
 
 install_prereqs(){
