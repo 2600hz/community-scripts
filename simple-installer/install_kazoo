@@ -113,7 +113,8 @@ clear_lock(){
 
 check_lock(){
     if [ -e $lockfile ]; then
-        error "Another instance of this script appears to be running, found lockfile at $lockfile, EXITING!"
+        error "Another instance of this script appears to be running,"
+        error "    found lockfile at $lockfile, EXITING!"
         exit; 
     else 
         set_lock
@@ -123,7 +124,8 @@ check_lock(){
 int_exit(){
     echo -e "${NC}"
     echo ${@:-}
-    echo "Exiting installer due to user interrupt, you can rerun with $0"
+    echo "Exiting installer due to user interrupt"
+    echo "    you can rerun with $0"
     clear_lock
     trap - EXIT
     exit 
@@ -170,10 +172,12 @@ cat <<"EOT"
 /_/ |_\__,_/ /___/\____/\____/  /___//____/\____/  
 
 
-Welcome to the kazoo installation script! This script will guide you through the options 
-to configure an all in one kazoo system or any of the kazoo cluster subcompnents. 
+Welcome to the kazoo installation script!
 
-======================================================================================== 
+This script will guide you through the options to configure an all-in-one kazoo 
+system or a node in a larger kazoo cluster.
+
+================================================================================
 
 EOT
 
@@ -210,14 +214,16 @@ check_re(){
 
 confirm(){
    question=$1
-   info "$question"
-   read answer
+   echo -ne "${blue}${question}${NC}"
+   read -p " " -n 1 answer
 
-   if [[ $answer =~ ^[yYnN] ]];then 
+   if [[ $answer =~ ^[yYnN] ]];then
+	   echo
        return
    else 
-      warn "Unknown option $answer - please enter either '${red}y${yellow}' or '${red}n${yellow}'!" 
-      confirm $@
+      warn "Unknown option '$answer'"
+      warn "    Please enter either '${red}y${yellow}' or '${red}n${yellow}'!" 
+      confirm "$question"
    fi
 }
 
@@ -372,7 +378,7 @@ set_hostname(){
 
 repo_ask(){
     local answer
-    confirm "Do you want to install from repo.2600hz.com ('n' to use your own repo) [y|n]?" 
+    confirm "Install from repo.2600hz.com ('n' to use your own repo) [y|n]?" 
 
     if [[ $answer =~ [nN] ]]; then 
         echo "Please enter the yum .repo file url for your repo or hit enter for default. "
@@ -465,7 +471,7 @@ handle_args(){
 
 main_menu(){
     printf "\n"
-    info  "=========================: Installation Source :=================================="
+    info  "============================: Installation Source :============================="
     printf "\n"
     info "Please choose a source to use for your kazoo installation."
     PS3='Source: '
@@ -495,7 +501,7 @@ main_menu(){
 
 repo_menu(){
     printf "\n"
-    info  "=========================: Version Selection :=================================="
+    info  "=============================: Version Selection :=============================="
     printf "\n"
     info 'Please choose the release version to install. '
 
@@ -527,7 +533,7 @@ repo_menu(){
 
 package_menu(){
     echo 
-    info "==========================: Package Selection :=================================="
+    info "==============================: Package Selection :============================="
     echo 
     
     local -a options
@@ -586,7 +592,8 @@ install_prereqs(){
 
 install_packages(){
 
-    info "Installing packages, this can take a while depending on the system and network..."
+    info "Installing packages"
+    info "    this can take a while depending on the system and network..."
 
     for pack in ${selected_packages[@]};
     do
