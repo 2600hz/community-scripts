@@ -215,7 +215,7 @@ confirm(){
    read -p " " -n 1 answer
 
    if [[ $answer =~ ^[yYnN] ]];then
-	   echo
+       echo
        return
    else 
       warn "Unknown option '$answer'"
@@ -235,14 +235,13 @@ ping_test(){
        return 
    else 
        warn "You do not appear to be able to reach the server $repo_host from this server!"
-       echo ""
        local answer
-       
-       case $answer in 
-           [yY]*) error_exit "Exiting script due user input, good hunting!" ;;
-           [nN]*) return ;;
-           *) ping_test ;;
-       esac
+           confirm "Do you want to exit this script and fix your network? [y|n]"; 
+       if [[ $answer =~ [yY] ]];then
+           error_exit "Exiting script due user input, good hunting!" 
+       else 
+           return 
+       fi
    fi
 }
 
@@ -445,10 +444,10 @@ handle_args(){
   while getopts ahs:u:r:f: opt; do
       case $opt in
            a) auto_pilot=1 ;;
-           s) set_install_source $OPTARG || usage "$opt - Invalid source specified -s $OPTARG" ;;
-           u) set_repo_url $OPTARG       || usage "$opt - Invalid repo URL $OPTARG specified"  ;;    
-           r) set_install_release $OPTARG        || usage "$opt - Invalid release $OPTARG specified"   ;;
-           f) system_hostname=$OPTARG    ;;
+           s) set_install_source $OPTARG  || usage "$opt - Invalid source specified -s $OPTARG" ;;
+           u) set_repo_url $OPTARG        || usage "$opt - Invalid repo URL $OPTARG specified"  ;;    
+           r) set_install_release $OPTARG || usage "$opt - Invalid release $OPTARG specified"   ;;
+           f) system_hostname=$OPTARG ;;
            h) usage "" ;;
            *) usage "Unknown option $opt selected!" ;;
       esac      
@@ -561,7 +560,7 @@ package_menu(){
                 break
                 ;;
             *)
-                if [ ${packages["$opt"]:-} ];then
+                if [[ ${opt:-} && ${packages["$opt"]:-} ]];then
                     set_package $opt
                 else
                     warn "invalid option $opt"

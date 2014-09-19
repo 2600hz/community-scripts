@@ -131,7 +131,7 @@ import_media_files_cmd="sup whistle_media_maintenance import_prompts /opt/kazoo/
 import_media_files_error="Media prompt import failed with: ${NC}sup whistle_media_maintenance import_prompts /opt/kazoo/system_media/ en-us"
 
 create_account_dbg="Creating admin account with: ${NC}sup crossbar_maintenance create_account admin sip.TOKEN admin admin"
-create_account_cmd="/opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin \"sip.TOKEN\:39\" admin admin"
+create_account_cmd="/opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin \"sip.TOKEN\" admin admin"
 create_account_error="Account creation failed, you can create an account with: ${NC}sup crossbar_maintenance create_account admin sip.TOKENadmin admin"
 
 
@@ -248,10 +248,10 @@ if  [[ ${install_list['haproxy']:-} ]]; then
 fi 
 
 [[ ${install_list['freeswitch']:-} ]] && run_cmd 'restart_epmd'
-[[ ${install_list['bigcouch']:-} ]]   && run_cmd 'restart_bigcouch'
-[[ ${install_list['rabbitmq']:-} ]]   && run_cmd 'restart_rabbitmq'
+[[ ${install_list['bigcouch']:-}   ]] && run_cmd 'restart_bigcouch'
+[[ ${install_list['rabbitmq']:-}   ]] && run_cmd 'restart_rabbitmq'
 [[ ${install_list['freeswitch']:-} ]] && run_cmd 'restart_freeswitch' 
-[[ ${install_list['kamailio']:-} ]]   && run_cmd 'restart_kamailio' 
+[[ ${install_list['kamailio']:-}   ]] && run_cmd 'restart_kamailio' 
 
 if [[ ${install_list['kazoo']:-} ]];then 
     run_cmd 'restart_whistle_apps'
