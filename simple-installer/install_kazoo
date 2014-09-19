@@ -236,12 +236,12 @@ ping_test(){
    else 
        warn "You do not appear to be able to reach the server $repo_host from this server!"
        local answer
-           confirm "Do you want to exit this script and fix your network?"; 
-       case $answer in 
-           [yY]*) error_exit "Exiting script due user input, good hunting!" ;;
-           [nN]*) return ;;
-           *) ping_test ;;
-       esac
+           confirm "Do you want to exit this script and fix your network? [y|n]"; 
+       if [[ $answer =~ [yY] ]];then
+           error_exit "Exiting script due user input, good hunting!" 
+       else 
+           return 
+       fi
    fi
 }
 
