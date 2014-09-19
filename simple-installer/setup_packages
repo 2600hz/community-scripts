@@ -234,7 +234,8 @@ info " : Restarting services : "
 
 
 #TODO: SETUP BASIC IP TABLES ENTRIES PER SERVICE!!!!!!
-warn "WARNING:  Stopping IP tables, that means your shields are down! You might wanna do something about it!!"
+warn "WARNING:  Stopping IP tables, that means your shields are down!"
+warn "          You should setup some firewall rules, before your haxored!!"
 service iptables stop 
 chkconfig iptables off 
 
