@@ -416,23 +416,22 @@ repo_enable(){
 repo_list_version(){
     version=""
     list_package=$1
-    list_status=$2
-    list_repo=$3
+    list_repo=$2
     dbg "Getting version info for $list_repo release for package $list_package"
-    release_version=`yum --disablerepo="*" --enablerepo="$list_repo" list $list_status | grep $list_package | awk '{print $2}'`
+    release_version=`yum --disablerepo="*" --enablerepo="$list_repo" list | grep $list_package | grep $list_repo | awk '{print $2}'`
     version=$release_version    
 }
 
 get_available_versions(){
     local version
  
-    repo_list_version $kazoo_package "available" $stable_release
+    repo_list_version $kazoo_package $stable_release
     stable_version=$version
     
-    repo_list_version $kazoo_package "available" $staging_release
+    repo_list_version $kazoo_package $staging_release
     staging_version=$version
     
-    repo_list_version $kazoo_package "available" $latest_release
+    repo_list_version $kazoo_package $latest_release
     latest_version=$version
 
 }

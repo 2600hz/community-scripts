@@ -28,6 +28,7 @@ info(){
 
 error(){
     error_msg="$*"
+    echo 
     error="${red}ERROR: ${error_msg} ${NC} "
     echo -e "$error" 1>&2
     echo -e "$error" >> $install_log
@@ -94,7 +95,7 @@ check_lock(){
 #exit paths which clear lock
 clean_exit(){
     if [ ${#errors_encountered[@]:-0} -gt 0 ];then
-        echo -e "${red}NOTE: ${#errors_encountered[@]} errors were encountered during kazoo setup${NC}"
+        echo -e "${red}NOTE: ${#errors_encountered[@]} error(s) encountered during kazoo setup${NC}"
         for error in "${errors_encountered[@]}"; do
             echo -e "$error"                                  
         done      
@@ -257,18 +258,18 @@ ask(){
 # You should define a local $answer in whatever function calls this. 
 
 confirm(){
-   question=$1
-   info $question
-   read answer
-
-   if [[ $answer =~ ^[yYnN] ]];then 
-       return
-   else 
-      warn "Unknown option $answer - please enter either '${red}y${yellow}' or '${red}n${yellow}'!" 
-      confirm $@
-   fi
+    question=$1
+    echo -ne "${blue}${question}${NC}"
+    read -p " " -n 1 answer
+    if [[ $answer =~ ^[yYnN] ]];then
+        echo
+        return
+    else
+        warn "Unknown option '$answer'"
+        warn " Please enter either '${red}y${yellow}' or '${red}n${yellow}'!"
+        confirm "$question"
+    fi
 }
-
 
 # functions for handling erlang.cookie if required by script
 get_default_cookie(){
