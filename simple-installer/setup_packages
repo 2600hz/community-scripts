@@ -131,7 +131,7 @@ import_media_files_cmd="sup whistle_media_maintenance import_prompts /opt/kazoo/
 import_media_files_error="Media prompt import failed with: ${NC}sup whistle_media_maintenance import_prompts /opt/kazoo/system_media/ en-us"
 
 create_account_dbg="Creating admin account with: ${NC}sup crossbar_maintenance create_account admin sip.TOKEN admin admin"
-create_account_cmd="/opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin \"sip.TOKEN\:39\" admin admin"
+create_account_cmd="/opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin \"sip.TOKEN\" admin admin"
 create_account_error="Account creation failed, you can create an account with: ${NC}sup crossbar_maintenance create_account admin sip.TOKENadmin admin"
 
 
