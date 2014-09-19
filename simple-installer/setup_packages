@@ -248,10 +248,10 @@ if  [[ ${install_list['haproxy']:-} ]]; then
 fi 
 
 [[ ${install_list['freeswitch']:-} ]] && run_cmd 'restart_epmd'
-[[ ${install_list['bigcouch']:-} ]]   && run_cmd 'restart_bigcouch'
-[[ ${install_list['rabbitmq']:-} ]]   && run_cmd 'restart_rabbitmq'
+[[ ${install_list['bigcouch']:-}   ]] && run_cmd 'restart_bigcouch'
+[[ ${install_list['rabbitmq']:-}   ]] && run_cmd 'restart_rabbitmq'
 [[ ${install_list['freeswitch']:-} ]] && run_cmd 'restart_freeswitch' 
-[[ ${install_list['kamailio']:-} ]]   && run_cmd 'restart_kamailio' 
+[[ ${install_list['kamailio']:-}   ]] && run_cmd 'restart_kamailio' 
 
 if [[ ${install_list['kazoo']:-} ]];then 
     run_cmd 'restart_whistle_apps'
