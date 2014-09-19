@@ -350,8 +350,9 @@ set_hostname(){
     fi
 
     #set the new hostname
+    hostname $fqdn
+
     shortname=${fqdn%%\.*}
-    hostname $shortname
     
     sed -i "s/^127.0.0.1 .*/127.0.0.1  $fqdn $shortname localhost localhost.localdomain localhost4 localhost4.localdomain4/" /etc/hosts
     sed -i "s/^::1 .*/::1  $fqdn $shortname localhost localhost.localdomain localhost6 localhost6.localdomain6/" /etc/hosts
