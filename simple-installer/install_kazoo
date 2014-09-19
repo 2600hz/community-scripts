@@ -560,7 +560,7 @@ package_menu(){
                 break
                 ;;
             *)
-                if [ ${packages["$opt"]:-} ];then
+                if [[ $opt && ${packages["$opt"]:-} ]];then
                     set_package $opt
                 else
                     warn "invalid option $opt"
