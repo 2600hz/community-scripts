@@ -286,6 +286,9 @@ if [[ ${install_list['bigcouch']:-} ]];then
     run_cmd 'update_bigcouch_views'
     run_cmd 'import_media_files'
     run_cmd 'create_account' $system_hostname
+
+	echo
+    echo
      
     info "Created admin account for kazoo with credentials:" 
     info "Username: ${green}admin"
@@ -293,7 +296,7 @@ if [[ ${install_list['bigcouch']:-} ]];then
     info "Account:  ${green}admin"
     info "Realm:    ${green}sip.${system_hostname}"
 fi 
-    
+
 [[ ${install_list['kazoo-ui']:-} ]] && info "You can access the kazoo-ui by going to ${green}http://$system_ip_address/kazoo-ui"
  
 echo 

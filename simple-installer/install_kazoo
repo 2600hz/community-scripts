@@ -178,12 +178,9 @@ This script will guide you through the options to configure an all-in-one kazoo
 system or a node in a larger kazoo cluster.
 
 ================================================================================
-
 EOT
 
 echo -e ${NC}
-echo
- 
 }
 
 usage(){
@@ -362,7 +359,7 @@ set_hostname(){
     #if we are not auto-pilot, ask user if it is ok to reboot
     if ! [[  ${all_in_one} ]];then 
         local answer=""
-        confirm  "Do you want to reboot? [y|n]"
+		confirm  "Do you want to reboot(optional)? [y|n]"
         [[ ${answer:-} =~ [nN] ]] && return
     fi
 
@@ -392,7 +389,7 @@ repo_ask(){
 
     ping_test $install_repo_url
 
-    info "Selected $install_repo_url for installation source" 
+    dbg "Selected $install_repo_url for installation source" 
 }
 
 repo_disable(){
@@ -475,17 +472,16 @@ main_menu(){
     printf "\n"
     info "Please choose a source to use for your kazoo installation."
     PS3='Source: '
-    local options=("Local" "Network" "Quit" )
+	# local options=("Local" "Network" "Quit" )
+    local options=("Network" "Quit")
     select opt in "${options[@]}"; do
         case $opt in
             "Local")
-                dbg "Local Repository will be used for installation"
                 set_install_source "local"
                 break
                 ;;
             "Network")
                 set_install_source "network"
-                dbg "Remote yum repo will be used for installation"
                 break
                 ;;
             "Quit")
@@ -496,6 +492,7 @@ main_menu(){
                 ;;
         esac
     done
+    echo
 }
 
 
@@ -506,7 +503,7 @@ repo_menu(){
     info 'Please choose the release version to install. '
 
     PS3='release: '
-    local options=("Stable ($stable_version)" "Staging ($staging_version)" "Latest ($latest_version) - not recommended"  )
+	local options=("Stable  ($stable_version) - recommended" "Staging ($staging_version) - testing/development" "Latest  ($latest_version) - expert")
     select opt in "${options[@]}"; do
         case $opt in
             Stable*)
@@ -527,7 +524,7 @@ repo_menu(){
         esac
     done
 
-    info "Selected version $install_release, $install_base for installation"
+    dbg "Selected version $install_release, $install_base for installation"
 }
 
 
@@ -535,10 +532,16 @@ package_menu(){
     echo 
     info "==============================: Package Selection :============================="
     echo 
+        
+    local answer=""
+	confirm  "Is this your only Kazoo server ('n' if part of a cluster)? [y|n]"
+    if [[ ${answer:-} =~ [yY] ]]; then
+        dbg "All packages will be installed for a stand-alone Kazoo installation"
+        set_package all_in_one
+        return 
+	fi
     
     local -a options
-
-    options+=("all_in_one" )
     
     for package in ${!packages[@]};do
         
@@ -550,15 +553,10 @@ package_menu(){
     options+=("done")
 
     info "Please choose the services to install on this server."
-    PS3="enter one package number per line, select option for done when complete: "
+    PS3="Enter one package number per line, select 'done' when complete: "
 
     select opt in "${options[@]}"; do
         case $opt in
-            all_in_one)
-                info "all_in_one selected, all packages will be installed"
-                set_package $opt
-                break  
-                ;;
             done) 
                 break
                 ;;
@@ -592,8 +590,7 @@ install_prereqs(){
 
 install_packages(){
 
-    info "Installing packages"
-    info "    this can take a while depending on the system and network..."
+    dbg "This can take a while depending on the system and network..."
 
     for pack in ${selected_packages[@]};
     do
@@ -640,20 +637,27 @@ fi
 
 ! [[ ${all_in_one:-} ]] && package_menu 
 
+echo 
+info "=================================: Installation :==============================="
+echo
+
 install_packages 
 
-info "Installed kazoo using version: ${install_version:-} repositories: [$install_release, $install_base] on: $install_repo_url"
-dbg "Starting setup..."
+dbg "Installed kazoo using version: ${install_version:-}\n     From repositories: [$install_release, $install_base]\n     Hosted on: $install_repo_url"
+
+echo 
+info "====================================: Setup :==================================="
+echo
 
 arg=""
 
 [[ ${all_in_one:-} ]] && arg="-a"
 
-info "Package setup list:"
+dbg "Package setup list:"
 for pack in ${!selected_packages[@]}; 
 do
     arg="$arg -i $pack"
-    info "- Package $pack will be configured"
+    echo -e "${green}     $pack pending configuration${NC}"
 done
 
 dbg "running ./opt/kazoo_install/setup_packages $arg"
