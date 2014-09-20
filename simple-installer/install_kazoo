@@ -25,7 +25,8 @@ stable_release="2600hz_R15B"
 stable_base="2600hz_base"
 staging_release="2600hz_R15B_staging"
 staging_base="2600hz_base_staging"
-latest_release="2600hz_R15B_staging"
+latest_release="2600hz_R15B_latest"
+latest_base="2600hz_base_latest
 
 #release info for menus
 stable_version=""
