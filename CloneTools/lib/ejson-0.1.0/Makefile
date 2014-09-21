@@ -1,5 +1,5 @@
 ROOT = ../..
-REBAR = $(ROOT)/utils/rebar/rebar
+REBAR = $(ROOT)/lib/ejson-0.1.0/rebar
 
 %.beam: %.erl
 	erlc -o t/ $<
