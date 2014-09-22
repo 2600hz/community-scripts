@@ -619,7 +619,7 @@ handle_args $@
 check_lock
 banner
 
-! [[ ${autopilot:-} ]] && set_network
+! [[ ${all_in_one:-} ]] && set_network
 
 set_hostname
 install_prereqs
