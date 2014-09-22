@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 set -o nounset
 
 DEBUG="0"
@@ -26,7 +25,7 @@ stable_base="2600hz_base"
 staging_release="2600hz_R15B_staging"
 staging_base="2600hz_base_staging"
 latest_release="2600hz_R15B_latest"
-latest_base="2600hz_base_latest
+latest_base="2600hz_base_latest"
 
 #release info for menus
 stable_version=""
@@ -88,9 +87,6 @@ warn(){
     echo -e "${yellow}$* ${NC} "; 
     echo -e "${yellow}$* ${NC} " >> $install_log 
 }
-
-
-
 
 #You must be root to run this script!
 if [[ $EUID -ne 0 ]]; then
@@ -156,32 +152,33 @@ trap int_exit SIGINT SIGQUIT
 
 banner(){
 reset
-echo 
+echo ""
 echo -e ${blue}
-cat <<"EOT"
-
-   ___   _____ ____  ____  __  __   
-  |__ \ / ___// __ \/ __ \/ / / /___
-  __/ // __ \/ / / / / / / /_/ /_  /
- / __// /_/ / /_/ / /_/ / __  / / /_
-/____/\____/\____/\____/_/ /_/ /___/
-                                    
-    __ __                           _________ ____ 
-   / //_/___ _____  ____  ____     /  _/ ___// __ \
-  / ,< / __ `/_  / / __ \/ __ \    / / \__ \/ / / /
- / /| / /_/ / / /_/ /_/ / /_/ /  _/ / ___/ / /_/ / 
-/_/ |_\__,_/ /___/\____/\____/  /___//____/\____/  
-
-
-Welcome to the kazoo installation script!
-
-This script will guide you through the options to configure an all-in-one kazoo 
-system or a node in a larger kazoo cluster.
-
-================================================================================
-EOT
-
+echo ""
+echo ""
+echo "    ___   _____ ____  ____  __  __                  "
+echo "   |__ \ / ___// __ \/ __ \/ / / /___               "
+echo "  __/ // __ \/ / / / / / / /_/ /_  /                "
+echo " / __// /_/ / /_/ / /_/ / __  / / /_                "   
+echo "/____/\____/\____/\____/_/ /_/ /___/                "
+echo "                                                    "
+echo "    __ __                           _________ ____  "
+echo "   / //_/___  ____  ____  ____     /  _/ ___// __ \ "
+echo "  / ,< / __ \/_  / / __ \/ __ \    / / \__ \/ / / / "
+echo " / /| / /_/ / / /_/ /_/ / /_/ /  _/ / ___/ / /_/ /  "
+echo "/_/ |_\__,_/ /___/\____/\____/  /___//____/\____/   "
+echo "                                                    "
+echo "                                                    "
+echo "Welcome to the kazoo installation script!           "
+echo "                                                    "
+echo "This script will guide you through the options to configure an all-in-one kazoo "
+echo "system or a node in a larger kazoo cluster. "
+echo ""
+echo "================================================================================"
+echo ""
+echo ""
 echo -e ${NC}
+
 }
 
 usage(){
@@ -306,9 +303,17 @@ set_install_source(){
     fi
 }
 
+
+set_network(){
+    local answer  
+    confirm "Do you want to setup your network configuration? [y|n]"
+    [[ $answer =~ [yY] ]] && system-config-network
+}
+
+
 set_hostname(){
     #warn user and get permission to delete database information
-    dbg "Checking system for fully qualified hostname (FQDN)" 
+    dbg "Checking system for fully qualified hostname (FQDN)"
 
     fqdn=""
 
@@ -361,12 +366,12 @@ set_hostname(){
         local answer=""
 		confirm  "Do you want to reboot(optional)? [y|n]"
         [[ ${answer:-} =~ [nN] ]] && return
-    fi
 
-    warn "Rebooting system due to hostname change, brb!"
-    clear_lock
-    reboot 
-    exit
+        warn "Rebooting system due to hostname change, brb!"
+        clear_lock
+        reboot 
+        exit
+    fi
 
 }
 
@@ -585,7 +590,7 @@ yum_loop(){
 
 install_prereqs(){
     dbg "Installing prerequisite packages."
-    yum_loop "yum-utils curl sed rsyslog" || error_exit "install prerequisite failed!"
+    yum_loop "yum-utils curl sed rsyslog system-config-network-tui" || error_exit "install prerequisite failed!"
 }
 
 install_packages(){
@@ -613,6 +618,9 @@ install_packages(){
 handle_args $@
 check_lock
 banner
+
+! [[ ${autopilot:-} ]] && set_network
+
 set_hostname
 install_prereqs
 
