@@ -20,7 +20,6 @@ dir="/opt/kazoo_install/"
 all_in_one=""
 
 
-
 # run_cmd uses references to the name _dbg _cmd _error
 # define all commands, debug print statments and errors here. 
 
@@ -215,7 +214,7 @@ run_cmd(){
 
     while read line; do 
         echo -en "\r${ceol}${line:-}"
-    done < <(eval $cmd_final 2> $install_log || error "$error")
+    done < <(eval $cmd_final 2>> $install_log || error "$error")
      echo
 
 }
