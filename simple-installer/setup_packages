@@ -20,7 +20,6 @@ dir="/opt/kazoo_install/"
 all_in_one=""
 
 
-
 # run_cmd uses references to the name _dbg _cmd _error
 # define all commands, debug print statments and errors here. 
 
