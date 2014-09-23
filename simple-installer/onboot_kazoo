@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+set -e
+set -o nounset
+
+lockfile="/var/lock/subsys/check_interfaces.lockfile"
+
+. /opt/kazoo_install/setup_common
+
+trap clean_exit SIGHUP SIGTERM ERR EXIT
+trap int_exit SIGINT SIGQUIT
+
+log_file=/var/log/check_interfaces.log
+
+datestamp=$(date +"%F %T")
+
+
+info " : Setting up kazoo on-boot addresses : "
+
+dbg " Kazoo IP Configuration "
+
+check_root
+check_lock
+    
+ip_address=""; check_info_file
+
+declare -a ip_addresses
+declare -a interfaces
+
+get_interfaces
+get_system_ip 
+
+ip_match=""
+for ip_system in ${ip_addresses[@]}; do
+    if [[ "${ip_system:-}" == "$ip_address" ]];then
+	info "system IP address matches configured kazoo IP: $ip_address"    
+        ip_match=1
+    fi			
+done
+
+if ! [[ ${ip_match:-} ]];then 
+    if [[ ${#ip_addresses[@]:-} -eq 1 ]];then
+        system_ip_address=${ip_addresses[0]}
+        info "configuring IP address to ${system_ip_address}"
+        set_info_file  
+        /opt/kazoo_install/setup_packages -a -i kamailio -i kazoo-ui     
+    else  
+        echo 'get_ip_address' >> /root/.bash_profile
+    fi
+fi
+
+
+	
+clean_exit $lockfile
+
+
+
+

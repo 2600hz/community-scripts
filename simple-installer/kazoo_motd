@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+#print formatting and logging func
+green='\e[0;32m'
+red='\e[0;31m'
+yellow='\e[0;33m'
+NC='\e[0m'
+blue='\e[0;36m'
+
+
+if [[ -e /etc/kazoo/kazoo_boot.conf ]]; then
+    ip_address=`sed -n "s|IP_ADDRESS=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+    admin_user=`sed -n "s|ADMIN_USER=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+    admin_password=`sed -n "s|ADMIN_PASSWORD=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+    admin_account=`sed -n "s|ADMIN_ACCOUNT=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+    admin_realm=`sed -n "s|ADMIN_REALM=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+fi
+
+
+write(){
+    echo -e "$1" >> /etc/motd
+}
+
+
+>/etc/motd
+
+
+write "${blue}" 
+write '    __                                                            '
+write '   / /______ _____  ____  ____     ________  ______   _____  _____'
+write '  / //_/ __ `/_  / / __ \/ __ \   / ___/ _ \/ ___/ | / / _ \/ ___/'
+write ' / ,< / /_/ / / /_/ /_/ / /_/ /  (__  )  __/ /   | |/ /  __/ /    '
+write '/_/|_|\__,_/ /___/\____/\____/  /____/\___/_/    |___/\___/_/     '
+write "${NC}"
+write ""
+write "Server Information"
+write ------------------------------------------------------------
+write "Hostname: ${green}`uname -n`${NC}                "
+write "      OS: ${green}`cat /etc/redhat-release`${NC} "
+write "  Kernel: ${green}`uname -sr`${NC}               "
+write " uptime: ${green}`uptime`${NC}                   "
+write "                                                 "
+write "System IP addresses:                             "
+write "------------------------------------------------------------"                         
+write "${green}`ifconfig | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{print "    IP Address = "$1}'`${NC}"
+write ""
+write "Kazoo Information                                           "
+write "------------------------------------------------------------"
+write "  WebServer: ${green}http://${ip_address}/kazoo-ui${NC}    "
+write "    Account: ${green}${admin_account}${NC}                 "
+write "  Sip Realm: ${green}${admin_realm}${NC}           "
+write ${NC}

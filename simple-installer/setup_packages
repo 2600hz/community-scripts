@@ -24,53 +24,76 @@ all_in_one=""
 # define all commands, debug print statments and errors here. 
 
 #
+# Questions for setting up admin account
+#
+
+admin_user=""
+admin_user_question="Please enter the user name for the ${red}admin${blue} account on your Kazoo system: "
+admin_user_re="$name_regex"
+admin_user_hint="This is the user you will use to administer Kazoo."
+admin_user_ref="admin_user"
+
+admin_password=""
+admin_password_question="Please enter the ${red}password${blue} for the ${yellow}admin${blue} account on your Kazoo system: "
+admin_password_re=".*"
+admin_password_hint="This is the password for the administer Kazoo account. "
+admin_password_ref="admin_password"
+
+
+admin_account=""
+admin_account_question="Please enter the ${red}account name${blue} for the ${yellow}admin${blue} account on your Kazoo system: "
+admin_account_re="$name_regex"
+admin_account_hint="This is the main account name you will use administer Kazoo."
+admin_account_ref="admin_account"
+
+#
 # restart commands 
 #
 
 restart_epmd_dbg="Start EPMD with: ${NC} /usr/bin/epmd -daemon"
 restart_epmd_cmd="/usr/bin/epmd -daemon"
-restart_epmd_error="epmd daemon failed to start, you can manualy start with: ${NC}/usr/bin/epmd -daemon"
+restart_epmd_error="epmd daemon failed to start, start with: ${NC}/usr/bin/epmd -daemon"
 
 restart_freeswitch_cmd="/sbin/service freeswitch restart"
 restart_freeswitch_dbg="Restart FreeSWITCH with: ${NC}service freeswitch restart"
-restart_freeswitch_error="Freeswitch restart failed, you can manualy start with: ${NC}service freeswitch restart"
+restart_freeswitch_error="Freeswitch restart failed, restart with: ${NC}service freeswitch restart"
 
 restart_bigcouch_cmd="/sbin/service bigcouch restart"
 restart_bigcouch_dbg="Restart Bigcouch to apply changes with: ${NC}service bigcouch restart"
-restart_bigcouch_error="Bigcouch restart failed, you can manualy start with: ${NC}/sbin/service bigcouch restart"
+restart_bigcouch_error="Bigcouch restart failed, restart with: ${NC}/sbin/service bigcouch restart"
 
 restart_kamailio_dbg="Restart Kamailio to apply the changes with: ${NC}service kamailio restart"
 restart_kamailio_cmd="/sbin/service kamailio restart"
-restart_kamailio_error="Kamailio restart failed, you can manualy start with: ${NC}service kamailio restart"
+restart_kamailio_error="Kamailio restart failed, restart with: ${NC}service kamailio restart"
 
 restart_rabbitmq_dbg="Restart RabbitMQ with: ${NC} service rabbitmq-server restart"
 restart_rabbitmq_cmd="/sbin/service rabbitmq-server restart" 
-restart_rabbitmq_error="Rabbitqm restart failed, you can manualy start with:  ${NC}service rabbitmq-server restart"
+restart_rabbitmq_error="Rabbitqm restart failed, restart with:  ${NC}service rabbitmq-server restart"
 
 #KZ-WHISTLE_APPS RESTART
 restart_whistle_apps_dbg="Restarting Whapps with: ${NC}service kz-whistle_apps restart"
 restart_whistle_apps_cmd="/sbin/service kz-whistle_apps restart" 
-restart_whistle_apps_error="kz-whistle_apps restart failed, you can manualy start with: ${NC}service kz-whistle_apps restart" 
+restart_whistle_apps_error="kz-whistle_apps restart failed, restart with: ${NC}service kz-whistle_apps restart" 
 
 #KZ-ECALLMGR RESTART 
 restart_ecallmgr_dbg="Restarting ecallmgr with: ${NC}service kz-ecallmgr restart"
 restart_ecallmgr_cmd="/sbin/service kz-ecallmgr restart" 
-restart_ecallmgr_error="kz-ecallmgr restart failed, you can manualy start with: ${NC}service kz-ecallmgr restart"
+restart_ecallmgr_error="kz-ecallmgr restart failed, restart with: ${NC}service kz-ecallmgr restart"
 
 #RESTART HTTPD
 restart_httpd_dbg="Starting httpd with: ${NC}service httpd restart"
 restart_httpd_cmd="/sbin/service httpd restart"
-restart_httpd_error="httpd restart failed, you can manualy start with: ${NC}service httpd restart"
+restart_httpd_error="httpd restart failed, restart with: ${NC}service httpd restart"
 
 #restart rsyslog
 restart_rsyslog_dbg="Restart rsyslog with: ${NC}service rsyslog restart"
 restart_rsyslog_cmd="/sbin/service rsyslog restart"
-restart_rsyslog_error="rsyslog failed to start, you can manualy start with: ${NC}service rsyslog restart"
+restart_rsyslog_error="rsyslog failed to start, restart with: ${NC}service rsyslog restart"
 
 #restart haproxy
 restart_haproxy_dbg="Restart HAProxy to apply changes with: ${NC}service haproxy restart"
 restart_haproxy_cmd="/sbin/service haproxy restart"
-restart_haproxy_error="haproxy restart failed, you can manualy start with: ${NC}service haproxy restart"
+restart_haproxy_error="haproxy restart failed, restart with: ${NC}service haproxy restart"
 
 
 #
@@ -115,7 +138,7 @@ boot_httpd_error="Failed to enable httpd in chkconfig"
 
 symlink_haproxy_dbg="Creating symlink to use HA proxy config in /etc/kazoo/haproxy instead of /etc/haproxy"
 symlink_haproxy_cmd="rm -rf /etc/haproxy/haproxy.cfg;ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg"
-symlink_haproxy_error="create symlink failed, you can manually create with: ${NC}ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg" 
+symlink_haproxy_error="create symlink failed,  create with: ${NC}ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg" 
 
 attach_ecallmgr_dbg="Attach ecallmgr to FreeSWITCH with: ${NC} sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
 attach_ecallmgr_cmd="/opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
@@ -132,7 +155,6 @@ import_media_files_error="Media prompt import failed with: ${NC}sup whistle_medi
 create_account_dbg="Creating admin account with: ${NC}sup crossbar_maintenance create_account admin sip.TOKEN admin admin"
 create_account_cmd="/opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin \"sip.TOKEN\" admin admin"
 create_account_error="Account creation failed, you can create an account with: ${NC}sup crossbar_maintenance create_account admin sip.TOKENadmin admin"
-
 
 handle_args(){
 
@@ -164,68 +186,30 @@ do_setup(){
     done
 }
 
-wait_apps_running(){
-    dbg "Waiting for whapps to start by polling: ${NC}/opt/kazoo/utils/sup/sup whapps_controller list_apps"
-
-    while
-    /opt/kazoo/utils/sup/sup whapps_controller list_apps &>> $install_log
-    (( $? != 0 ))
-    do
-        continue
-    done
-
-    dbg "Waiting for ecallmgr to start by polling: ${NC}/opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes"
-
-    while
-    /opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes &>> $install_log
-    (( $? != 0 ))
-    do
-        continue
-    done
+ask_account_info(){
+    ask admin_user
+    ask admin_password 
+    ask admin_account
+    set_info_file 	
 }
-
-run_cmd(){
-    local name=$1
-    local value=${2:-}
-
-    #use $name to find variables we want
-    local _debug=\$"${name}_dbg"
-    local _cmd=\$"${name}_cmd"
-    local _error=\$"${name}_error"
-
-    #dereference same
-    local debug=`eval "expr \"${_debug}\""`
-    local cmd=`eval "expr \"${_cmd}\""`
-    local error=`eval "expr \"${_error}\""`
-
-    local debug_final=$debug
-    local cmd_final=$cmd
-    local error_final=$error
-
-    #replace TOKEN with $value
-    if [[ ${value:-} ]]; then    
-        debug_final=${debug//TOKEN/$value}
-        cmd_final=${cmd//TOKEN/$value}
-        error_final=${error//TOKEN/$value}
-    fi
-
-    #run command and log output to $install_log
-    dbg $debug_final
-
-    while read line; do 
-        echo -en "\r${ceol}${line:-}"
-    done < <(eval $cmd_final 2>> $install_log || error "$error")
-     echo
-
-}
-
+ 
 check_root
 check_lock
+
 handle_args $@
-ask_ip_selection
-get_system_hostname
-#auto generate erlang cookie on all-in-one installs
-[ ${all_in_one:-} ] && generate_erlang_cookie
+
+system_ip_address=""; check_ip || ask_ip_selection
+system_hostname=""; get_system_hostname
+admin_realm="sip.${system_hostname}"
+
+#auto generate Erlang cookie on all-in-one installs
+[[ ${all_in_one:-} ]] && generate_erlang_cookie
+
+#ask for account info if kazoo installed
+if [[ ${install_list[kazoo-ui]:-} ]]; then
+    check_info_file 
+    ! [[ ${admin_user:-} ]] && ask_account_info
+fi 
 
 do_setup
 
@@ -281,6 +265,14 @@ fi
 [[ ${install_list['haproxy']:-}    ]] && run_cmd 'boot_haproxy'
 [[ ${install_list['kazoo-ui']:-}   ]] && run_cmd 'boot_httpd'
 
+if [[ ${all_in_one:-} ]];then
+    /opt/install_kazoo/kazoo_motd
+   info "adding on-boot script to support all in one systems"
+   echo "/opt/install_kazoo/onboot_kazoo" >> /etc/rc.d/rc.local
+fi
+
+
+
 if [[ ${install_list['bigcouch']:-} ]];then 
     run_cmd 'update_bigcouch_views'
     run_cmd 'import_media_files'
@@ -290,9 +282,9 @@ if [[ ${install_list['bigcouch']:-} ]];then
     echo
      
     info "Created admin account for kazoo with credentials:" 
-    info "Username: ${green}admin"
-    info "Password: ${green}admin"
-    info "Account:  ${green}admin"
+    info "Username: ${green}${admin_user}"
+    info "Password: ${green}${admin_password}"
+    info "Account:  ${green}${admin_account}"
     info "Realm:    ${green}sip.${system_hostname}"
 fi 
 

@@ -3,7 +3,7 @@
 default_cookie=""
 system_hostname=""
 
-install_log="/var/log/kazoo_install.log"
+logfile="/var/log/kazoo_config.log"
 
 declare -a errors_encountered
 
@@ -18,12 +18,12 @@ blue='\e[0;36m'
 
 dbg(){
     echo -e " - ${green}$* ${NC} "
-    echo -e " - ${green}$* ${NC} " >> $install_log
+    echo -e " - ${green}$* ${NC} " >> $logfile
 }
 
 info(){
     echo -e "${blue}$* ${NC} "
-    echo -e "${blue}$* ${NC} " >> $install_log
+    echo -e "${blue}$* ${NC} " >> $logfile
 }
 
 error(){
@@ -31,17 +31,23 @@ error(){
     echo 
     error="${red}ERROR: ${error_msg} ${NC} "
     echo -e "$error" 1>&2
-    echo -e "$error" >> $install_log
+    echo -e "$error" >> $logfile
     errors_encountered+=("$error")   
 }
 
 warn(){
     echo -e "${yellow}$* ${NC} ";
-    echo -e "${yellow}$* ${NC} " >> $install_log
+    echo -e "${yellow}$* ${NC} " >> $logfile
+}
+
+log_print(){
+    while read line; do 
+        echo -e $line
+        echo -e $line >> $logfile
+    done
 }
 
 cookie_file="/etc/kazoo/erlang.cookie"
-ip_address_file="/etc/kazoo/kazoo.ip_address"
 
 #TODO: Add common definition for REGEX matches 
 #for valid url, IP address, port, hostname for use in setup scripts. 
@@ -51,7 +57,7 @@ url_regex="^(https?:\/\/)?([0-9a-z\.-\.]+)([a-z\.]{2,6})?([:][0-9]+)?([\/\w\.-]*
 ip_address_regex="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 fqdn_regex='(?=^.{4,255}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}$)'
 ip_fqdn_regex="$ip_address_regex|$fqdn_regex"
-
+name_regex="[a-zA-Z0-9\\.-\\_]+"
 
 #Safety stuff (must be root, lockfile functions, trap and clean_exit function)
 
@@ -128,8 +134,9 @@ int_exit(){
     exit 1;
 }
 
-#gets list of ethernet interfaces and puts in array interfaces
+#gets list of Ethernet interfaces and puts in array interfaces
 get_interfaces(){
+    local interface
     for interface in `ifconfig | grep Ethernet |cut -d" " -f1`;do
         interfaces+=("$interface")
     done
@@ -137,6 +144,7 @@ get_interfaces(){
 
 #gets list of ip addresses from interfaces list
 get_system_ip(){
+    local ip_address
     for interface in ${interfaces[@]}; do
         for ip_address in `ifconfig $interface | grep "inet addr" | cut -d: -f2 | cut -d" " -f1`;
         do
@@ -149,27 +157,63 @@ get_system_hostname(){
     system_hostname=$(hostname -f)
 }
 
+check_info_file(){
+    if [[ -e /etc/kazoo/kazoo_boot.conf ]]; then
+        ip_address=`sed -n "s|IP_ADDRESS=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+        admin_user=`sed -n "s|ADMIN_USER=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+        admin_password=`sed -n "s|ADMIN_PASSWORD=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+        admin_account=`sed -n "s|ADMIN_ACCOUNT=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+        admin_realm=`sed -n "s|ADMIN_REALM=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+    fi
+}
+
+set_info_file(){
+    echo "IP_ADDRESS=$system_ip_address"  >  /etc/kazoo/kazoo_boot.conf
+    echo "ADMIN_USER=$admin_user"         >> /etc/kazoo/kazoo_boot.conf
+    echo "ADMIN_PASSWORD=$admin_password" >> /etc/kazoo/kazoo_boot.conf
+    echo "ADMIN_ACCOUNT=$admin_account"   >> /etc/kazoo/kazoo_boot.conf
+    echo "ADMIN_REALM=$admin_realm"       >> /etc/kazoo/kazoo_boot.conf
+}
+
+check_ip(){
+    #check if system already has IP address 
+    local ip_address=""; check_info_file
+    
+    ! [[ ${ip_address:-} ]] && return 1
+
+    
+    if [[ $ip_address =~ $ip_address_regex ]]; then
+        system_ip_address=$ip_address
+        return 0
+    else 
+        warn "system IP address ${red}${ip_address}${yellow} is not a valid"
+        return 1
+    fi
+}
+
 ask_ip_selection(){
     local -a ip_addresses
     local -a interfaces
-    
-    if [ -e $ip_address_file ];then
-        ip_address=$(<$ip_address_file)
-        if [[ $ip_address =~ $ip_address_regex ]]; then
-            system_ip_address=$ip_address 
-            return 
-        else 
-            warn "The system IP address in $ip_address_file is not a valid ip!"
-        fi 
-        
-    fi
 
     get_interfaces
     get_system_ip 
 
     if [ ${#ip_addresses[@]:-} -eq 1 ];then
         system_ip_address=${ip_addresses[0]}
-    elif [ ! ${#ip_addresses[@]:-} ];then
+    elif [  ${#ip_addresses[@]:-}  -gt 1 ];then
+             echo 
+         info "Please select the ${red}IP address${blue} to use for handling traffic on this server: "
+             echo 
+         PS3="Select IP address: "
+         select opt in ${ip_addresses[@]}; do
+             case $opt in
+                 *)
+                     system_ip_address=$opt
+                     break
+                     ;;
+             esac
+         done
+    else 
         warn "NO ip addresses are configured!"
         system_ip_address=""
         local system_ip_address_question="Please enter a system ip address you will be assigning to this server"
@@ -177,21 +221,78 @@ ask_ip_selection(){
         local system_ip_address_hint="Since you do not currently have an IP address, you can use this menu to add the IP you plan to assign after setup"
         local system_ip_address_ref="system_ip_address"
         ask system_ip_address
-    else
-      PS3="Please select the IP address to use:"
-      select opt in ${ip_addresses}; do
-          case $opt in
-             *)
-               system_ip_address=$opt     
-               break
-               ;;
-          esac
-      done
     fi
     
-    echo -n $system_ip_address >> $ip_address_file
+}
+
+wait_apps_running(){
+    dbg "Waiting for whapps to start by polling: ${NC}/opt/kazoo/utils/sup/sup whapps_controller list_apps"
+
+    while
+    /opt/kazoo/utils/sup/sup whapps_controller list_apps &>> $logfile
+    (( $? != 0 ))
+    do
+        continue
+    done
+
+    dbg "Waiting for ecallmgr to start by polling: ${NC}/opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes"
+
+    while
+    /opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes &>> $logfile
+    (( $? != 0 ))
+    do
+        continue
+    done
+}
+
+
+################################################################################
+#  run_cmd NOTE:
+#  *_cmd and *_dbg are access commands and debug statements for use in set_value
+#  TOKEN is replaced using with the $value argument in set_value
+#  using variable expansion substring replacement
+#  used to run long running commands that have lots of output to restrict to a 
+#  as single line.  
+################################################################################
+
+run_cmd(){
+    local name=$1
+    local value=${2:-}
+
+    #use $name to find variables we want
+    local _debug=\$"${name}_dbg"
+    local _cmd=\$"${name}_cmd"
+    local _error=\$"${name}_error"
+
+    #dereference same
+    local debug=`eval "expr \"${_debug}\""`
+    local cmd=`eval "expr \"${_cmd}\""`
+    local error=`eval "expr \"${_error}\""`
+
+    local debug_final=$debug
+    local cmd_final=$cmd
+    local error_final=$error
+
+    #replace TOKEN with $value
+    if [[ ${value:-} ]]; then    
+        debug_final=${debug//TOKEN/$value}
+        cmd_final=${cmd//TOKEN/$value}
+        error_final=${error//TOKEN/$value}
+    fi
+
+    #run command and log output to $logfile
+    dbg $debug_final
+
+    while read line; do 
+        echo -en "\r${ceol}${line:-}"
+    done < <(eval $cmd_final 2>&1 log_print || error "$error")
+     echo
 
 }
+
+#
+# sets the value for a parameter
+#
 
 set_value(){
 
@@ -217,9 +318,9 @@ set_value(){
     local debug_final=${debug//TOKEN/$value}
     local cmd_final=${cmd//TOKEN/$value}
 
-    #run command and log output to $install_log
+    #run command and log output to $logfile
     dbg $debug_final
-    eval $cmd_final &>> $install_log || error_exit "Command $cmd_final failed"
+    eval $cmd_final &>> $logfile || error_exit "Command $cmd_final failed"
 
     #verify command returned success response, throw error if failed
     if [[ $? -ne 0 ]];then
@@ -230,11 +331,14 @@ set_value(){
 check_re(){
    val=$1
    re=$2
-   echo $val | grep -P "$re" &>> $install_log || return 1
+   echo $val | grep -P "$re" &>> $logfile || return 1
    return 
 }
 
-#gets input for the user for $name parameter
+#
+#ask user for input for defined questions, gets input for the user for $name parameter
+#
+
 ask(){
     local name=$1
 
@@ -258,9 +362,6 @@ ask(){
     #  fqdn_regex - matches fully qualified domain names
     #  ip_fqdn_regex - matches ip OR fully qualified domain names
     ##################################################################################
-
-
-
 
    #we use the name value to "dereference" the variables we need for this function
     local _question=\$"${name}_question"
@@ -303,7 +404,11 @@ confirm(){
     fi
 }
 
+
+#
 # functions for handling erlang.cookie if required by script
+#
+
 get_default_cookie(){
     if [ -e $cookie_file ];then
         default_cookie=$(<$cookie_file)

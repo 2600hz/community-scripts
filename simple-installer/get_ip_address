@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -e
+set -o nounset
+
+#logfile
+install_log="/var/log/kazoo_install.log"
+
+#lock_file MUST BE DEFINED!
+lockfile="/var/lock/subsys/ask_ip_address.lockfile"
+
+. /opt/kazoo_install/setup_common
+
+trap error_exit SIGHUP SIGTERM ERR EXIT
+trap int_exit SIGINT SIGQUIT
+
+ip_address=""; check_info_file
+system_ip_address=""; ask_ip_selection
+
+set_info_file
+
+#run setup package for this to set the right IPs/restat the right services
+/opt/kazoo_install/setup_packages -a -i kamailio -i kazoo-ui
+
+#remove this 
+sed -i "s|get_ip_address||" /root/.bash_profile 
+#exit and clear lock
+clean_exit

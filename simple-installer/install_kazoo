@@ -88,6 +88,15 @@ warn(){
     echo -e "${yellow}$* ${NC} " >> $install_log 
 }
 
+
+log_print(){
+    while read line; do 
+        echo -e $line
+        echo -e $line >> $logfile
+    done
+}
+
+
 #You must be root to run this script!
 if [[ $EUID -ne 0 ]]; then
    echo -e "${red}ERROR:${NC}" 
@@ -307,7 +316,9 @@ set_install_source(){
 set_network(){
     local answer  
     confirm "Do you want to setup your network configuration? [y|n]"
-    [[ $answer =~ [yY] ]] && system-config-network
+    if [[ ${answer:-} =~ [yY] ]];then
+         system-config-network
+    fi 
 }
 
 
@@ -582,7 +593,7 @@ yum_loop(){
     ret=0
     while read line; do
         echo -en "\r${ceol}$line"         
-    done < <(yum install -y $pack 2> $install_log || ret=1  )
+    done < <(yum install -y $pack 2>&1 log_print || ret=1  )
     echo
    
     return $ret   
@@ -618,11 +629,10 @@ install_packages(){
 handle_args $@
 check_lock
 banner
-
-! [[ ${all_in_one:-} ]] && set_network
-
 set_hostname
 install_prereqs
+
+! [[ ${all_in_one:-} ]] && set_network
 
 #if all_in_one is already set we are doing auto pilot install via handle_args
 ! [[ ${install_source:-} ]] && main_menu
