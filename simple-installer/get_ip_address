@@ -19,7 +19,7 @@ system_ip_address=""; ask_ip_selection
 set_info_file
 
 #run setup package for this to set the right IPs/restat the right services
-/opt/kazoo_install/setup_packages -a -i kamailio
+/opt/kazoo_install/setup_packages -a -i kamailio -i kazoo-ui
 
 #remove this 
 sed -i "s|get_ip_address||" /root/.bash_profile 

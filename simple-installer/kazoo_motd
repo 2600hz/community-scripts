@@ -47,8 +47,6 @@ write ""
 write "Kazoo Information                                           "
 write "------------------------------------------------------------"
 write "  WebServer: ${green}http://${ip_address}/kazoo-ui${NC}    "
-write "   Username: ${green}${admin_user}${NC}                    "
-write "   Password: ${green}${admin_password}${NC}                "
 write "    Account: ${green}${admin_account}${NC}                 "
 write "  Sip Realm: ${green}${admin_realm}${NC}           "
 write ${NC}
