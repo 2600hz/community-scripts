@@ -213,11 +213,32 @@ wait_apps_running(){
     done
 }
 
+check_info_file(){
+    if [[ -e /etc/kazoo/kazoo_boot.conf ]]; then
+        ip_address=`sed -n "s|IP_ADDRESS=\(.*\)|\1|g" /etc/kazoo/kazoo_boot.conf`
+        admin_user=`sed -n "s|ADMIN_USER=\(.*|\1\)|g" /etc/kazoo/kazoo_boot.conf`
+        admin_password=`sed -n "s|ADMIN_PASSWORD=\(.*\)|\1|g" /etc/kazoo/kazoo_boot.conf`
+        admin_realm=`sed -n "s|ADMIN_REALM=\(.*\)|\1|g" /etc/kazoo/kazoo_boot.conf`
+    fi
+}
+
+set_info_file(){
+    echo "IP_ADDRESS=$system_ip_address" > /etc/kazoo/kazoo_boot.conf 
+    echo  "ADMIN_USER=$admin_user" >> /etc/kazoo/kazoo_boot.conf
+    echo "ADMIN_PASSWORD=$admin_passowrd" >> /etc/kazoo/kazoo_boot.conf
+    echo "s|ADMIN_REALM=.*|ADMIN_REALM=$admin_realm" >> /etc/kazoo/kazoo_boot.conf
+}
+
+
+
+
 ################################################################################
 #  run_cmd NOTE:
 #  *_cmd and *_dbg are access commands and debug statements for use in set_value
 #  TOKEN is replaced using with the $value argument in set_value
 #  using variable expansion substring replacement
+#  used to run long running commands that have lots of output to restrict to a 
+#  as single line.  
 ################################################################################
 
 run_cmd(){
@@ -255,6 +276,9 @@ run_cmd(){
 
 }
 
+#
+# sets the value for a parameter
+#
 
 set_value(){
 
@@ -297,7 +321,10 @@ check_re(){
    return 
 }
 
-#gets input for the user for $name parameter
+#
+#ask user for input for defined questions, gets input for the user for $name parameter
+#
+
 ask(){
     local name=$1
 
@@ -363,7 +390,11 @@ confirm(){
     fi
 }
 
+
+#
 # functions for handling erlang.cookie if required by script
+#
+
 get_default_cookie(){
     if [ -e $cookie_file ];then
         default_cookie=$(<$cookie_file)

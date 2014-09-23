@@ -14,50 +14,58 @@ log_file=/var/log/check_interfaces.log
 
 datestamp=date +"%F %T"
 
-system_ip_address=""; ask_ip_selection
 
-interactive(){
-    ask admin_user
-    ask ip_address
-	ask admin_realm  
-	ask admin_password
-}
+info " : Setting up kazoo on-boot addresses : "
 
-if [[ -e /etc/kazoo/kazoo_boot.conf ]]; then
-	ip_address=`sed -n "s|IP_ADDRESS=\(.*\)|\1|g" /etc/kazoo/kazoo_boot.conf`
-	admin_user= sed -n "s|ADMIN_USER=\(.*|\1\)|g" /etc/kazoo/kazoo_boot.conf`
-	admin_passowrd=`sed -n "s|ADMIN_PASSWORD=\(.*\)|\1|g" /etc/kazoo/kazoo_boot.conf`
-	admin_realm=`sed -n "s|ADMIN_REALM=\(.*\)|\1|g" /etc/kazoo/kazoo_boot.conf`
-fi
-
-
-info " : checking Kazoo IP : "
-sed -i "s|IP_ADDRESS=.*|IP_ADDRESS=$ip_addr|g" /etc/kazoo/kazoo_boot.conf
-sed -i "s|ADMIN_USER=.*|ADMIN_USER=$ip_addr|g" /etc/kazoo/kazoo_boot.conf
-sed -i "s|ADMIN_PASSWORD=.*|ADMIN_PASSWORD=$ip_addr|g" /etc/kazoo/kazoo_boot.conf
-sed -i "s|ADMIN_REALM=.*|ADMIN_REALM=$ip_addr|g" /etc/kazoo/kazoo_boot.conf
-
-set_value cookie $default_cookie
-
+dbg " Kazoo IP Configuration "
+    
 if [[ ${1:-} =~ -a ]];then
     all_in_one=1
 fi
 
-if [  ${all_in_one:-} ];then
-   #if allinone we default everything we can
-   amqp_string="guest:guest@127.0.0.1:5672"
-   ip_address="127.0.0.1"
+
+check_root
+check_lock
+    
+system_hostname=""; get_system_hostname
+system_ip_address=""; ask_ip_selection
+
+
+ip_address="";
+check_info_file
+
+declare -a ip_addresses
+declare -a interfaces
+
+get_interfaces
+get_system_ip 
+
+ip_match=""
+
+for ip_addr in ${ip_addresses[@]}; do
+	if [[ "$ip_addr" == "$system_ip_address" ]];then
+		ip_match=1
+	fi			
+done
+
+
+
+    
 else
-   info "NOTE: You can type '${NC}?${blue}' in response to any question for a hint"
-   interactive
+    error "No IP addresses could be found, please setup your interfaces or this server won't work!" 
 fi
 
-dbg "Applying Kazoo configuration..."
 
-set_value amqp_string $amqp_string
-set_value cookie $cookie
-set_value ip_address $ip_address
+if ! [[ ${ip_match:-} ]];then 
+    if [[ ${#ip_addresses[@]:-} -eq 1 ]];then
+	    setup_packages -a -i kamailio   
+	elif [ ! ${#ip_addresses[@]:-} -gt 1 ];then 
+	    echo 'ask_ip_address' >> /home/root/.bashrc
+	fi
+fi
 
+
+	
 clean_exit $lockfile
 
 

@@ -182,39 +182,26 @@ do_setup(){
     done
 }
 
-interactive(){
+ask_account_info(){
 	ask admin_user
 	ask admin_realm  
-	ask admin_password
-	set_ip_address_file 	
-}
-
-check_ip_address_file(){
-	if [[ -e /etc/kazoo/kazoo_boot.conf ]]; then
-		ip_address=`sed -n "s|IP_ADDRESS=\(.*\)|\1|g" /etc/kazoo/kazoo_boot.conf`
-		admin_user=`sed -n "s|ADMIN_USER=\(.*|\1\)|g" /etc/kazoo/kazoo_boot.conf`
-		admin_password=`sed -n "s|ADMIN_PASSWORD=\(.*\)|\1|g" /etc/kazoo/kazoo_boot.conf`
-		admin_realm=`sed -n "s|ADMIN_REALM=\(.*\)|\1|g" /etc/kazoo/kazoo_boot.conf`
-	fi
-}
-
-set_ip_address_file(){
-    echo "IP_ADDRESS=$ip_address" > /etc/kazoo/kazoo_boot.conf 
-    echo  "ADMIN_USER=$admin_user" >> /etc/kazoo/kazoo_boot.conf
-    echo "ADMIN_PASSWORD=$admin_passowrd" >> /etc/kazoo/kazoo_boot.conf
-    echo "s|ADMIN_REALM=.*|ADMIN_REALM=$admin_realm" >> /etc/kazoo/kazoo_boot.conf
+	ask admin_account
+	set_info_file 	
 }
  
 check_root
 check_lock
 handle_args $@
-ask_ip_selection
-get_system_hostname
-#auto generate erlang cookie on all-in-one installs
-[[ ${all_in_one:-} ]] && generate_erlang_cooki
+system_ip_address=""; ask_ip_selection
+system_hostname=""; get_system_hostname
 
+#auto generate Erlang cookie on all-in-one installs
+[[ ${all_in_one:-} ]] && generate_erlang_cookie
+
+#ask for account info if kazoo installed
 if [[ $install_list[kazoo-ui] ]]; then
-
+    check_config_file
+	! [[ $admin_user ]] && ask_account_info
 fi 
 
 do_setup
