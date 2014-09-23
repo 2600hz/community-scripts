@@ -43,7 +43,7 @@ get_system_ip
 ip_match=""
 
 for ip_addr in ${ip_addresses[@]}; do
-	if [[ "$ip_addr" == "$system_ip_address" ]];then
+	if [[ "${ip_addr:-}" == "$ip_address" ]];then
 		ip_match=1
 	fi			
 done
