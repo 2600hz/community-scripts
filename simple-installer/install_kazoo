@@ -307,7 +307,9 @@ set_install_source(){
 set_network(){
     local answer  
     confirm "Do you want to setup your network configuration? [y|n]"
-    [[ $answer =~ [yY] ]] && system-config-network
+    if [[ ${answer:-} =~ [yY] ]];then
+         system-config-network
+    fi 
 }
 
 
@@ -619,10 +621,12 @@ handle_args $@
 check_lock
 banner
 
-! [[ ${all_in_one:-} ]] && set_network
+install_prereqs
 
 set_hostname
-install_prereqs
+
+! [[ ${all_in_one:-} ]] && set_network
+
 
 #if all_in_one is already set we are doing auto pilot install via handle_args
 ! [[ ${install_source:-} ]] && main_menu

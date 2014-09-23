@@ -28,19 +28,23 @@ all_in_one=""
 #
 
 admin_user=""
-admin_user_question="Please enter the user name for the ${red}admin${NC} account on your Kazoo system: "
-admin_user_re="[a-Za-Z0-9]+"
+admin_user_question="Please enter the user name for the ${red}admin${blue} account on your Kazoo system: "
+admin_user_re="$name_regex"
 admin_user_hint="This is the user you will use to administer Kazoo."
+admin_user_ref="admin_user"
 
 admin_password=""
-admin_password_question="Please enter the ${red} password${NC} for the ${yellow}admin${nc} account on your Kazoo system: "
-admin_password_re="[a-Za-Z0-9]+"
+admin_password_question="Please enter the ${red}password${blue} for the ${yellow}admin${blue} account on your Kazoo system: "
+admin_password_re=".*"
 admin_password_hint="This is the password for the administer Kazoo account. "
+admin_password_ref="admin_password"
+
 
 admin_account=""
-admin_account_question="Please enter the ${red} account name${NC} for the ${yellow}admin${nc} account on your Kazoo system: "
-admin_account_re="$fqdn_regex"
+admin_account_question="Please enter the ${red}account name${blue} for the ${yellow}admin${blue} account on your Kazoo system: "
+admin_account_re="$name_regex"
 admin_account_hint="This is the main account name you will use administer Kazoo."
+admin_account_ref="admin_account"
 
 #
 # restart commands 
@@ -183,25 +187,28 @@ do_setup(){
 }
 
 ask_account_info(){
-	ask admin_user
-	ask admin_realm  
-	ask admin_account
-	set_info_file 	
+    ask admin_user
+    ask admin_password 
+    ask admin_account
+    set_info_file 	
 }
  
 check_root
 check_lock
+
 handle_args $@
-system_ip_address=""; ask_ip_selection
+
+system_ip_address=""; check_ip || ask_ip_selection
 system_hostname=""; get_system_hostname
+admin_realm="sip.${system_hostname}"
 
 #auto generate Erlang cookie on all-in-one installs
 [[ ${all_in_one:-} ]] && generate_erlang_cookie
 
 #ask for account info if kazoo installed
-if [[ $install_list[kazoo-ui] ]]; then
-    check_config_file
-	! [[ $admin_user ]] && ask_account_info
+if [[ ${install_list[kazoo-ui]:-} ]]; then
+    check_info_file 
+    ! [[ ${admin_user:-} ]] && ask_account_info
 fi 
 
 do_setup
@@ -257,6 +264,14 @@ fi
 [[ ${install_list['bigcouch']:-}   ]] && run_cmd 'boot_bigcouch'
 [[ ${install_list['haproxy']:-}    ]] && run_cmd 'boot_haproxy'
 [[ ${install_list['kazoo-ui']:-}   ]] && run_cmd 'boot_httpd'
+
+if [[ ${all_in_one:-} ]];then
+    /opt/install_kazoo/kazoo_motd
+   info "adding on-boot script to support all in one systems"
+   echo "/opt/install_kazoo/onboot_kazoo" >> /etc/rc.d/rc.local
+fi
+
+
 
 if [[ ${install_list['bigcouch']:-} ]];then 
     run_cmd 'update_bigcouch_views'

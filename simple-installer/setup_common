@@ -41,7 +41,6 @@ warn(){
 }
 
 cookie_file="/etc/kazoo/erlang.cookie"
-ip_address_file="/etc/kazoo/kazoo.ip_address"
 
 #TODO: Add common definition for REGEX matches 
 #for valid url, IP address, port, hostname for use in setup scripts. 
@@ -51,7 +50,7 @@ url_regex="^(https?:\/\/)?([0-9a-z\.-\.]+)([a-z\.]{2,6})?([:][0-9]+)?([\/\w\.-]*
 ip_address_regex="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 fqdn_regex='(?=^.{4,255}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}$)'
 ip_fqdn_regex="$ip_address_regex|$fqdn_regex"
-
+name_regex="[a-zA-Z0-9\\.-\\_]+"
 
 #Safety stuff (must be root, lockfile functions, trap and clean_exit function)
 
@@ -130,6 +129,7 @@ int_exit(){
 
 #gets list of Ethernet interfaces and puts in array interfaces
 get_interfaces(){
+    local interface
     for interface in `ifconfig | grep Ethernet |cut -d" " -f1`;do
         interfaces+=("$interface")
     done
@@ -137,6 +137,7 @@ get_interfaces(){
 
 #gets list of ip addresses from interfaces list
 get_system_ip(){
+    local ip_address
     for interface in ${interfaces[@]}; do
         for ip_address in `ifconfig $interface | grep "inet addr" | cut -d: -f2 | cut -d" " -f1`;
         do
@@ -149,27 +150,39 @@ get_system_hostname(){
     system_hostname=$(hostname -f)
 }
 
+check_ip(){
+    #check if system already has IP address 
+    local ip_address=""; check_info_file
+    if [[ $ip_address =~ $ip_address_regex ]]; then
+        system_ip_address=$ip_address
+        return 0
+    else 
+        warn "The system IP address in $ip_address_file is not a valid ip!"
+        return 1
+    fi
+}
+
+
 ask_ip_selection(){
     local -a ip_addresses
     local -a interfaces
-    
-    if [ -e $ip_address_file ];then
-        ip_address=$(<$ip_address_file)
-        if [[ $ip_address =~ $ip_address_regex ]]; then
-            system_ip_address=$ip_address 
-            return 
-        else 
-            warn "The system IP address in $ip_address_file is not a valid ip!"
-        fi 
-        
-    fi
 
     get_interfaces
     get_system_ip 
 
     if [ ${#ip_addresses[@]:-} -eq 1 ];then
         system_ip_address=${ip_addresses[0]}
-    elif [ ! ${#ip_addresses[@]:-} ];then
+    elif [  ${#ip_addresses[@]:-}  -gt 1 ];then
+         PS3="Please select the IP address to use for this server:"
+         select opt in ${ip_addresses[@]}; do
+             case $opt in
+                 *)
+                     system_ip_address=$opt
+                     break
+                     ;;
+             esac
+         done
+    else 
         warn "NO ip addresses are configured!"
         system_ip_address=""
         local system_ip_address_question="Please enter a system ip address you will be assigning to this server"
@@ -177,20 +190,8 @@ ask_ip_selection(){
         local system_ip_address_hint="Since you do not currently have an IP address, you can use this menu to add the IP you plan to assign after setup"
         local system_ip_address_ref="system_ip_address"
         ask system_ip_address
-    else
-      PS3="Please select the IP address to use:"
-      select opt in ${ip_addresses}; do
-          case $opt in
-             *)
-               system_ip_address=$opt     
-               break
-               ;;
-          esac
-      done
     fi
     
-    echo -n $system_ip_address >> $ip_address_file
-
 }
 
 wait_apps_running(){
@@ -215,18 +216,20 @@ wait_apps_running(){
 
 check_info_file(){
     if [[ -e /etc/kazoo/kazoo_boot.conf ]]; then
-        ip_address=`sed -n "s|IP_ADDRESS=\(.*\)|\1|g" /etc/kazoo/kazoo_boot.conf`
-        admin_user=`sed -n "s|ADMIN_USER=\(.*|\1\)|g" /etc/kazoo/kazoo_boot.conf`
-        admin_password=`sed -n "s|ADMIN_PASSWORD=\(.*\)|\1|g" /etc/kazoo/kazoo_boot.conf`
-        admin_realm=`sed -n "s|ADMIN_REALM=\(.*\)|\1|g" /etc/kazoo/kazoo_boot.conf`
+        ip_address=`sed -n "s|IP_ADDRESS=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+        admin_user=`sed -n "s|ADMIN_USER=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+        admin_password=`sed -n "s|ADMIN_PASSWORD=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+        admin_account=`sed -n "s|ADMIN_ACCOUNT=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+        admin_realm=`sed -n "s|ADMIN_REALM=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
     fi
 }
 
 set_info_file(){
-    echo "IP_ADDRESS=$system_ip_address" > /etc/kazoo/kazoo_boot.conf 
-    echo  "ADMIN_USER=$admin_user" >> /etc/kazoo/kazoo_boot.conf
-    echo "ADMIN_PASSWORD=$admin_passowrd" >> /etc/kazoo/kazoo_boot.conf
-    echo "s|ADMIN_REALM=.*|ADMIN_REALM=$admin_realm" >> /etc/kazoo/kazoo_boot.conf
+    echo "IP_ADDRESS=$system_ip_address"  >  /etc/kazoo/kazoo_boot.conf 
+    echo "ADMIN_USER=$admin_user"         >> /etc/kazoo/kazoo_boot.conf
+    echo "ADMIN_PASSWORD=$admin_password" >> /etc/kazoo/kazoo_boot.conf
+    echo "ADMIN_ACCOUNT=$admin_account"   >> /etc/kazoo/kazoo_boot.conf
+    echo "ADMIN_REALM=$admin_realm"       >> /etc/kazoo/kazoo_boot.conf
 }
 
 
