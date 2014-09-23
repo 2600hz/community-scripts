@@ -3,7 +3,7 @@
 default_cookie=""
 system_hostname=""
 
-install_log="/var/log/kazoo_install.log"
+logfile="/var/log/kazoo_config.log"
 
 declare -a errors_encountered
 
@@ -18,12 +18,12 @@ blue='\e[0;36m'
 
 dbg(){
     echo -e " - ${green}$* ${NC} "
-    echo -e " - ${green}$* ${NC} " >> $install_log
+    echo -e " - ${green}$* ${NC} " >> $logfile
 }
 
 info(){
     echo -e "${blue}$* ${NC} "
-    echo -e "${blue}$* ${NC} " >> $install_log
+    echo -e "${blue}$* ${NC} " >> $logfile
 }
 
 error(){
@@ -31,13 +31,13 @@ error(){
     echo 
     error="${red}ERROR: ${error_msg} ${NC} "
     echo -e "$error" 1>&2
-    echo -e "$error" >> $install_log
+    echo -e "$error" >> $logfile
     errors_encountered+=("$error")   
 }
 
 warn(){
     echo -e "${yellow}$* ${NC} ";
-    echo -e "${yellow}$* ${NC} " >> $install_log
+    echo -e "${yellow}$* ${NC} " >> $logfile
 }
 
 cookie_file="/etc/kazoo/erlang.cookie"
@@ -150,18 +150,39 @@ get_system_hostname(){
     system_hostname=$(hostname -f)
 }
 
+check_info_file(){
+    if [[ -e /etc/kazoo/kazoo_boot.conf ]]; then
+        ip_address=`sed -n "s|IP_ADDRESS=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+        admin_user=`sed -n "s|ADMIN_USER=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+        admin_password=`sed -n "s|ADMIN_PASSWORD=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+        admin_account=`sed -n "s|ADMIN_ACCOUNT=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+        admin_realm=`sed -n "s|ADMIN_REALM=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
+    fi
+}
+
+set_info_file(){
+    echo "IP_ADDRESS=$system_ip_address"  >  /etc/kazoo/kazoo_boot.conf
+    echo "ADMIN_USER=$admin_user"         >> /etc/kazoo/kazoo_boot.conf
+    echo "ADMIN_PASSWORD=$admin_password" >> /etc/kazoo/kazoo_boot.conf
+    echo "ADMIN_ACCOUNT=$admin_account"   >> /etc/kazoo/kazoo_boot.conf
+    echo "ADMIN_REALM=$admin_realm"       >> /etc/kazoo/kazoo_boot.conf
+}
+
 check_ip(){
     #check if system already has IP address 
     local ip_address=""; check_info_file
+    
+    ! [[ ${ip_address:-} ]] && return 1
+
+    
     if [[ $ip_address =~ $ip_address_regex ]]; then
         system_ip_address=$ip_address
         return 0
     else 
-        warn "The system IP address in $ip_address_file is not a valid ip!"
+        warn "system IP address ${red}${ip_address}${yellow} is not a valid"
         return 1
     fi
 }
-
 
 ask_ip_selection(){
     local -a ip_addresses
@@ -173,7 +194,10 @@ ask_ip_selection(){
     if [ ${#ip_addresses[@]:-} -eq 1 ];then
         system_ip_address=${ip_addresses[0]}
     elif [  ${#ip_addresses[@]:-}  -gt 1 ];then
-         PS3="Please select the IP address to use for this server:"
+             echo 
+         info "Please select the ${red}IP address${blue} to use for handling traffic on this server: "
+             echo 
+         PS3="Select IP address: "
          select opt in ${ip_addresses[@]}; do
              case $opt in
                  *)
@@ -198,7 +222,7 @@ wait_apps_running(){
     dbg "Waiting for whapps to start by polling: ${NC}/opt/kazoo/utils/sup/sup whapps_controller list_apps"
 
     while
-    /opt/kazoo/utils/sup/sup whapps_controller list_apps &>> $install_log
+    /opt/kazoo/utils/sup/sup whapps_controller list_apps &>> $logfile
     (( $? != 0 ))
     do
         continue
@@ -207,32 +231,12 @@ wait_apps_running(){
     dbg "Waiting for ecallmgr to start by polling: ${NC}/opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes"
 
     while
-    /opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes &>> $install_log
+    /opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes &>> $logfile
     (( $? != 0 ))
     do
         continue
     done
 }
-
-check_info_file(){
-    if [[ -e /etc/kazoo/kazoo_boot.conf ]]; then
-        ip_address=`sed -n "s|IP_ADDRESS=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
-        admin_user=`sed -n "s|ADMIN_USER=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
-        admin_password=`sed -n "s|ADMIN_PASSWORD=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
-        admin_account=`sed -n "s|ADMIN_ACCOUNT=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
-        admin_realm=`sed -n "s|ADMIN_REALM=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
-    fi
-}
-
-set_info_file(){
-    echo "IP_ADDRESS=$system_ip_address"  >  /etc/kazoo/kazoo_boot.conf 
-    echo "ADMIN_USER=$admin_user"         >> /etc/kazoo/kazoo_boot.conf
-    echo "ADMIN_PASSWORD=$admin_password" >> /etc/kazoo/kazoo_boot.conf
-    echo "ADMIN_ACCOUNT=$admin_account"   >> /etc/kazoo/kazoo_boot.conf
-    echo "ADMIN_REALM=$admin_realm"       >> /etc/kazoo/kazoo_boot.conf
-}
-
-
 
 
 ################################################################################
@@ -269,12 +273,12 @@ run_cmd(){
         error_final=${error//TOKEN/$value}
     fi
 
-    #run command and log output to $install_log
+    #run command and log output to $logfile
     dbg $debug_final
 
     while read line; do 
         echo -en "\r${ceol}${line:-}"
-    done < <(eval $cmd_final 2>> $install_log || error "$error")
+    done < <(eval $cmd_final 2>> $logfile || error "$error")
      echo
 
 }
@@ -307,9 +311,9 @@ set_value(){
     local debug_final=${debug//TOKEN/$value}
     local cmd_final=${cmd//TOKEN/$value}
 
-    #run command and log output to $install_log
+    #run command and log output to $logfile
     dbg $debug_final
-    eval $cmd_final &>> $install_log || error_exit "Command $cmd_final failed"
+    eval $cmd_final &>> $logfile || error_exit "Command $cmd_final failed"
 
     #verify command returned success response, throw error if failed
     if [[ $? -ne 0 ]];then
@@ -320,7 +324,7 @@ set_value(){
 check_re(){
    val=$1
    re=$2
-   echo $val | grep -P "$re" &>> $install_log || return 1
+   echo $val | grep -P "$re" &>> $logfile || return 1
    return 
 }
 
