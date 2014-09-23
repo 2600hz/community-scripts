@@ -40,6 +40,13 @@ warn(){
     echo -e "${yellow}$* ${NC} " >> $logfile
 }
 
+log_print(){
+    while read line; do 
+        echo -e $line
+        echo -e $line >> $logfile
+    done
+}
+
 cookie_file="/etc/kazoo/erlang.cookie"
 
 #TODO: Add common definition for REGEX matches 
@@ -278,7 +285,7 @@ run_cmd(){
 
     while read line; do 
         echo -en "\r${ceol}${line:-}"
-    done < <(eval $cmd_final 2>> $logfile || error "$error")
+    done < <(eval $cmd_final 2>&1 log_print || error "$error")
      echo
 
 }
