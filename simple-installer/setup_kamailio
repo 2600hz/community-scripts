@@ -4,7 +4,6 @@ set -e
 set -o nounset
 
 #logfile
-install_log="/var/log/kazoo_install.log"
 #lock_file
 lockfile="/var/lock/subsys/setup_kamailio.lockfile"
 
