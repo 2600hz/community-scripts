@@ -205,7 +205,7 @@ system_ip_address=""; check_ip || ask_ip_selection
 system_hostname=""; get_system_hostname
 admin_realm="sip.${system_hostname}"
 
-account_string="$admin_account $admin_realm $admin_user \'$admin_password\'"
+account_string="$admin_account $admin_realm $admin_user \"$admin_password\""
 
 
 
