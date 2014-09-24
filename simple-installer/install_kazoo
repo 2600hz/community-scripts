@@ -593,7 +593,7 @@ yum_loop(){
     ret=0
     while read line; do
         echo -en "\r${ceol}$line"         
-    done < <(yum install -y $pack 2>&1 log_print || ret=1  )
+    done < <(yum install -y $pack |& log_print || ret=1  )
     echo
    
     return $ret   

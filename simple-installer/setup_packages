@@ -3,7 +3,6 @@
 set -o nounset
 ceol=`tput el`
 
-
 declare -A install_list
 
 ! [[ ${HOME:-} ]] && export HOME=/root
