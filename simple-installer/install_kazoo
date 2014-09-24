@@ -79,7 +79,7 @@ info(){
 }
 
 error(){ 
-    echo -e "${red}ERROR: $* ${NC} "; 
+    echo -e "${red}ERROR: $* ${NC} " 
     echo -e "${red}ERROR: $* ${NC} " >> $install_log 
 }
 
