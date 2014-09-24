@@ -143,17 +143,19 @@ attach_ecallmgr_dbg="Attach ecallmgr to FreeSWITCH with: ${NC} sup -n ecallmgr e
 attach_ecallmgr_cmd="/opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
 attach_ecallmgr_error="Attach ecallmgr failed, rerun with: ${NC}sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
 
-update_bigcouch_views_dbg="Updating all Bigcouch views with: ${NC}sup whapps_maintenance blocking_refresh"
-update_bigcouch_views_cmd="/opt/kazoo/utils/sup/sup whapps_maintenance blocking_refresh"
-update_bigcouch_views_error="whapps blocking_refresh failed! rerun with: ${NC}sup whapps_maintenance blocking_refresh"
+update_bigcouch_views_dbg="Updating all Bigcouch views with: ${NC}sup whapps_maintenance migrate"
+update_bigcouch_views_cmd="/opt/kazoo/utils/sup/sup whapps_maintenance migrate"
+update_bigcouch_views_error="whapps blocking_refresh failed! rerun with: ${NC}sup whapps_maintenance migrate"
 
 import_media_files_dbg="Importing media files with: ${NC}sup whistle_media_maintenance import_prompts /opt/kazoo/system_media/ en-us "
+#this needs to be fixed, this is not currently working. Using old command for now. 
 import_media_files_cmd="sup whistle_media_maintenance import_prompts /opt/kazoo/system_media/ en-us"
+#import_media_files_cmd="/opt/kazoo/utils/media_importer/media_importer /opt/kazoo/system_media/*.wav"
 import_media_files_error="Media prompt import failed with: ${NC}sup whistle_media_maintenance import_prompts /opt/kazoo/system_media/ en-us"
 
-create_account_dbg="Creating admin account with: ${NC}sup crossbar_maintenance create_account admin sip.TOKEN admin admin"
-create_account_cmd="/opt/kazoo/utils/sup/sup crossbar_maintenance create_account admin \"sip.TOKEN\" admin admin"
-create_account_error="Account creation failed, you can create an account with: ${NC}sup crossbar_maintenance create_account admin sip.TOKENadmin admin"
+create_account_dbg="Creating admin account with: ${NC}sup crossbar_maintenance create_account TOKEN"
+create_account_cmd="/opt/kazoo/utils/sup/sup crossbar_maintenance create_account TOKEN"
+create_account_error="Account creation failed, you can create an account with: ${NC}sup crossbar_maintenance create_account TOKEN"
 
 handle_args(){
 
@@ -197,6 +199,8 @@ check_lock
 
 handle_args $@
 
+    echo
+
 system_ip_address=""; check_ip || ask_ip_selection
 system_hostname=""; get_system_hostname
 admin_realm="sip.${system_hostname}"
@@ -207,8 +211,11 @@ admin_realm="sip.${system_hostname}"
 #ask for account info if kazoo installed
 if [[ ${install_list[kazoo-ui]:-} ]]; then
     check_info_file 
-    ! [[ ${admin_user:-} ]] && ask_account_info
+    ! [[ ${admin_user:-} ]] || ! [[ ${admin_password:-} ]] || ! [[ ${admin_account:-} ]] && ask_account_info
 fi 
+
+#account string to use in install
+account_string="\"$admin_account\" \"$admin_realm\" \"$admin_user\" \"$admin_password\""
 
 do_setup
 
@@ -217,7 +224,7 @@ info " : Restarting services : "
 
 #TODO: SETUP BASIC IP TABLES ENTRIES PER SERVICE!!!!!!
 warn "WARNING:  Stopping IP tables, that means your shields are down!"
-warn "          You should setup some firewall rules, before you're haxored!!"
+warn "          You should setup some firewall rules, before you are haxored!!"
 service iptables stop 
 chkconfig iptables off 
 
@@ -247,7 +254,7 @@ fi
 if [[ ${install_list['freeswitch']:-} &&  ${install_list['kazoo']:-} ]];then 
     run_cmd 'attach_ecallmgr' $system_hostname
 elif [[ ${install_list['freeswitch']:-} ]];then
-    info "Attach this freeswitch to your cluster from any apps sever by running: ${NC}sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@${system_hostname}" 
+    info "Attach this FreeSWITCH to your cluster from any apps sever by running: ${NC}sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@${system_hostname}" 
 fi 
 
 [[ ${install_list['kazoo-ui']:-} ]] && run_cmd 'restart_httpd' 
@@ -265,9 +272,12 @@ fi
 [[ ${install_list['kazoo-ui']:-}   ]] && run_cmd 'boot_httpd'
 
 if [[ ${all_in_one:-} ]];then
-    /opt/kazoo_install/kazoo_motd
-   info "adding on-boot script to support all in one systems"
-   echo "/opt/install_kazoo/onboot_kazoo" >> /etc/rc.d/rc.local
+   
+   echo "/opt/kazoo_install/kazoo_motd" >> /root/.bashrc
+
+   dbg "adding on-boot script to support all in one systems"
+   
+   echo "/opt/kazoo_install/onboot_kazoo" >> /etc/rc.d/rc.local
 fi
 
 
@@ -275,19 +285,19 @@ fi
 if [[ ${install_list['bigcouch']:-} ]];then 
     run_cmd 'update_bigcouch_views'
     run_cmd 'import_media_files'
-    run_cmd 'create_account' $system_hostname
+    run_cmd 'create_account' "$account_string"
 
 	echo
     echo
      
-    info "Created admin account for kazoo with credentials:" 
+    info "Created administrator account for kazoo with credentials:" 
     info "Username: ${green}${admin_user}"
     info "Password: ${green}${admin_password}"
     info "Account:  ${green}${admin_account}"
-    info "Realm:    ${green}sip.${system_hostname}"
+    info "Realm:    ${green}${admin_realm}"
 fi 
 
-[[ ${install_list['kazoo-ui']:-} ]] && info "You can access the kazoo-ui by going to ${green}http://$system_ip_address/kazoo-ui"
+[[ ${install_list['kazoo-ui']:-} ]] && info "You can access the kazoo-ui by going to: ${green}http://$system_ip_address/kazoo-ui"
  
 echo 
 

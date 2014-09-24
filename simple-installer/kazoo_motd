@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
-#print formatting and logging func
+#print formatting
 green='\e[0;32m'
 red='\e[0;31m'
 yellow='\e[0;33m'
 NC='\e[0m'
 blue='\e[0;36m'
 
+[ -e /etc/kazoo/VERSION ] && kazoo_version=$(</etc/kazoo/VERSION)
 
 if [[ -e /etc/kazoo/kazoo_boot.conf ]]; then
     ip_address=`sed -n "s|IP_ADDRESS=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
@@ -38,7 +39,7 @@ write ------------------------------------------------------------
 write "Hostname: ${green}`uname -n`${NC}                "
 write "      OS: ${green}`cat /etc/redhat-release`${NC} "
 write "  Kernel: ${green}`uname -sr`${NC}               "
-write " uptime: ${green}`uptime`${NC}                   "
+write "  uptime: ${green}`uptime`${NC}                  "
 write "                                                 "
 write "System IP addresses:                             "
 write "------------------------------------------------------------"                         
@@ -46,7 +47,8 @@ write "${green}`ifconfig | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 
 write ""
 write "Kazoo Information                                           "
 write "------------------------------------------------------------"
-write "  WebServer: ${green}http://${ip_address}/kazoo-ui${NC}    "
-write "    Account: ${green}${admin_account}${NC}                 "
-write "  Sip Realm: ${green}${admin_realm}${NC}           "
+[[ $kazoo_version ]] && write "    Version: ${green}$kazoo_version${NC}                    "
+[[ $ip_address    ]] && write "  WebServer: ${green}http://${ip_address}/kazoo-ui${NC}     "
+[[ $admin_account ]] && write "    Account: ${green}${admin_account}${NC}                  "
+[[ $admin_realm   ]] && write "  Sip Realm: ${green}${admin_realm}${NC}                    "
 write ${NC}
