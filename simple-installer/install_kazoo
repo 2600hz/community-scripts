@@ -630,9 +630,11 @@ handle_args $@
 check_lock
 banner
 set_hostname
-install_prereqs
+
 
 ! [[ ${all_in_one:-} ]] && set_network
+
+install_prereqs
 
 #if all_in_one is already set we are doing auto pilot install via handle_args
 ! [[ ${install_source:-} ]] && main_menu
