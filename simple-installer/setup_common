@@ -380,7 +380,7 @@ ask(){
         ask $@
     fi
 
-    eval $ref="$ANSWER"
+    eval $ref='$ANSWER'
 }
 
 # recursive function to get yes or no response for $question, 
