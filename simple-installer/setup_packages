@@ -205,11 +205,6 @@ system_ip_address=""; check_ip || ask_ip_selection
 system_hostname=""; get_system_hostname
 admin_realm="sip.${system_hostname}"
 
-account_string="$admin_account $admin_realm $admin_user \"$admin_password\""
-
-
-
-
 #auto generate Erlang cookie on all-in-one installs
 [[ ${all_in_one:-} ]] && generate_erlang_cookie
 
@@ -218,6 +213,9 @@ if [[ ${install_list[kazoo-ui]:-} ]]; then
     check_info_file 
     ! [[ ${admin_user:-} ]] || ! [[ ${admin_password:-} ]] || ! [[ ${admin_account:-} ]] && ask_account_info
 fi 
+
+#account string to use in install
+account_string="$admin_account $admin_realm $admin_user \"$admin_password\""
 
 do_setup
 
