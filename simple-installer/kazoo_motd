@@ -7,7 +7,7 @@ yellow='\e[0;33m'
 NC='\e[0m'
 blue='\e[0;36m'
 
-kazoo_version=(</etc/kazoo/VERSION)
+kazoo_version=$(</etc/kazoo/VERSION)
 
 if [[ -e /etc/kazoo/kazoo_boot.conf ]]; then
     ip_address=`sed -n "s|IP_ADDRESS=\(.*\)|\1|p" /etc/kazoo/kazoo_boot.conf`
