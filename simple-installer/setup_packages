@@ -199,6 +199,8 @@ check_lock
 
 handle_args $@
 
+    echo
+
 system_ip_address=""; check_ip || ask_ip_selection
 system_hostname=""; get_system_hostname
 admin_realm="sip.${system_hostname}"
@@ -285,7 +287,7 @@ fi
 if [[ ${install_list['bigcouch']:-} ]];then 
     run_cmd 'update_bigcouch_views'
     run_cmd 'import_media_files'
-    run_cmd 'create_account' $account_string
+    run_cmd 'create_account' "$account_string"
 
 	echo
     echo
@@ -294,7 +296,7 @@ if [[ ${install_list['bigcouch']:-} ]];then
     info "Username: ${green}${admin_user}"
     info "Password: ${green}${admin_password}"
     info "Account:  ${green}${admin_account}"
-    info "Realm:    ${green}sip.${system_hostname}"
+    info "Realm:    ${green}${account_realm}"
 fi 
 
 [[ ${install_list['kazoo-ui']:-} ]] && info "You can access the kazoo-ui by going to: ${green}http://$system_ip_address/kazoo-ui"
