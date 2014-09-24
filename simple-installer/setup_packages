@@ -296,7 +296,7 @@ if [[ ${install_list['bigcouch']:-} ]];then
     info "Username: ${green}${admin_user}"
     info "Password: ${green}${admin_password}"
     info "Account:  ${green}${admin_account}"
-    info "Realm:    ${green}${account_realm}"
+    info "Realm:    ${green}${admin_realm}"
 fi 
 
 [[ ${install_list['kazoo-ui']:-} ]] && info "You can access the kazoo-ui by going to: ${green}http://$system_ip_address/kazoo-ui"
