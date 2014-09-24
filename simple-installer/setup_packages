@@ -277,7 +277,7 @@ if [[ ${all_in_one:-} ]];then
 
    dbg "adding on-boot script to support all in one systems"
    
-   echo "/opt/install_kazoo/onboot_kazoo" >> /etc/rc.d/rc.local
+   echo "/opt/kazoo_install/onboot_kazoo" >> /etc/rc.d/rc.local
 fi
 
 
