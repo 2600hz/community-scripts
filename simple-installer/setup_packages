@@ -268,7 +268,7 @@ fi
 if [[ ${all_in_one:-} ]];then
     /opt/install_kazoo/kazoo_motd
    info "adding on-boot script to support all in one systems"
-   echo "/opt/install_kazoo/onboot_kazoo" >> /etc/rc.d/rc.local
+   echo '/opt/install_kazoo/onboot_kazoo' >> /etc/rc.d/rc.local
 fi
 
 
