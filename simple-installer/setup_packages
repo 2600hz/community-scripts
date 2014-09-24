@@ -144,7 +144,7 @@ attach_ecallmgr_cmd="/opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance a
 attach_ecallmgr_error="Attach ecallmgr failed, rerun with: ${NC}sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
 
 update_bigcouch_views_dbg="Updating all Bigcouch views with: ${NC}sup whapps_maintenance blocking_refresh"
-update_bigcouch_views_cmd="/opt/kazoo/utils/sup/sup whapps_maintenance blocking_refresh"
+update_bigcouch_views_cmd="/opt/kazoo/utils/sup/sup whapps_maintenance migrate"
 update_bigcouch_views_error="whapps blocking_refresh failed! rerun with: ${NC}sup whapps_maintenance blocking_refresh"
 
 import_media_files_dbg="Importing media files with: ${NC}sup whistle_media_maintenance import_prompts /opt/kazoo/system_media/ en-us "
