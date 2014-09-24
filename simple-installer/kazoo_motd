@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#print formatting and logging func
+#print formatting
 green='\e[0;32m'
 red='\e[0;31m'
 yellow='\e[0;33m'
@@ -38,7 +38,7 @@ write ------------------------------------------------------------
 write "Hostname: ${green}`uname -n`${NC}                "
 write "      OS: ${green}`cat /etc/redhat-release`${NC} "
 write "  Kernel: ${green}`uname -sr`${NC}               "
-write " uptime: ${green}`uptime`${NC}                   "
+write "  uptime: ${green}`uptime`${NC}                  "
 write "                                                 "
 write "System IP addresses:                             "
 write "------------------------------------------------------------"                         
