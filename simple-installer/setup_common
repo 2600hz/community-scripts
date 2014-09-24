@@ -254,7 +254,7 @@ wait_apps_running(){
 
 run_cmd(){
     local name=$1
-    local value=${2:-}
+    local value="${2:-}"
 
     #use $name to find variables we want
     local _debug=\$"${name}_dbg"
@@ -301,7 +301,7 @@ set_value(){
     ################################################################################
 
     local name=$1
-    local value=$2
+    local value="$2"
 
     #use $name to find variables we want
     local _debug=\$"${name}_dbg"
