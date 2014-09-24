@@ -215,7 +215,7 @@ if [[ ${install_list[kazoo-ui]:-} ]]; then
 fi 
 
 #account string to use in install
-account_string="$admin_account $admin_realm $admin_user \"$admin_password\""
+account_string="\"$admin_account\" \"$admin_realm\" \"$admin_user\" \"$admin_password\""
 
 do_setup
 
