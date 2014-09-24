@@ -92,7 +92,7 @@ warn(){
 log_print(){
     while read line; do 
         echo -e $line
-        echo -e $line >> $logfile
+        echo -e $line >> $install_log
     done
 }
 
