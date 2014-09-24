@@ -678,7 +678,7 @@ do
     echo -e "${green}     $pack pending configuration${NC}"
 done
 
-dbg "running ./opt/kazoo_install/setup_packages $arg"
+dbg "running /opt/kazoo_install/setup_packages $arg"
 
 /opt/kazoo_install/setup_packages $arg 
 
