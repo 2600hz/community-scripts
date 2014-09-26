@@ -312,12 +312,25 @@ set_install_source(){
     fi
 }
 
+set_network_up(){
+    local -A interfaces
+    while read line; do 
+        [[ $line =~ ^[0-9]:.* ]] && interfaces+=(cut -d' ' -f 2);
+    done
+
+    for int in ${interfaces[@]}; do
+        ip link set $int up 
+    done
+
+}
+
 
 set_network(){
     local answer  
     confirm "Do you want to setup your network configuration? [y|n]"
     if [[ ${answer:-} =~ [yY] ]];then
          system-config-network
+         set_network_up
     fi 
 }
 
