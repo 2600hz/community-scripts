@@ -320,9 +320,7 @@ set_interfaces_up(){
              interfaces+=(${int%%:*})
         fi
     done < <(ip link)
-
-    dbg "Restarting networking with:${NC} service network restart"
-
+    
     for int in ${interfaces[@]}; do
         local $answer=""
         confirm "Interface $int is currently down, do you want to bring this up? [Y|N]"
