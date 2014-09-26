@@ -312,14 +312,18 @@ set_install_source(){
     fi
 }
 
-set_network_up(){
-    local -A interfaces
+set_interfaces_up(){
+    local -a interfaces
     while read line; do 
-        [[ $line =~ ^[0-9]:.* ]] && interfaces+=(cut -d' ' -f 2);
-    done
+        if [[ $line =~ ^[0-9]:.* ]];then
+             local int=`cut -d' ' -f 2`;
+             interfaces+=(${int%%:.*})
+        fi
+    done < <(ip link)
 
     for int in ${interfaces[@]}; do
-        ip link set $int up 
+        dbg "bringing up interface ${red}${int}${NC}" 
+        ip link set $int up || error "interface $int failed to come up" 
     done
 
 }
@@ -330,7 +334,7 @@ set_network(){
     confirm "Do you want to setup your network configuration? [y|n]"
     if [[ ${answer:-} =~ [yY] ]];then
          system-config-network
-         set_network_up
+         set_interfaces_up
     fi 
 }
 
