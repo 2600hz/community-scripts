@@ -321,6 +321,9 @@ set_interfaces_up(){
         fi
     done < <(ip link)
 
+    dbg "Restarting networking with:${NC} service network restart"
+    service network restart
+
     for int in ${interfaces[@]}; do
         dbg "bringing up interface ${red}${int}${NC}" 
         ip link set $int up || error "interface $int failed to come up" 
