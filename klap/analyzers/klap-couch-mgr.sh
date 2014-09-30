@@ -15,4 +15,5 @@ for FILE in $(listFiles $@); do
         statHeader
 
 	zgrep "unformatted error" $TMP_FILE | rev | cut -d " " -f 1 | rev | sort | uniq -c | sort -nr | head | printTable "Unformatted Errors"
+        zgrep "gateway_timeout" $FILE | wc -l | printTable "Number of gateway timeouts"
 done
