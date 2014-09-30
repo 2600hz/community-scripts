@@ -312,6 +312,23 @@ set_install_source(){
     fi
 }
 
+
+enable_onboot(){
+    local onboot=$1
+    local int=$2
+
+    answer=""
+    confirm "Do you want to enable interface to start up $int on boot? [Y|N]"
+    [[ $answer =~ [Nn] ]] && return
+
+    if [[ $onboot == "add" ]];then
+        echo  "ONBOOT=yes" >> "/etc/sysconfig/network-scripts/ifcfg-${int}"
+    elif [[ $onboot == "replace" ]];then
+        sed -i "s|ONBOOT=no|ONBOOT=yes|g" "/etc/sysconfig/network-scripts/ifcfg-${int}"
+    fi
+
+}
+
 set_interfaces_up(){
     local -a interfaces
     while read line; do 
@@ -320,25 +337,28 @@ set_interfaces_up(){
              interfaces+=(${int%%:*})
         fi
     done < <(ip link)
+
+    [[  ${#interfaces[@]:-} -eq 0 ]] && return
+
     
     for int in ${interfaces[@]}; do
         local $answer=""
         confirm "Interface $int is currently down, do you want to bring this up? [Y|N]"
+     
         if [[ $answer =~ [Yy] ]];then
             dbg "bringing up interface ${red}${int}${NC}" 
             ifup $int || error "interface $int failed to come up"
         fi
 
-        grep -s ONBOOT "/etc/sysconfig/network-scripts/ifcfg-${int}"
-        if [[ $? -gt 0 ]];then
-            answer=""
-            confirm "Do you want to enable interface to start up $int on boot? [Y|N]"
-            if [[ $answer =~ [Yy] ]];then
-                dbg "setting interface ${red}${int}${NC} to enable on boot" 
-                echo  "ONBOOT=yes" >> "/etc/sysconfig/network-scripts/ifcfg-${int}"
-            fi
-        fi  
+        onboot=$(grep -s ONBOOT "/etc/sysconfig/network-scripts/ifcfg-${int}")
+
+        if [[ ! ${onboot:-} ]];then
+            enable_onboot 'add' $int
+        elif [[ ${onboot:-} == 'ONBOOT=no' ]];then
+            enable_onboot 'replace' $int 
+        fi
     done
+
 }
 
 
@@ -346,8 +366,10 @@ set_network(){
     local answer  
     confirm "Do you want to setup your network configuration? [y|n]"
     if [[ ${answer:-} =~ [yY] ]];then
-         system-config-network
+         system-config-network 
          set_interfaces_up
+         dbg "restarting network service to apply changes"
+         service network restart
     fi 
 }
 
