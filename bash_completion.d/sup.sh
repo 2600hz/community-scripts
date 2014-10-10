@@ -9,16 +9,15 @@ _sup()
     #
     # Find all whapps that contain maintenance commands
     #
-    opts=`find $kazoopath/applications/*/src/*maintenance.erl |sed 's/.*\///' |sed 's/.erl$//' | xargs`
-
+    opts=`find $kazoopath/*/*/src/*maintenance.erl |sed 's/.*\///' |sed 's/.erl$//' | xargs`
 
     #
     #  Complete the arguments
     #
     case "${prev}" in
 	*_maintenance)
-            local commands=$(grep export $kazoopath/applications/*/src/${prev}.erl |sed 's/.*(\[//' | sed 's/]).//')
-	    COMPREPLY=( $(compgen -W "${commands}" -- ${cur}) )
+            local commands=$(grep export $kazoopath/*/*/src/${prev}.erl |sed 's/.*(\[//' | sed 's/]).//')
+	        COMPREPLY=( $(compgen -W "${commands}" -- ${cur}) )
             return 0
             ;;
 	*)

@@ -27,4 +27,6 @@ Step 5: Type sup and hit tab!  Rejoice!
 
 (i.e. You will be able to tab complete to something like "sup stepswitch_maintenance process_number/1" which tells you that process_number takes one argument.  On execution, it needs to be removed (and the argument added).  Example:  "sup stepswitch_maintenance process_number +12125551212"
 
+4) Some modules have comments or do multiple exports so they don't auto-complete properly.  If you find one fix it :) or let us know and we will correct it, thanks!
+
 Happy tab completing!
