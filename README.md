@@ -79,6 +79,9 @@ _Note:_ This can consume large amounts of memory, and impact the running system.
 ## RadiusCDR
 Script to listen for incoming CDRs from the RabbitMQ server, store the CDR in a sqlite database, and send radius account start and stop packets for billing
 
+## bash_completion.d
+Bash completion scripts for the sup utility! Tab completion for sup module names and function names, including argument count (which you should backspace when using)
+
 ## kazoo-puppet
 Puppet scripts for deploying Kazoo (requires an update, only valid for single server currently)
 
