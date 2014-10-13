@@ -11,6 +11,12 @@ module.exports =  {
 
     "base_path": "",
 
+    "influxdb_host": "my_influxdb_server",
+
+    "grafanadb_dbname": "grafana-dashboards",
+    "grafanadb_user": "dashboardsuser",
+    "grafanadb_password": "dashboardspassword",
+
     ////////////////////////////////////
     // Proxy server configurations
     ////////////////////////////////////
