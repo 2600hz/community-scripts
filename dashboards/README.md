@@ -265,12 +265,6 @@ Warning: No CAS authentication presented
 Server listening on 9202
 ```
 
-Drop the supplied config file from this repo in grafana/config.js into /usr/local/grafana-authentication-proxy/grafana/config.js
-
-##############################
-### ANYTHING TO MODIFY IN IT?
-##############################
-
 It will (by default) use InfluxDB to store saved dashboards.  You can also use elasticsearch if you've got that set up already, but since we didnt cover it in this tutorial, I'll skip that.
 
 
@@ -286,7 +280,7 @@ yum install -y nginx
 
 Then take the grafana.conf I've included in this repo in the nginx/conf.d file, and place it in your own /etc/nginx/conf.d directory.
 
-Make the necessary changes to the hostnames in the config file, and restart nginx.
+Make the necessary changes to the hostnames in the config file (if necessary), or simply remove /etc/nginx/conf.d/default.conf so the grafana.conf becomes the default host (if you dont have any other virtual hosts running on this server) and restart nginx.
 
 #### Test it out!
 
