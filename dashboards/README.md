@@ -67,6 +67,8 @@ Click databases, fill in the database name __grafana-stats__ and then click Crea
 
 Click on your newly created database name, and add a user that will be used to put data in this database only.  Write it down cause you'll need it in step 2.  You dont need to make it an admin user.
 
+Now repeat the database + user creation process once more, this time for a database we'll call __grafana-dashboards__ where grafana will store its saved dashboards.
+
 InfluxDB is all done!
 
 
@@ -211,7 +213,7 @@ We're going to install Grafana via grafana-authentication-proxy.  It's a small w
 ```
 cd /usr/local
 yum install -y git
-git clone https://github.com/strima/grafana-authentication-proxy.git
+git clone https://github.com/voxter/grafana-authentication-proxy.git
 cd grafana-authentication-proxy/
 git submodule init
 git submodule update
@@ -222,7 +224,7 @@ npm install
 Update grafana to the latest version (and base it off the proper repo):
 
 ```
-cd grafana && git remote set-url origin https://github.com/grafana/grafana.git && git checkout master && git pull
+cd grafana && git checkout master && git pull
 npm install
 grunt
 ```
@@ -231,7 +233,7 @@ grunt
 
 Edit /usr/local/grafana-authentication-proxy/config.js
 
-Depending on wether or not you're using elasticsarch (in this example, for storing user dashboards) you can specify your ES server information here too, and it will proxy front end user auth for ES queries as well. Otherwise you can leave it alone.
+Depending on wether or not you're using elasticsarch (in this case, it would be for storing user dashboards) you can specify your ES server information here too, and it will proxy front end user auth for ES queries as well. Otherwise you can leave it alone, and we'll store our dashboards in InfluxDB
 
 Pay attention to the following lines in the config file and update them accordingly:
 
