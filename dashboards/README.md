@@ -65,6 +65,8 @@ Click disconnect in the top right, then log back in with your new username and p
 
 Click databases, fill in the database name __grafana-stats__ and then click Create Database.  You can leave the shard defaults as is.
 
+Click on your newly created database name, and add a user that will be used to put data in this database only.  Write it down cause you'll need it in step 2.  You dont need to make it an admin user.
+
 InfluxDB is all done!
 
 
@@ -77,20 +79,38 @@ Graphite-API docs are here: http://graphite-api.readthedocs.org/en/latest/
 
 #### Install Graphite-API
 
-Personally, I installed using pip (you must yum install python-pip first - note: You must have [EPEL](https://fedoraproject.org/wiki/EPEL) repos installed)
+First, lets install the [EPEL](https://fedoraproject.org/wiki/EPEL) repo for Centos 6. Click the link if you need the repo for another version.
 
 ```
-pip install graphite-api
+rpm -ivh http://fedora-epel.mirror.iweb.com/6/i386/epel-release-6-8.noarch.rpm
 ```
 
-You'll also need some supporting packages in order to run graphite-api. You can serve it from apache, nginx, gunicorn, whatever you want.  I've used gunicorn for simplicity here, so make sure gunicorn is avaiable on your system. 
+Then lets install pip and the rest of the packages and tools you'll need:
 
-On CentOS:
+```
+yum install python-pip gcc libffi-devel python-devel cairo
+pip install influxdb-python
+pip install graphite-influxdb
+pip install Flask-Cache
+```
+
+Currently, we need to download a patched version of graphite-api that supports caches, statsd instrumentation, and graphite-style templates.
+
+```
+cd /tmp
+wget -O graphite-api-patched.tar.gz https://github.com/Dieterbe/graphite-api/tarball/support-templates2
+tar zxvf graphite-api-patched.tar.gz
+cd Dieterbe-graphite-api-739165f/
+python setup.py install
+```
+
+You'll also need some supporting packages in order to run graphite-api. You can serve it from apache, nginx, gunicorn, whatever you want.  I've used straight-up gunicorn for simplicity here, so make sure gunicorn is avaiable on your system. For more detailed instructions on hosting behind nginx, apache, etc, see the graphite-api docs here: http://graphite-api.readthedocs.org/en/latest/deployment.html
+
+So let's get gunicorn on CentOS:
 
 ```
 yum install python-gunicorn
 ```
-
 
 #### Configure Graphite-API
 
@@ -140,12 +160,18 @@ logging:
       level: INFO
 ```
 
-#### Start Graphite-API
-
-It will be listening on tcp port 8000, as you can see in the command line below. If you want to change that, go ahead.  Make sure its accessible though.
+The search_index file path needs to exist. You can place it anywhere you like, but to keep with the path in the example, you'll need to create the directory and make sure whichever user you're running gunicorn as can write to it:
 
 ```
-/usr/bin/python /usr/bin/gunicorn -b 0.0.0.0:8000 -w 2 --log-level debug graphite_api.app:app
+mkdir -p /data/graphite/storage/
+```
+
+#### Start Graphite-API
+
+It will be listening on tcp port 8000, as you can see in the command line below. If you want to change that, go ahead.  Make sure its accessible though.  Note, my command line below wil run it in the background.  Remove the & at the end to run it in the foreground if you want to test for now.
+
+```
+/usr/bin/python /usr/bin/gunicorn -b 0.0.0.0:8000 -w 2 --log-level debug graphite_api.app:app &
 ```
 
 ### Step 3: Netcat 
@@ -164,6 +190,7 @@ The graphite metric format is:  METRICNAME METRICVALUE POSIXDATESTAMP
 Here's a small script you can use to test it:
 
 ~~~
+#!/bin/sh
 TIMESTAMP=`date +%s`
 METRIC=metric.test.thing
 VALUE=10
@@ -171,162 +198,129 @@ VALUE=10
 echo $METRIC $VALUE $TIMESTAMP | nc HOST_OR_IP_OF_INFLUXDB_SERVER 2003
 ~~~
 
-Now, go browse the InfluxDB web admin page (http://IP_OF_YOUR_INFLUXDB:8083) and see if you can do "select * from metric.test.thing;" It should return one value of 10.
+Now, go browse the InfluxDB web admin page (http://IP_OF_YOUR_INFLUXDB:8083), click on "Explore data" next to your database __grafana-stats__  and see if you can do "select * from metric.test.thing;" It should return one value of 10.
 
 
 ### Step 4: Grafana
 Purpose: To actually draw the awesome dashboards! It wants to speak to a graphite server, which graphite-api is handling for us, which will then in turn query InfluxDB.
 
 #### Install Grafana
-Pre requisites: Elasticsearch or ???
 
-Grab the latest grafana from http://grafana.org/download/
-As of this writing, the latest is 1.8.1
+We're going to install Grafana via grafana-authentication-proxy.  It's a small wrapper that adds proper authentication and per-user-dashboards to grafana. Its not the usual way you'd install it, but trust me, you'll want it. So, install grafana-authentication-proxy.  I put mine in /usr/local:
 
-Untar/unzip grafana into some place you intend to host it (like /usr/local/grafana-1.8.1)
+```
+cd /usr/local
+yum install -y git
+git clone https://github.com/strima/grafana-authentication-proxy.git
+cd grafana-authentication-proxy/
+git submodule init
+git submodule update
+yum install -y npm nodejs-grunt-cli
+npm install
+```
 
-#### Configure Grafana
+Update grafana to the latest version (and base it off the proper repo):
 
-Edit/create config.js file in the grafana directory, and use my config as an example if you like. (This file also in this repo)
+```
+cd grafana && git remote set-url origin https://github.com/grafana/grafana.git && git checkout master && git pull
+npm install
+grunt
+```
 
-~~~
-///// @scratch /configuration/config.js/1
- // == Configuration
- // config.js is where you will find the core Grafana configuration. This file contains parameter that
- // must be set before Grafana is run for the first time.
- ///
-define(['settings'],
-function (Settings) {
+#### Configure Grafana / Grafana-authentication-proxy
 
+Edit /usr/local/grafana-authentication-proxy/config.js
 
-  return new Settings({
+Depending on wether or not you're using elasticsarch (in this example, for storing user dashboards) you can specify your ES server information here too, and it will proxy front end user auth for ES queries as well. Otherwise you can leave it alone.
 
-    /* Data sources
-    * ========================================================
-    * Datasources are used to fetch metrics, annotations, and serve as dashboard storage
-    *  - You can have multiple of the same type.
-    *  - grafanaDB: true    marks it for use for dashboard storage
-    *  - default: true      marks the datasource as the default metric source (if you have multiple)
-    *  - basic authentication: use url syntax http://username:password@domain:port
-    */
+Pay attention to the following lines in the config file and update them accordingly:
 
-    // InfluxDB example setup (the InfluxDB databases specified need to exist)
-    /*
-    datasources: {
-      // If you want to query influxdb directly instead of via graphite, you can do this, but you lose some functions that graphite provides.
-    /*  influxdb: {
-        type: 'influxdb',
-        url: "http://MY_INFLUXDB_SERVER:8086/db/database_name",
-        username: 'admin',
-        password: 'admin',
-      },
-    */
-      // You can use InfluxDB as the "grafanaDB" to store your dashboards instead of using ElasticSearch.  If you've already got an elasticsearch server, you can use it below.
-    /*
-      grafana: {
-        type: 'influxdb',
-        url: "http://MY_INFLUXDB_SERVER:8086/db/grafana",
-        username: 'admin',
-        password: 'admin',
-        grafanaDB: true
-      },
-    */
-    },
-    */
+```
+    "graphiteUrl": "http://ip_or_host_of_your_graphite_api_server:8000", // This address must be publicly reachable
 
-    // Graphite & Elasticsearch example setup
+    "cookie_secret": "cookie_rhymes_with_c",
+    
+    "enable_basic_auth": true,
+    
+    "basic_auth_file": "",
+        "basic_auth_users": [
+            {"user": "username1", "password": "passwd1"},
+            {"user": "username2", "password": "passwd2"},
+        ],
+```
 
-    datasources: {
-      graphite_api: {
-        type: 'graphite',
-        url: "http://MY_GRAPHITEAPI_SERVER",
-        default: true,
-      },
-      elasticsearch: {
-        type: 'elasticsearch',
-        url: "http://MY_ELASTICSEARCH_SERVER:9202",
-        index: 'grafana-dash',
-        grafanaDB: true,
-      },
-      influxdb: {
-        type: 'influxdb',
-        url: "http://MY_INFLUXDB_SERVER:8086/db/grafana-stats",
-        username: 'MY_GRAPHITE_USER',
-        password: 'MY_GRAPHITE_PASSWORD',
-      }
-    },
+You can choose to enable Google OAuth, or basic auth, or whatever you want - but this example we've only shown how to enable Basic Auth.
 
-    // OpenTSDB & Elasticsearch example setup
-    /*
-    datasources: {
-      opentsdb: {
-        type: 'opentsdb',
-        url: "http://opentsdb.server:4242",
-      }
-    },
-    */
+Once your config is done, start the node application with:
 
-    /* Global configuration options
-    * ========================================================
-    */
+```
+node app.js &
 
-    // specify the limit for dashboard search results
-    search: {
-      max_results: 20
-    },
+Server starting...
+Info: HTTP Basic Authentication applied
+Warning: No Google OAuth2 presented
+Warning: No CAS authentication presented
+Server listening on 9202
+```
 
-    // default start dashboard
-    default_route: '/dashboard/file/default.json',
+Drop the supplied config file from this repo in grafana/config.js into /usr/local/grafana-authentication-proxy/grafana/config.js
 
-    // set to false to disable unsaved changes warning
-    unsaved_changes_warning: true,
+##############################
+### ANYTHING TO MODIFY IN IT?
+##############################
 
-    // set the default timespan for the playlist feature
-    // Example: "1m", "1h"
-    playlist_timespan: "1m",
+It will (by default) use InfluxDB to store saved dashboards.  You can also use elasticsearch if you've got that set up already, but since we didnt cover it in this tutorial, I'll skip that.
 
-    // If you want to specify password before saving, please specify it bellow
-    // The purpose of this password is not security, but to stop some users from accidentally changing dashboards
-    admin: {
-      password: 'grafana_secret_password'
-    },
-
-    // Add your own custom pannels
-    plugins: {
-      panels: []
-    }
-
-  });
-});
-~~~
 
 #### Deploy Grafana 
 
-We're going to use nginx to serve grafana up over HTTP and although you dont __need__ it, I'm going to do you a favor and give you a working example of how to couple it with grafana-authentication-proxy (https://github.com/strima/grafana-authentication-proxy) so your grafana dashboards are password protected (not the default).
+We're going to use nginx to serve grafana up over HTTP.
 
 So first, make sure you've got nginx installed:
 
 ```
-yum install nginx
+yum install -y nginx
 ```
 
-Next, install grafana-authentication-proxy.  I put mine in /usr/local alongside grafana
+Then take the grafana.conf I've included in this repo in the nginx/conf.d file, and place it in your own /etc/nginx/conf.d directory.
 
-```
-# cd /usr/local
-# git clone https://github.com/strima/grafana-authentication-proxy.git
-# cd grafana-authentication-proxy/
-# git submodule init
-# git submodule update
-# npm install
-```
+Make the necessary changes to the hostnames in the config file, and restart nginx.
 
-#### Add user auth/per-user dashboards to Grafana by using grafana-authentication-proxy 
+#### Test it out!
+
+Hit http://your_grafana_server in a web browser, it should ask you for one of the usernames you put in the grafana-authentication-proxy config.js file.  Once you log in, you should see the grafana page, and if everything is working properly, there should be a graph at the bottom of the page with simulated data on it!  Click the title of the graph, then click edit.
+
+Click the green add query button, and then click the first 'select metric' box that has now appeared.  You should see "metric" - repeat, then you'll seee "test", once more and you'll see "thing" - this is the metric we added a moment ago when we were testing InfluxDB!
+
+### Step 5: Collect some data!
+
+OK, so we have a working datastore backend, a graphite Input handler, query API, and a frontend to make it all pretty.  Now, how do we get some kick ass system and kazoo data in there?
+
+Let's start with a very simple bash script that we can cron.  I've included a script in this repo called system_stats.sh. Run it to make sure it works:
+
+~~~
+# ./system_stats.sh
+kazoo.calls.inbound.net.voxter.dc1.prod.media01.total 7 1413233954
+kazoo.calls.outbound.net.voxter.dc1.prod.media01.total 7 1413233954
+kazoo.calls.inbound.net.voxter.dc1.prod.media02.total 7 1413233954
+kazoo.calls.outbound.net.voxter.dc1.prod.media02.total 6 1413233954
+~~~
+
+This is the data that would have been sent to the graphite input handler, so you're set!  Stick that puppy in a crontab and come back in an hour.
+
+~~~
+/etc/crontab
+
+*/10 * * * * root /usr/local/bin/graphite_log_total_calls > /dev/null 2>&1
+~~~
+
+Now go build yourself some dashboards using the data!
 
 
-### Step 5: Diamond
+
 
 ## Method 2: Log data from rsyslog -> logstash -> elasticsarch -> kibana
 
 Other kinds of data you need to write queries to parse your log data (be it kamailio logs, 2600hz-platform logs, freeswitch logs, etc) and display the compiled data in a meaningful way (i.e. most popular account receiving REGISTER packets, most popular destination city for outgoing calls, etc.)
 
+COMING SOON...
