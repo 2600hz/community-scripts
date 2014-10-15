@@ -24,7 +24,7 @@ chmod +x /opt/install_kazoo/install*
 _NOTE_: This is a network based installer, so you should verify your internet connectivity is working prior to installing. 
 
 
-### SCRIPTS: 
+### Scripts: 
 The installer breaks functionality up into seperate scripts. The installer script will install the packages selected by the user. Then setup scripts are executed based on package selection to configure each of the services that were installed. In all in one mode, the server will setup all the packages using the all in one defaults. 
 
 #### Install Scripts:
@@ -49,9 +49,11 @@ The installer breaks functionality up into seperate scripts. The installer scrip
 **setup_common**     - a bash function "library" to provide all the commonly used functions in the setup scripts. 
 
 #### Other scripts: 
-onboot_kazoo     - Script used to check if the kazoo configuration in /etc/kazoo/
-get_ip_address   - Script used for selecting IP address on boot
-kazoo_motd       - Script that generates a dynamic motd 
+**onboot_kazoo**     - Script used to check if the kazoo configuration in /etc/kazoo/
+
+**get_ip_address**   - Script used for selecting IP address on boot
+
+**kazoo_motd**       - Script that generates a dynamic motd 
 
 
 
