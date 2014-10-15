@@ -29,14 +29,23 @@ The installer breaks functionality up into seperate scripts. The installer scrip
 
 #### Install Scripts:
 **install_kazoo**    - Installs the RPM packages for kazoo based on user package selection and then calls setup_packages.
+
 **setup_packages**   - Dispatches to setup scripts for every package specified in command line args. 
+
 **setup_freeswitch** - FreeSWITCH setup script. 
+
 **setup_kazoo**      - Kazoo setup script. 
+
 **setup_rabbitmq**   - RabbitMQ setup script. 
+
 **setup_kazoo-ui**   - Kazoo-UI setup script.
+
 **setup_kamailio**   - Kamaiio setup script. 
+
 **setup_bigcouch**   - BigCouch setup script. 
+
 **setup_haproxy**    - HaProxy setup script. 
+
 **setup_common**     - a bash function "library" to provide all the commonly used functions in the setup scripts. 
 
 #### Other scripts: 
