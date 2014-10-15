@@ -51,9 +51,11 @@ The installer breaks functionality up into seperate scripts. The installer scrip
 #### Other scripts: 
 **onboot_kazoo**     - Script used to check if the IP_ADDRESS value in /etc/kazoo/kazoo_boot.conf matches the systems IP address. 
 
-**get_ip_address**   - Script used for selecting IP address on boot if onboot_kazoo finds a problem. Gets added to root users .bashrc so the user is prompted to change the password. This only happens when multiple interfaces are found and none of them match the configured IP address. 
+**get_ip_address**   - Script used for selecting IP address on boot if onboot_kazoo is unable to automatically determine which IP address to set if system IP was changed. This script is called on login via the root users .bashrc so the user is prompted to change the kazoo IP addresses. 
 
 **kazoo_motd**       - Script that generates a dynamic motd which includes some nice details about the kazoo system. 
+
+
 
 
 
