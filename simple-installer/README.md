@@ -16,9 +16,12 @@ Public Scripts from the 2600hz Community
 chmod +x /opt/install_kazoo/setup*
 chmod +x /opt/install_kazoo/install*  
 ``` 
-* to start the installation run ./install_kazoo
+* to start the install run 
+```bash
+./install_kazoo
+```
 
-_NOTE_: This is a network installer, so you should verify your internet connectivity is working prior to installing. 
+_NOTE_: This is a network based installer, so you should verify your internet connectivity is working prior to installing. 
 
 
 
