@@ -19,6 +19,9 @@ Script to listen for incoming CDRs from the RabbitMQ server, store the CDR in a 
 
 Bash completion scripts for the sup utility! Tab completion for sup module names and function names, including argument count (which you should backspace when using)
 
+## dashboards
+Want to set up some beautiful Kazoo dashboards? Look no further! This will set up InfluxDB, Grafana, Graphite-API, and everything around it thats necessary.
+
 ## kazoo-puppet
 
 Puppet scripts for deploying Kazoo (requires an update, only valid for single server currently)
