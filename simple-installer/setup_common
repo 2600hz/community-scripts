@@ -337,7 +337,7 @@ check_re(){
 #
 
 ask(){
-    local name=$1
+    local name="$1"
 
     ################################################################################
     #ask NOTE:
@@ -373,11 +373,16 @@ ask(){
 
     info $question
     read ANSWER
-   
+  
+    if ! [[ ${ANSWER:-} || $ANSWER =~ '^$']];then
+        warn $hint
+	ask "$name"
+    fi
+
    #if invalid answer, we show them the hint and call ourselves with our args
     if ! check_re $ANSWER $re ; then
         warn $hint
-        ask $@
+        ask "$name"
     fi
 
     eval $ref='$ANSWER'
