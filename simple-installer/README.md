@@ -10,11 +10,11 @@ Public Scripts from the 2600hz Community
 
 
 ### How To install: 
-* get all the files from the repo and place them in /opt/install_kazoo 
+* get all the files from the repo and place them in /opt/kazoo_install 
 * run 
 ```bash 
-chmod +x /opt/install_kazoo/setup*
-chmod +x /opt/install_kazoo/install*  
+chmod +x /opt/kazoo_install/setup*
+chmod +x /opt/kazoo_install/install*  
 ``` 
 * to start the install run 
 ```bash
