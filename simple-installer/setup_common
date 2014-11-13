@@ -374,7 +374,7 @@ ask(){
     info $question
     read ANSWER
   
-    if ! [[ ${ANSWER:-} || $ANSWER =~ '^$']];then
+    if ! [[ ${ANSWER:-} ]];then
         warn $hint
 	ask "$name"
     fi
