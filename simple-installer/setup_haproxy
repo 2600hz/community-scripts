@@ -103,7 +103,7 @@ interactive() {
     ask_proxies
 }
 
-info " : Configuring Kazoo-UI : "
+info " : Configuring HAProxy : "
 check_root
 check_lock 
 
