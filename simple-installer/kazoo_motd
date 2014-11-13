@@ -38,8 +38,6 @@ write "Server Information"
 write ------------------------------------------------------------
 write "Hostname: ${green}`uname -n`${NC}                "
 write "      OS: ${green}`cat /etc/redhat-release`${NC} "
-write "  Kernel: ${green}`uname -sr`${NC}               "
-write "  uptime: ${green}`uptime`${NC}                  "
 write "                                                 "
 write "System IP addresses:                             "
 write "------------------------------------------------------------"                         
