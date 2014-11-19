@@ -53,7 +53,7 @@ amqp_pass_ref="amqp_pass"
 #AMQP IP
 amqp_ip=""
 amqp_ip_question="What is your AMQP server IP address"
-amqp_ip_re="[0-9]+\.[0-9]+\.[0-9]\.[0-9]+"
+amqp_ip_re="$ip_address_regex"
 amqp_ip_hint="This is the AMQP server ip address, what more can be said?"
 amqp_ip_ref="amqp_ip"
 
