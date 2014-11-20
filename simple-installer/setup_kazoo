@@ -26,9 +26,9 @@ cookie_ref="ip_address"
 ip_address=""
 ip_address_dbg="setting $kazoo_config - ip = TOKEN"
 ip_address_cmd="sed -i 's|ip = .*|ip = TOKEN|' $kazoo_config"
-ip_address_question="What IP should we use for kazoo?: "
+ip_address_question="What IP should we use for kazoo to talk to bigcouch (normally: 127.0.0.1)?: "
 ip_address_re="$ip_address_regex"
-ip_address_hint="This is the Kazoo application ip address" 
+ip_address_hint="This is generally the haProxy ip address which is normally available via localhost" 
 ip_address_ref="ip_address"
 
 ####KAZOO AMQP CONFIG
