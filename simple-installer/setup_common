@@ -427,7 +427,12 @@ get_default_cookie(){
 
 generate_erlang_cookie(){
     UUID=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)
-    echo -n $UUID > $cookie_file  
+    set_cookie_file $UUID  
     default_cookie=$UUID 
+}
+
+set_cookie_file(){
+    cookie=$1
+    echo -n $cookie > $cookie_file
 }
 

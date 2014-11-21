@@ -74,11 +74,11 @@ n_ref="n"
 #BIGCOUCH ZONE
 z=""
 z_dbg="setting bigcouch $bigcouch_local_ini - z=TOKEN"
-z_cmd="sed -i 's|z=.*|z=TOKEN|' $bigcouch_local_ini"
+z_cmd="sed -i '24i z=TOKEN' $bigcouch_local_ini"
 z_question="How many zones should each database be stored in? (Number: 0-9): "
 z_re="[0-9]"
 z_hint="HINT: you should have at least 2 if you have have more than one database server"
-z_ref="z_config"
+z_ref="z"
 
 #BIGCOUCH BIND ADDRESS
 bind_addres=""
@@ -109,6 +109,7 @@ if [  ${default_cookie:-} ];then
     cookie="$default_cookie"
 else
     ask cookie
+    set_cookie_file $cookie
 fi
 
 
@@ -136,7 +137,8 @@ set_value q $q
 set_value r $r
 set_value w $w
 set_value n $n
-if [[ ${z:-} -ne 0 ]]; then
+
+if (( $z > 0 )); then
     set_value z $z
 fi
 set_value bind_address $bind_address

@@ -26,9 +26,9 @@ cookie_ref="ip_address"
 ip_address=""
 ip_address_dbg="setting $kazoo_config - ip = TOKEN"
 ip_address_cmd="sed -i 's|ip = .*|ip = TOKEN|' $kazoo_config"
-ip_address_question="What IP should we use for kazoo?: "
+ip_address_question="What IP should we use for kazoo to talk to bigcouch (normally: 127.0.0.1)?: "
 ip_address_re="$ip_address_regex"
-ip_address_hint="This is the Kazoo application ip address" 
+ip_address_hint="This is generally the haProxy ip address which is normally available via localhost" 
 ip_address_ref="ip_address"
 
 ####KAZOO AMQP CONFIG
@@ -53,7 +53,7 @@ amqp_pass_ref="amqp_pass"
 #AMQP IP
 amqp_ip=""
 amqp_ip_question="What is your AMQP server IP address"
-amqp_ip_re="[0-9]+\.[0-9]+\.[0-9]\.[0-9]+"
+amqp_ip_re="$ip_address_regex"
 amqp_ip_hint="This is the AMQP server ip address, what more can be said?"
 amqp_ip_ref="amqp_ip"
 
@@ -86,6 +86,7 @@ if [  ${default_cookie:-} ];then
     cookie="$default_cookie"
 else
     ask cookie
+    set_cookie_file $cookie
 fi
 
 

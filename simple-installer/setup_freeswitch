@@ -69,6 +69,7 @@ if [  ${default_cookie:-} ];then
     cookie="$default_cookie"
 else
     ask cookie
+    set_cookie_file $cookie
 fi
 
 
