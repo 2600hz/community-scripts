@@ -91,7 +91,7 @@ Then lets install pip and the rest of the packages and tools you'll need:
 
 ```
 yum install python-pip gcc libffi-devel python-devel cairo
-pip install influxdb-python
+pip install influxdb
 pip install graphite-influxdb
 pip install Flask-Cache
 ```
@@ -256,6 +256,7 @@ You can choose to enable Google OAuth, or basic auth, or whatever you want - but
 Once your config is done, start the node application with:
 
 ```
+cd /usr/local/grafana-authentication-proxy
 node app.js &
 
 Server starting...
