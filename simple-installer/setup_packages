@@ -188,10 +188,14 @@ do_setup(){
 }
 
 ask_account_info(){
-    ask admin_user
-    ask admin_password 
-    ask admin_account
-    set_info_file 	
+    answer=""
+    confirm "Do you want to setup a new admin account?"
+    if [[ $answer =~ ^[yY] ]]; then
+        ask admin_user
+        ask admin_password 
+        ask admin_account
+        set_info_file
+    fi
 }
  
 check_root
