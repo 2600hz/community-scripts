@@ -31,6 +31,15 @@ system_hostname=""
 system_hostname_dbg="setting $kamailio_local_cfg - !MY_HOSTNAME!TOKEN"
 system_hostname_cmd="sed -i 's/!MY_HOSTNAME!.*!/!MY_HOSTNAME!TOKEN!/g' $kamailio_local_cfg"
 
+#rabbitMQ AMQP server
+amqp_address=""
+amqp_address_dbg="setting $kamailio_local_cfg - !MY_AMQP_URL!TOKEN"
+amqp_address_cmd="sed -i 's|!MY_AMQP_URL!.*!|!MY_AMQP_URL!TOKEN|g' $kamailio_local_cfg"
+amqp_address_question="Please enter the IP address that kamailio should use for sip (ip_address): "
+amqp_address_re=".*"
+amqp_address_hint="This should be the FULL URL for AMQP Example: amqp://guest:guest@10.26.0.61:5672"
+amqp_address_ref="amqp_address"
+
 #KAMAILIO FREESWITCH DISPATCH IP ADDRESS, PORT, SETID
 dispatcher_ip_address="" 
 dispatcher_ip_address_question="Please enter your dispatch server IP address (ip_address))"
@@ -90,6 +99,7 @@ ask_dispatcher(){
 
 interactive(){
     ask_dispatcher
+    ask amqp_address
     ask ip_address
 }
 
