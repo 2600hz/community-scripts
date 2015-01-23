@@ -213,7 +213,7 @@ admin_realm="sip.${system_hostname}"
 [[ ${all_in_one:-} ]] && generate_erlang_cookie
 
 #ask for account info if kazoo installed
-if [[ ${install_list[kazoo-ui]:-} ]]; then
+if [[ ${install_list[kazoo]:-} ]]; then
     check_info_file 
     ! [[ ${admin_user:-} ]] || ! [[ ${admin_password:-} ]] || ! [[ ${admin_account:-} ]] && ask_account_info
 fi 
@@ -286,7 +286,7 @@ fi
 
 
 
-if [[ ${install_list['bigcouch']:-} ]];then 
+if [[ ${install_list['kazoo']:-} ]];then 
     run_cmd 'update_bigcouch_views'
     run_cmd 'import_media_files'
     run_cmd 'create_account' "$account_string"
