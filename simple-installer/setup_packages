@@ -210,7 +210,11 @@ system_hostname=""; get_system_hostname
 admin_realm="sip.${system_hostname}"
 
 #auto generate Erlang cookie on all-in-one installs
-[[ ${all_in_one:-} ]] && generate_erlang_cookie
+if [[ ${all_in_one:-} ]];then 
+    generate_erlang_cookie
+else 
+    get_default_cookie 
+fi
 
 #ask for account info if kazoo installed
 if [[ ${install_list[kazoo]:-} ]]; then
