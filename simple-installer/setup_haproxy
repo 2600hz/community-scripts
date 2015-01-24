@@ -25,7 +25,7 @@ declare -a proxies_mgr
 
 ip=""
 ip_question="Please enter your bigcouch IPs: "
-ip_re="$ip_regex"
+ip_re="$ip_address_regex"
 ip_hint="this should be one of the ip addresses of your bigcouch servers"
 ip_ref="ip"
 
