@@ -247,6 +247,9 @@ fi
 [[ ${install_list['freeswitch']:-} ]] && run_cmd 'restart_epmd'
 [[ ${install_list['bigcouch']:-}   ]] && run_cmd 'restart_bigcouch'
 [[ ${install_list['rabbitmq']:-}   ]] && run_cmd 'restart_rabbitmq'
+
+sleep 5
+
 [[ ${install_list['freeswitch']:-} ]] && run_cmd 'restart_freeswitch' 
 [[ ${install_list['kamailio']:-}   ]] && run_cmd 'restart_kamailio' 
 
