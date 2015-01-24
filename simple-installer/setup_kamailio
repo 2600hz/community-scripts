@@ -37,7 +37,7 @@ amqp_address_dbg="setting $kamailio_local_cfg - !MY_AMQP_URL!TOKEN"
 amqp_address_cmd="sed -i 's|!MY_AMQP_URL!.*!|!MY_AMQP_URL!amqp://guest:guest@TOKEN:5672|g' $kamailio_local_cfg"
 amqp_address_question="Please enter the IP address that kamailio should use for amqp (rabbitmq server ip address): "
 amqp_address_re=".*"
-amqp_address_hint="This should be the FULL URL for AMQP Example: amqp://guest:guest@10.26.0.61:5672"
+amqp_address_hint="This is the ip address of your rabbitmq-server"
 amqp_address_ref="amqp_address"
 
 #KAMAILIO FREESWITCH DISPATCH IP ADDRESS, PORT, SETID
