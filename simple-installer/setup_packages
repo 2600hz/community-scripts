@@ -174,13 +174,18 @@ handle_args(){
 
 do_setup(){
     for package in ${!install_list[@]}; do
-        package_setup="${dir}setup_${package}"
+        if [[ $package == "kazoo" && $run_rabbit]];
+            package_setup="${dir}setup_${package};${dir}setup_rabbitmq"        
+        else
+            package_setup="${dir}setup_${package}"
+        fi 
+
         dbg "Running setup script: ${NC} $package_setup ${green}for package:${NC} $package"
  
         if [[ -n $all_in_one ]]; then 
-           $package_setup -a || error_exit "package setup failed for $package in script: ${NC}$package_setup"
+            $package_setup -a || error_exit "package setup failed for $package in script: ${NC}$package_setup"
         else
-           $package_setup || error_exit "package setup failed for $package in script: ${NC}$package_setup"
+            $package_setup || error_exit "package setup failed for $package in script: ${NC}$package_setup"
         fi
     done
 }
@@ -219,7 +224,7 @@ if [[ ${install_list[kazoo]:-} ]]; then
     check_info_file 
     ! [[ ${admin_user:-} ]] || ! [[ ${admin_password:-} ]] || ! [[ ${admin_account:-} ]] && ask_account_info
     local answer = ""
-    confirm "do you want to run this server as your AMQP broker? [y|n] "
+    confirm "do you want to run this server as an AMQP broker? [y|n] "
     if [[ $answer =~ ^[yY] ]]; then 
         run_rabbit=1
     fi 
