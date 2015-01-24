@@ -174,11 +174,7 @@ handle_args(){
 
 do_setup(){
     for package in ${!install_list[@]}; do
-        if [[ $package == "kazoo" && $run_rabbit]];
-            package_setup="${dir}setup_${package};${dir}setup_rabbitmq"        
-        else
-            package_setup="${dir}setup_${package}"
-        fi 
+        package_setup="${dir}setup_${package}"
 
         dbg "Running setup script: ${NC} $package_setup ${green}for package:${NC} $package"
  
@@ -192,8 +188,11 @@ do_setup(){
 
 ask_account_info(){
     answer=""
-    confirm "Do you want to configure the admin account and import media? (NOTE: only do this if this is the LAST apps server you are installing) [y|n]? "
-    if [[ $answer =~ ^[yY] ]]; then
+
+    [[ ${all_in_one:-} ]] || 
+        confirm "Do you want to configure the admin account and import media? (NOTE: only do this if this is the LAST apps server you are installing) [y|n]? "
+
+    if [[ $answer =~ ^[yY] || ${all_in_one:-} ]]; then
         ask admin_user
         ask admin_password 
         ask admin_account
@@ -223,11 +222,16 @@ fi
 if [[ ${install_list[kazoo]:-} ]]; then
     check_info_file 
     ! [[ ${admin_user:-} ]] || ! [[ ${admin_password:-} ]] || ! [[ ${admin_account:-} ]] && ask_account_info
-    local answer = ""
-    confirm "do you want to run this server as an AMQP broker? [y|n] "
-    if [[ $answer =~ ^[yY] ]]; then 
+
+    if [[ ${all_in_one:-} ]]; then
         run_rabbit=1
-    fi 
+    else 
+        answer=""
+        confirm "do you want to run this server as an AMQP broker? [y|n] "
+        if [[ $answer =~ ^[yY] ]]; then 
+            run_rabbit=1
+        fi
+    fi  
 fi 
 
 #account string to use in install
@@ -254,7 +258,7 @@ fi
 
 [[ ${install_list['freeswitch']:-} ]] && run_cmd 'restart_epmd'
 [[ ${install_list['bigcouch']:-}   ]] && run_cmd 'restart_bigcouch'
-[[ ${install_list['kazoo']:-} && $run_rabbit  ]] && run_cmd 'restart_rabbitmq'
+[[ ${install_list['kazoo']:-} && ${run_rabbit:-}  ]] && run_cmd 'restart_rabbitmq'
 
 sleep 5
 
@@ -279,7 +283,7 @@ fi
 [[ ${install_list['kazoo-ui']:-} ]] && run_cmd 'restart_httpd' 
 
 if [[ ${install_list['kazoo']:-} ]];then
-    run_cmd 'boot_rabbitmq'
+    [[ ${run_rabbit:-} ]] && run_cmd 'boot_rabbitmq'
     run_cmd 'boot_whistle_apps' 
     run_cmd 'boot_ecallmgr' 
 fi  
