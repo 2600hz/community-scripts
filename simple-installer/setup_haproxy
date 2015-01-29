@@ -18,8 +18,16 @@ haproxy_config="/etc/kazoo/haproxy/haproxy.cfg"
 
 #HAPROXY PROXY ARRAYS for storing proxy lists
 declare -a proxies_data
+declare -a ips
 declare -a proxies_mgr
 
+
+
+ip=""
+ip_question="Please enter your bigcouch IPs: "
+ip_re="$ip_address_regex"
+ip_hint="this should be one of the ip addresses of your bigcouch servers"
+ip_ref="ip"
 
 fqdn=""
 fqdn_question="Please enter your bigcouch FQDN: "
@@ -38,6 +46,8 @@ ask_proxies(){
     while :; do
         local fqdn
         ask fqdn
+        local ip
+        ask ip
         local backup
         ask backup
 
@@ -47,8 +57,8 @@ ask_proxies(){
            backup=""
         fi         
 
-        config_data="    server $fqdn 127.0.0.1:5984 ${backup:-}"
-        config_mgr="    server $fqdn 127.0.0.1:5986 ${backup:-}"
+        config_data="    server $fqdn $ip:5984 ${backup:-}"
+        config_mgr="    server $fqdn $ip:5986 ${backup:-}"
 
         proxies_data+=("$config_data")
         proxies_mgr+=("$config_mgr")

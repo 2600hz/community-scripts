@@ -421,6 +421,14 @@ get_default_cookie(){
         confirm "Do you want to generate a new erlang cookie? [y|n]"
         if [[ $answer =~ ^[yY] ]];then
             generate_erlang_cookie
+        else
+            default_cookie=""                                                                                                                     
+            default_cookie_question="Please enter the default erlang cookie for your system: "
+            default_cookie_re=".*"
+            default_cookie_hint="Hint: this should be the same throughout the cluster" 
+            default_cookie_ref="default_cookie" 
+            ask "default_cookie"
+            set_cookie_file $default_cookie
         fi
     fi
 }

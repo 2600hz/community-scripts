@@ -24,8 +24,8 @@ cookie_ref="ip_address"
 
 #KAZOO IP
 ip_address=""
-ip_address_dbg="setting $kazoo_config - ip = TOKEN"
-ip_address_cmd="sed -i 's|ip = .*|ip = TOKEN|' $kazoo_config"
+ip_address_dbg="setting $kazoo_config - ip = \"TOKEN\""
+ip_address_cmd="sed -i 's|ip = .*|ip = \"TOKEN\"|' $kazoo_config"
 ip_address_question="What IP should we use for kazoo to talk to bigcouch (normally: 127.0.0.1)?: "
 ip_address_re="$ip_address_regex"
 ip_address_hint="This is generally the haProxy ip address which is normally available via localhost" 
@@ -36,40 +36,17 @@ amqp_string=""
 amqp_string_dbg="setting amqp config in $kazoo_config - TOKEN"
 amqp_string_cmd="sed -i 's|\"amqp://.*\"|\"amqp://TOKEN\"|' $kazoo_config"  
 
-#AMQP USER
-amqp_user=""
-amqp_user_question="What username do you want to use for your AMQP config"
-amqp_user_re="[A-Za-z0-9]+"
-amqp_user_hint="This is the username you define in your rabbit server"
-amqp_user_ref="amqp_user"
-
-#AMQP PASS
-amqp_pass=""
-amqp_pass_question="What password do you want to use for your AMQP config"
-amqp_pass_re=".*"
-amqp_pass_hint="This is the password for amqp"
-amqp_pass_ref="amqp_pass"
-
 #AMQP IP
 amqp_ip=""
 amqp_ip_question="What is your AMQP server IP address"
 amqp_ip_re="$ip_address_regex"
-amqp_ip_hint="This is the AMQP server ip address, what more can be said?"
+amqp_ip_hint="This is the ip address of your rabbitmq server?"
 amqp_ip_ref="amqp_ip"
 
-#AMQP port
-amqp_port=""
-amqp_port_question="What is your AMQP server port? (5672)"
-amqp_port_re="[0-9]+"
-amqp_port_hint="This is the port for AMQP, you best have a really good reason for not using defautl value of 5672"
-amqp_port_ref="amqp_port"
 
 ask_amqp_config(){
     ask amqp_ip
-    ask amqp_user
-    ask amqp_pass
-    ask amqp_port
-    amqp_string="${amqp_user}:${amqp_pass}@${amqp_ip}:${amqp_port}"
+    amqp_string="guest:guest@${amqp_ip}:5672"
 }
 
 interactive(){
