@@ -401,7 +401,11 @@ set_hostname(){
       do
           info "Please enter fully qualified domain name (FQDN) for this server: "
           read fqdn
+          
+          [[ ! ${fqdn:-} ]] && continue
+
           check_re $fqdn $hostname_check_re
+        
           if [ $? -eq 0 ];then
               valid=true
           else
