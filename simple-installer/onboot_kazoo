@@ -43,7 +43,7 @@ if ! [[ ${ip_match:-} ]];then
         system_ip_address=${ip_addresses[0]}
         info "configuring IP address to ${system_ip_address}"
         set_info_file  
-        /opt/kazoo_install/setup_packages -a -i kamailio -i kazoo-ui     
+        /opt/kazoo_install/setup_packages -a -i kamailio -i monster-ui     
     else  
         echo 'get_ip_address' >> /root/.bash_profile
     fi

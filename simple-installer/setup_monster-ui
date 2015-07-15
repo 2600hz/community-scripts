@@ -3,18 +3,18 @@
 set -e
 set -o nounset
 
-lockfile="/var/lock/subsys/setup_kazoo-ui.lockfile"
+lockfile="/var/lock/subsys/setup_monster-ui.lockfile"
 . /opt/kazoo_install/setup_common
 
 trap clean_exit SIGHUP SIGTERM ERR EXIT
 trap int_exit SIGINT SIGQUIT
 
-kazoo_ui_conf_js="/var/www/html/kazoo-ui/config/config.js"
+kazoo_ui_conf_js="/var/www/html/monster-ui/js/config.js"
 
 #KAZOO-UI URL
 url=""
-url_dbg="setting kazoo-ui URL address for accessing API - TOKEN"
-url_cmd="sed -i \"s|api_url: .*/v1|api_url: 'TOKEN/v1|g\" $kazoo_ui_conf_js"
+url_dbg="setting Monster-UI URL address for accessing API - TOKEN"
+url_cmd="sed -i \"s|default: .*/v1|default: 'TOKEN/v2|g\" $kazoo_ui_conf_js"
 url_question="Please enter your api url (EXAMPLE: http://10.0.0.1:8000): "
 url_re="$url_regex"
 url_hint="Full URL for api, this IP should be the same as your kazoo server"
@@ -24,7 +24,7 @@ interactive() {
     ask url
 }
 
-info " : Configuring Kazoo-UI : "
+info " : Configuring Monster-UI : "
 check_root
 check_lock 
 
@@ -37,12 +37,14 @@ fi
 if [  ${all_in_one:-} ];then
    #if allinone we default everything we can
    url="http://${system_ip_address}:8000"
+   #Create blank index.html file to redirect traffic to the UI when you go to your server IP. 
+   echo "<html><head><meta HTTP-EQUIV=\"REFRESH\" content=\"0; url=http://${system_ip_address}/monster-ui/index.html\"></head></html>" >> /var/www/html/index.html
 else
    info "NOTE: You can type '${NC}?${blue}' as a response to any question for a hint!"
    interactive
 fi
 
-dbg "Applying Kazoo-UI configuration..."
+dbg "Applying Monster-UI configuration..."
 
 set_value url $url
 

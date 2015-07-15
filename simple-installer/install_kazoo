@@ -42,7 +42,7 @@ kazoo_package="kazoo-R15B.x86_64"
 freeswitch_package="kazoo-freeswitch-R15B.x86_64"
 kamailio_package="kazoo-kamailio.x86_64"
 bigcouch_package="kazoo-bigcouch-R15B.x86_64"
-kazoo_ui_package="kazoo-ui.noarch"
+kazoo_ui_package="monster-ui*"
 haproxy_package="haproxy.x86_64"
 rabbitmq_package=""
 
@@ -51,7 +51,7 @@ packages['kazoo']=$kazoo_package
 packages['freeswitch']=$freeswitch_package
 packages['kamailio']=$kamailio_package
 packages['bigcouch']=$bigcouch_package
-packages['kazoo-ui']=$kazoo_ui_package
+packages['monster-ui']=$kazoo_ui_package
 packages['haproxy']=$haproxy_package
 packages['rabbitmq']=$rabbitmq_package
 
@@ -668,8 +668,8 @@ install_packages(){
         yum_loop $pack || error_exit "Package install failed for $pack"
     done
 
-    if [[ ${selected_packages['kazoo-ui']:-} ]];then
-        dbg "Installing httpd to support kazoo-ui"
+    if [[ ${selected_packages['monster-ui']:-} ]];then
+        dbg "Installing httpd to support monster-ui"
         yum_loop "httpd" || error_exit "Package install failed for http"
     fi 
 }
