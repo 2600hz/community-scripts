@@ -37,7 +37,7 @@ fi
 if [  ${all_in_one:-} ];then
    #if allinone we default everything we can
    url="http://${system_ip_address}:8000"
-   //Create blank index.html file to redirect traffic to the UI when you go to your server IP. 
+   #Create blank index.html file to redirect traffic to the UI when you go to your server IP. 
    echo "<html><head><meta HTTP-EQUIV=\"REFRESH\" content=\"0; url=http://${system_ip_address}/monster-ui/index.html\"></head></html>" >> /var/www/html/index.html
 else
    info "NOTE: You can type '${NC}?${blue}' as a response to any question for a hint!"
