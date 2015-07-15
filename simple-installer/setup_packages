@@ -45,6 +45,10 @@ admin_account_re="$name_regex"
 admin_account_hint="This is the main account name you will use administer Kazoo."
 admin_account_ref="admin_account"
 
+setup_apps_cmd='sup crossbar_maintenance init_apps /var/www/html/monster-ui/apps http://$system_ip_address:8000/v2' 
+setup_apps_dbg='setting up apps with: '$setup_apps_cmd 
+setup_apps_error='Setup apps failed!'
+
 #
 # restart commands 
 #
@@ -313,7 +317,7 @@ fi
 
 if [[ ${install_list['kazoo']:-} ]];then 
  
-    run_cmd 'sup crossbar_maintenance init_apps /var/www/html/monster-ui/apps http://$system_ip_address:8000/v2' 
+    run_cmd 'setup_apps' 
     
     if [[ ${admin_user:-} ]]; then
         run_cmd 'update_bigcouch_views'
