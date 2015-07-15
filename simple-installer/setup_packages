@@ -312,6 +312,8 @@ fi
 
 
 if [[ ${install_list['kazoo']:-} ]];then 
+ 
+    run_cmd 'sup crossbar_maintenance init_apps /var/www/html/monster-ui/apps http://$system_ip_address:8000/v2' 
     
     if [[ ${admin_user:-} ]]; then
         run_cmd 'update_bigcouch_views'
