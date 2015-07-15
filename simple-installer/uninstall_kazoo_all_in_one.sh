@@ -24,7 +24,7 @@ service httpd stop
 
 echo "Removing Packages"
 
-yum remove kazoo-configs kazoo-bigcouch haproxy kazoo-R15B kazoo-prompts kazoo-freeswitch-R15B kazoo-ui httpd kazoo-librabbitmq
+yum remove kazoo-configs kazoo-bigcouch haproxy kazoo-R15B kazoo-prompts kazoo-freeswitch-R15B kazoo-ui httpd kazoo-librabbitmq monster-ui*
 
 echo "removing old directories"
 
