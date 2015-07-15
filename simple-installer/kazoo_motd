@@ -46,7 +46,7 @@ write ""
 write "Kazoo Information                                           "
 write "------------------------------------------------------------"
 [[ $kazoo_version ]] && write "    Version: ${green}$kazoo_version${NC}                    "
-[[ $ip_address    ]] && write "  WebServer: ${green}http://${ip_address}/kazoo-ui${NC}     "
+[[ $ip_address    ]] && write "  WebServer: ${green}http://${ip_address}/monster-ui${NC}     "
 [[ $admin_account ]] && write "    Account: ${green}${admin_account}${NC}                  "
 [[ $admin_realm   ]] && write "  Sip Realm: ${green}${admin_realm}${NC}                    "
 write ${NC}

@@ -290,7 +290,7 @@ elif [[ ${install_list['freeswitch']:-} ]];then
     info "Attach this FreeSWITCH to your cluster from any apps sever by running: ${NC}sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@${system_hostname}" 
 fi 
 
-[[ ${install_list['kazoo-ui']:-} ]] && run_cmd 'restart_httpd' 
+[[ ${install_list['monster-ui']:-} ]] && run_cmd 'restart_httpd' 
 
 if [[ ${install_list['kazoo']:-} ]];then
     [[ ${run_rabbit:-} ]] && run_cmd 'boot_rabbitmq'
@@ -302,7 +302,7 @@ fi
 [[ ${install_list['kamailio']:-}   ]] && run_cmd 'boot_kamailio'
 [[ ${install_list['bigcouch']:-}   ]] && run_cmd 'boot_bigcouch'
 [[ ${install_list['haproxy']:-}    ]] && run_cmd 'boot_haproxy'
-[[ ${install_list['kazoo-ui']:-}   ]] && run_cmd 'boot_httpd'
+[[ ${install_list['monster-ui']:-}   ]] && run_cmd 'boot_httpd'
 
 if [[ ${all_in_one:-} ]];then
    
@@ -335,7 +335,7 @@ if [[ ${install_list['kazoo']:-} ]];then
     fi 
 fi 
 
-[[ ${install_list['kazoo-ui']:-} ]] && info "You can access the kazoo-ui by going to: ${green}http://$system_ip_address/kazoo-ui"
+[[ ${install_list['monster-ui']:-} ]] && info "You can access the Monster-UI by going to: ${green}http://$system_ip_address/monster-ui"
  
 echo 
 

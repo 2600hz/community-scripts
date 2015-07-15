@@ -38,7 +38,7 @@ The installer breaks functionality up into seperate scripts. The installer scrip
 
 **setup_rabbitmq**   - RabbitMQ setup script. 
 
-**setup_kazoo-ui**   - Kazoo-UI setup script.
+**setup_monster-ui** - Monster-UI setup script.
 
 **setup_kamailio**   - Kamaiio setup script. 
 
