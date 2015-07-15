@@ -14,7 +14,7 @@ kazoo_ui_conf_js="/var/www/html/monster-ui/js/config.js"
 #KAZOO-UI URL
 url=""
 url_dbg="setting Monster-UI URL address for accessing API - TOKEN"
-url_cmd="sed -i \"s|default: .*/v1|default: 'TOKEN/v2|g\" $kazoo_ui_conf_js"
+url_cmd="sed -i \"s|default: .*/v2|default: 'TOKEN/v2|g\" $kazoo_ui_conf_js"
 url_question="Please enter your api url (EXAMPLE: http://10.0.0.1:8000): "
 url_re="$url_regex"
 url_hint="Full URL for api, this IP should be the same as your kazoo server"
