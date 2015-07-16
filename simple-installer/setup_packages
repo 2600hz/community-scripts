@@ -313,11 +313,7 @@ if [[ ${all_in_one:-} ]];then
    echo "/opt/kazoo_install/onboot_kazoo" >> /etc/rc.d/rc.local
 fi
 
-
-
 if [[ ${install_list['kazoo']:-} ]];then 
- 
-    run_cmd 'setup_apps' 
     
     if [[ ${admin_user:-} ]]; then
         run_cmd 'update_bigcouch_views'
@@ -326,12 +322,15 @@ if [[ ${install_list['kazoo']:-} ]];then
 
 	    echo
         echo
+        
+        run_cmd 'setup_apps' 
      
         info "Created administrator account for kazoo with credentials:" 
         info "Username: ${green}${admin_user}"
         info "Password: ${green}${admin_password}"
         info "Account:  ${green}${admin_account}"
         info "Realm:    ${green}${admin_realm}"
+        
     fi 
 fi 
 
