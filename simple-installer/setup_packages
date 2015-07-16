@@ -322,14 +322,15 @@ if [[ ${install_list['kazoo']:-} ]];then
 
 	    echo
         echo
+        
+        run_cmd 'setup_apps' 
      
         info "Created administrator account for kazoo with credentials:" 
         info "Username: ${green}${admin_user}"
         info "Password: ${green}${admin_password}"
         info "Account:  ${green}${admin_account}"
         info "Realm:    ${green}${admin_realm}"
-
-        run_cmd 'setup_apps' 
+        
     fi 
 fi 
 
