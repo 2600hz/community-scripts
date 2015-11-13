@@ -1,0 +1,81 @@
+
+CREATE TABLE call
+(
+  calldate timestamp with time zone NOT NULL DEFAULT now(),
+  account_id character varying(40) NOT NULL DEFAULT ''::character varying,
+  realm character varying(40) NOT NULL DEFAULT ''::character varying,
+  call_direction character varying(80) NOT NULL DEFAULT ''::character varying,
+  caller_id_number character varying(46) NOT NULL DEFAULT ''::character varying,
+  caller_id_name character varying(45) NOT NULL DEFAULT ''::character varying,
+  custom_sip_headers character varying(80) NOT NULL DEFAULT ''::character varying,
+  callee_id_number character varying(44) NOT NULL DEFAULT ''::character varying,
+  callee_id_name character varying(43) NOT NULL DEFAULT ''::character varying,
+  hangup_code character varying(80) NOT NULL DEFAULT ''::character varying,
+  hangup_cause character varying(80) NOT NULL DEFAULT ''::character varying,
+  disposition character varying(80) NOT NULL DEFAULT ''::character varying,
+  duration bigint NOT NULL DEFAULT (0)::bigint,
+  billsec bigint NOT NULL DEFAULT (0)::bigint,
+  media_server character varying(47) NOT NULL DEFAULT ''::character varying,
+  presence_id character varying(48) NOT NULL DEFAULT ''::character varying,
+  request character varying(49) NOT NULL DEFAULT ''::character varying,
+  "from" character varying(51) NOT NULL DEFAULT ''::character varying,
+  "to" character varying(52) NOT NULL DEFAULT ''::character varying,
+  to_user character varying(10) NOT NULL DEFAULT ''::character varying,
+  from_uri character varying(80) NOT NULL DEFAULT ''::character varying,
+  to_uri character varying(80) NOT NULL DEFAULT ''::character varying,
+  ringing_seconds character varying(5) NOT NULL DEFAULT ''::character varying,
+  remote_sdp character varying(500) NOT NULL DEFAULT ''::character varying,
+  user_agent character varying(80) NOT NULL DEFAULT ''::character varying,
+  other_leg_call_id character varying(80) NOT NULL DEFAULT ''::character varying,
+  other_leg_destination_number character varying(80) NOT NULL DEFAULT ''::character varying,
+  other_leg_caller_id_number character varying(80) NOT NULL DEFAULT ''::character varying,
+  other_leg_caller_id_name character varying(80) NOT NULL DEFAULT ''::character varying,
+  other_leg_direction character varying(80) NOT NULL DEFAULT ''::character varying,
+  "timestamp" character varying(30) NOT NULL DEFAULT ''::character varying,
+  custom_channel_vars character varying(500) NOT NULL DEFAULT ''::character varying,
+  call_id character varying(80) NOT NULL DEFAULT ''::character varying,
+  node character varying(80) NOT NULL DEFAULT ''::character varying,
+  msg_id character varying(80) NOT NULL DEFAULT ''::character varying,
+  app_version character varying(40) NOT NULL DEFAULT ''::character varying,
+  app_name character varying(40) NOT NULL DEFAULT ''::character varying,
+  event_name character varying(40) NOT NULL DEFAULT ''::character varying,
+  event_category character varying(80),
+  switch_uri character varying(41) NOT NULL DEFAULT ''::character varying,
+  switch_url character varying(42) NOT NULL DEFAULT ''::character varying,
+  to_tag character varying(30) NOT NULL DEFAULT ''::character varying,
+  from_tag character varying(30) NOT NULL DEFAULT ''::character varying,
+  CONSTRAINT "pk.uniqueid" PRIMARY KEY (call_id)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE call
+  OWNER TO root;
+
+-- Index: call_call_direction_idx
+
+-- DROP INDEX call_call_direction_idx;
+
+CREATE INDEX call_call_direction_idx
+  ON call
+  USING btree
+  (call_direction COLLATE pg_catalog."default");
+
+-- Index: call_calldate_idx
+
+-- DROP INDEX call_calldate_idx;
+
+CREATE INDEX call_calldate_idx
+  ON call
+  USING btree
+  (calldate);
+
+-- Index: call_realm_idx
+
+-- DROP INDEX call_realm_idx;
+
+CREATE INDEX call_realm_idx
+  ON call
+  USING btree
+  (realm COLLATE pg_catalog."default");
+
