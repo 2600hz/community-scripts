@@ -80,8 +80,7 @@ wait_for_view_update(Design, AccountDb) ->
             wait_for_view_update(Design, AccountDb)
     end.
 
-target_request(Path) ->
-    wh_types:to_list(<<?TARGET, (wh_binary:join(Path, <<"/">>))/binary>>).
+target_request(Path) -> ?TARGET_PATH(Path).
 
 stream_receiver({_, {'error', _R}}, Views, AccountDb) ->
     io:format("  unable to get view: ~p~n", [_R]),

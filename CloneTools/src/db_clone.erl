@@ -25,19 +25,36 @@
 run() ->
     inets:start(),
     process_flag('trap_exit', 'true'),
+    ?LOG("cloning ~s to ~s~n", [?SOURCE, ?TARGET]),
     case httpc:request(source_request([<<"_all_dbs">>])) of
         {'ok', {{_, 200, "OK"}, _, Body}} ->
-            clone_dbs(wh_json:decode(Body));
+            Dbs = wh_json:decode(Body),
+            clone_dbs(Dbs);
         _Else -> ?LOG("unable to get dbs: ~p~n", [_Else])
     end,
     ?WHITE,
     halt().
 
+run(["-s", Source | Rest]) ->
+    os:putenv("SOURCE", Source),
+    run(Rest);
+run(["-t", Target | Rest]) ->
+    os:putenv("TARGET", Target),
+    run(Rest);
+run(["kz-source", Source | Rest]) ->
+    os:putenv("SOURCE", Source),
+    run(Rest);
+run(["kz-target", Target | Rest]) ->
+    os:putenv("TARGET", Target),
+    run(Rest);
 run([_|_]=Dbs) ->
+    ?LOG_GREEN("cloning ~s to ~s~n", [?SOURCE, ?TARGET]),
     inets:start(),
     _ = clone_dbs(Dbs),
     ?WHITE,
-    halt().
+    halt();
+run([]) ->
+    run().
 
 update_view(Binary) ->
     Binary1 = update_binary(Binary, <<"date_media">>, ?MAX_VM_AGE),
@@ -719,12 +736,9 @@ update_transactions(JObj, Db) ->
             'error'
     end.
 
-target_request(Path) ->
-    %% Path = [<<"test-", Db/binary>>] ++ Rest,
-    wh_types:to_list(<<?TARGET, (wh_binary:join(Path, <<"/">>))/binary>>).
+target_request(Path) -> ?TARGET_PATH(Path).
 
-source_request(Path) ->
-    wh_types:to_list(<<?SOURCE, (wh_binary:join(Path, <<"/">>))/binary>>).
+source_request(Path) -> ?SOURCE_PATH(Path).
 
 uri_encode(Binary) when is_binary(Binary) ->
     wh_types:to_binary(http_uri:encode(wh_types:to_list(Binary)));

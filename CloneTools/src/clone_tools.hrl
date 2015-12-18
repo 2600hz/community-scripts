@@ -1,11 +1,12 @@
 %% ===========[ MODIFY ]====================
 %% TARGET should be set to the URL of haproxy
 %% for the new database cluster.
--define(TARGET, "http://127.0.0.1:15984/").
-
+-define(TARGET, case os:getenv("TARGET") of false -> "http://127.0.0.1:15984/"; _ -> os:getenv("TARGET") end).
+-define(TARGET_PATH(Path), wh_types:to_list(iolist_to_binary([?TARGET, wh_binary:join(Path, <<"/">>)]))).
 %% SOURCE should be set to a single node
 %% in the old database cluster.
--define(SOURCE, "http://127.0.0.1:5984/").
+-define(SOURCE, case os:getenv("SOURCE") of false -> "http://127.0.0.1:5984/"; _ -> os:getenv("SOURCE") end).
+-define(SOURCE_PATH(Path), wh_types:to_list(iolist_to_binary([?SOURCE, wh_binary:join(Path, <<"/">>)]))).
 
 %% MAX_CR_AGE is the maxium age (in days)
 %% of the CDRs to copy (IE: last 30 days).

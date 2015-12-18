@@ -100,7 +100,7 @@ get_callflow(Db, CallflowId) ->
             'undefined'
     end.
 
-put_doc(JObj, Db) ->    
+put_doc(JObj, Db) ->
     Id = wh_json:get_value(<<"_id">>, JObj),
     Target = target_request([Db
                              ,Id
@@ -127,6 +127,4 @@ put_doc(JObj, Db) ->
                      ,[Target, _R])
     end.
 
-target_request(Path) ->
-    %% Path = [<<"test-", Db/binary>>] ++ Rest,
-    wh_types:to_list(<<?TARGET, (wh_binary:join(Path, <<"/">>))/binary>>).
+target_request(Path) -> ?TARGET_PATH(Path).
