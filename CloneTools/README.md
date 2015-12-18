@@ -4,18 +4,58 @@
 Erlang tool to copy all databases from one Bigcouch cluster to another, with options for CDRs and voicemails
 
 ## Usage
-Edit [src/clone_tools.hrl](CloneTools/src/clone_tools.hrl) and update [TARGET](https://github.com/2600hz/community-scripts/blob/master/CloneTools/src/clone_tools.hrl#L4) and [SOURCE](https://github.com/2600hz/community-scripts/blob/master/CloneTools/src/clone_tools.hrl#L8).
 
-_(optional)_ Change [MAX_CR_AGE](https://github.com/2600hz/community-scripts/blob/master/CloneTools/src/clone_tools.hrl#L13) and [MAX_VM_AGE](https://github.com/2600hz/community-scripts/blob/master/CloneTools/src/clone_tools.hrl#L18). These control the maximum age, in days, for CDRs and voicemail messages, respectively. Setting the value to 0 will copy all documents of the indicated type. Setting to any positive integer will copy all documents of that type up to that number of days prior to the execution of the clone tool.  You can also set the value to 'none' to skip all documents of the respective type.
-
-_(optional)_ Change [DEAD_ACCOUNT_IDS](https://github.com/2600hz/community-scripts/blob/master/CloneTools/src/clone_tools.hrl#L25). This can be set to a list of account ids that may still be in the hierarchy after removing the accounts.  This will blindly remove any id in the list from any pvt_tree.
-
-Save the clone_tools.hrl file and in the [clone tools directory](CloneTools/) run:
+### compile `db_clone`
 ```bash
-make clean;make;./clone.sh
+make clean; make
 ```
 
-This will start a clone, it will take a very long time (possibly days) and to ensure it is not disrupted we recommend running it in screen.
+### run `db_clone`
+
+```bash
+./db_clone [-s source] [-t target] [-e exclude] [-max_cr_age max-cdrs-age] [-max_vm_age max-vm-age] [-dead_accounts list-of-dead-accounts] [databases]
+
+source: source database url, default http://127.0.0.1:5984/
+target: target database url, default http://127.0.0.1:15984/
+exclude:
+    modb: exclude databases matching regexp "$account.*-\d{6}$"
+    regexp: exclude databases matching provided regexp
+max-cdrs-age: maximum age, in days, for CDRs. `0` means `all`. Default `none`
+max-vm-age: maximum age, in days, for voicemail messages. `0` means `all`. Default `0`.
+list-of-dead-accounts: This can be set to a list of account ids that may still be in the hierarchy after removing the accounts.  This will blindly remove any id in the list from any pvt_tree. Should be quoted by `'` or `"`.
+
+NOTE: source/target URLs should ends at `/`
+```
+
+### examples
+
+This command clones all databases from default source to default target.
+```bash
+./db_clone
+```
+
+Clone `accounts` and `system_config` databases from `http://source.example.com/` to `http://target.example.com:5984/`
+```bash
+./db_clone -s http://source.example.com/ -t http://target.example.com:5984/ accounts system_config
+```
+
+```bash
+./db_clone -e '^(accounts|system_config)$'
+```
+
+```bash
+./db_clone -e motd
+```
+
+```bash
+./db_clone -max_cdr_age 0 -max_vm_age none
+```
+
+```bash
+./db_clone -dead_accounts "2e0bcf74f7a1b2ce7e408ce2731796a3 544060f3f8af919ad79764ca8a961241 72fabca989b3102c28482c60070aac5b"
+```
+
+NOTE: Cloning databases will take a very long time (possibly days) and to ensure it is not disrupted we recommend running it in screen.
 
 ## Few Notes
 * This is a one way copy, changes made during the copy will not be cloned on subsequent runs (expect newly created documents and voicemails)
