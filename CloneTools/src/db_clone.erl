@@ -1,3 +1,4 @@
+%% Sponsored by CloudPBX Inc. (http://cloudpbx.ca)
 -module(db_clone).
 
 %% {'ok', Dbs} = couch_mgr:db_info(), [begin case Db of <<"test-", _/binary>> -> couch_mgr:db_delete(wh_util:uri_encode(Db)); _ -> ok end end || Db <- Dbs].

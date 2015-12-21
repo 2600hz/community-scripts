@@ -1,3 +1,4 @@
+%% Sponsored by CloudPBX Inc. (http://cloudpbx.ca)
 -module(number_replicator).
 
 -include("clone_tools.hrl").

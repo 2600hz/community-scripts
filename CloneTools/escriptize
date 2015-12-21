@@ -1,5 +1,6 @@
 #!/usr/bin/env escript
-
+%% Sponsored by CloudPBX Inc. (http://cloudpbx.ca)
+%%
 -module(escriptize).
 
 -record('opts', {dir = "ebin", out}).
