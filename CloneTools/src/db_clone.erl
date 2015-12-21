@@ -51,6 +51,12 @@ run(["-e", Exclude | Rest]) ->
 run(["-dead_accounts", Accounts | Rest]) ->
     os:putenv("DEAD_ACCOUNTS", list_to_binary(Accounts)),
     run(Rest);
+run(["-max_cdr_age", MaxCdrAge | Rest]) ->
+    os:putenv("MAX_CDR_AGE", MaxCdrAge),
+    run(Rest);
+run(["-max_vm_age", MaxVmAge | Rest]) ->
+    os:putenv("MAX_VM_AGE", MaxVmAge),
+    run(Rest);
 run([_|_]=Dbs) ->
     ?LOG_GREEN("cloning ~s to ~s~n", [?SOURCE, ?TARGET]),
     inets:start(),

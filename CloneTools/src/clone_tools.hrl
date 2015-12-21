@@ -11,12 +11,12 @@
 %% MAX_CR_AGE is the maxium age (in days)
 %% of the CDRs to copy (IE: last 30 days).
 %% Set to 0 to copy all or 'none'.
--define(MAX_CR_AGE, 'none').
+-define(MAX_CR_AGE, case os:getenv("MAX_CDR_AGE") of 'false' -> 'none'; "none" -> 'none'; _ -> list_to_integer(os:getenv("MAX_CDR_AGE")) end).
 
 %% MAX_VM_AGE is the maxium age (in days)
 %% of the voicemail in a box to copy.
 %% Set to 0 to copy all or 'none'.
--define(MAX_VM_AGE, 0).
+-define(MAX_VM_AGE, case os:getenv("MAX_VM_AGE") of 'false' -> 0; "none" -> 'none'; _ -> list_to_integer(os:getenv("MAX_VM_AGE")) end).
 
 %% DEAD_ACCOUNT_IDS is the listing of account
 %% IDs that are no longer existent but appear
