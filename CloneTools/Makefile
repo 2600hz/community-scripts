@@ -21,6 +21,9 @@ compile: ebin/$(PROJECT).app
 		| sed 's/{modules, \[\]}/{modules, \[$(MODULES)\]}/' \
 		> ebin/$(PROJECT).app
 	-@$(MAKE) ebin/$(PROJECT).app
+	@./escriptize -d ebin -o db_clone
+	@chmod +x db_clone
+	@echo "\n\tdb_clone successfuly created\n"
 
 ebin/$(PROJECT).app: src/*.erl
 	@mkdir -p ebin/

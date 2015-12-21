@@ -1,0 +1,28 @@
+#!/usr/bin/env escript
+
+-module(escriptize).
+
+-record('opts', {dir = "ebin", out}).
+
+-export([main/0, main/1]).
+
+main() ->
+    io:format("not enough arguments"),
+    halt(1).
+
+main(Args) ->
+    main(Args, #opts{}).
+
+main(["-d", Dir | Args], Opts) ->
+    main(Args, Opts#opts{dir = Dir});
+main(["-o", Out | Args], Opts) ->
+    main(Args, Opts#opts{out = Out});
+main([_ | Args], Opts) ->
+    main(Args, Opts);
+main([], Opts) ->
+    run(Opts).
+
+run(#opts{dir = Dir, out = Out}) ->
+    {ok, {"mem", Zip}} = zip:create("mem", filelib:wildcard(Dir ++ "/*.beam"), ['memory']),
+    ok = escript:create(Out, [shebang, {emu_args, "-pa ebin"}, {archive, Zip}]),
+    halt(0).

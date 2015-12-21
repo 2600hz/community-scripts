@@ -6,6 +6,7 @@
 
 -export([run/0
          ,run/1
+         ,main/1
         ]).
 
 -define(VIEWS, [{<<"filtered_ids">>, wh_json:from_list([{<<"map">>, update_view(<<"function(doc) { if (doc.pvt_deleted || (doc.pvt_type == 'prviate_media'  && doc.pvt_created < {{date_media}}) || (doc.pvt_type == 'cdr'  && doc.pvt_created < {{date_cdr}}) || doc.pvt_type == 'vmbox' || doc.pvt_type == 'debit' || doc.pvt_type == 'credit' || doc.pvt_type == 'acdc_stat') return; emit(doc._id, null); }">>)}])}
@@ -41,12 +42,6 @@ run(["-s", Source | Rest]) ->
 run(["-t", Target | Rest]) ->
     os:putenv("TARGET", Target),
     run(Rest);
-run(["kz-source", Source | Rest]) ->
-    os:putenv("SOURCE", Source),
-    run(Rest);
-run(["kz-target", Target | Rest]) ->
-    os:putenv("TARGET", Target),
-    run(Rest);
 run([_|_]=Dbs) ->
     ?LOG_GREEN("cloning ~s to ~s~n", [?SOURCE, ?TARGET]),
     inets:start(),
@@ -55,6 +50,9 @@ run([_|_]=Dbs) ->
     halt();
 run([]) ->
     run().
+
+main(Opts) ->
+    run(Opts).
 
 update_view(Binary) ->
     Binary1 = update_binary(Binary, <<"date_media">>, ?MAX_VM_AGE),
