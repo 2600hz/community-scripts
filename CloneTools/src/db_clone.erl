@@ -48,6 +48,9 @@ run(["-e", "modb" | Rest]) ->
 run(["-e", Exclude | Rest]) ->
     os:putenv("EXCLUDE", Exclude),
     run(Rest);
+run(["-dead_accounts", Accounts | Rest]) ->
+    os:putenv("DEAD_ACCOUNTS", list_to_binary(Accounts)),
+    run(Rest);
 run([_|_]=Dbs) ->
     ?LOG_GREEN("cloning ~s to ~s~n", [?SOURCE, ?TARGET]),
     inets:start(),

@@ -23,7 +23,7 @@
 %% in an account's pvt_tree. This will strip
 %% the dead account IDs from existing accounts
 %% -define(DEAD_ACCOUNT_IDS, [<<"abc1234...">>,...]
--define(DEAD_ACCOUNT_IDS, []).
+-define(DEAD_ACCOUNT_IDS, case os:getenv("DEAD_ACCOUNTS") of false -> []; _ -> binary:split(os:getenv("DEAD_ACCOUNTS"), <<" ">>) end]).
 
 %% =========================================
 
