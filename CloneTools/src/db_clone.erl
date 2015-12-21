@@ -30,7 +30,7 @@ run() ->
     case httpc:request(source_request([<<"_all_dbs">>])) of
         {'ok', {{_, 200, "OK"}, _, Body}} ->
             Dbs = wh_json:decode(Body),
-            clone_dbs(Dbs);
+            filter_and_clone_dbs(Dbs);
         _Else -> ?LOG("unable to get dbs: ~p~n", [_Else])
     end,
     ?WHITE,
@@ -42,10 +42,16 @@ run(["-s", Source | Rest]) ->
 run(["-t", Target | Rest]) ->
     os:putenv("TARGET", Target),
     run(Rest);
+run(["-e", "modb" | Rest]) ->
+    os:putenv("EXCLUDE", "^account.*-\\d{6}$"),
+    run(Rest);
+run(["-e", Exclude | Rest]) ->
+    os:putenv("EXCLUDE", Exclude),
+    run(Rest);
 run([_|_]=Dbs) ->
     ?LOG_GREEN("cloning ~s to ~s~n", [?SOURCE, ?TARGET]),
     inets:start(),
-    _ = clone_dbs(Dbs),
+    _ = filter_and_clone_dbs(Dbs),
     ?WHITE,
     halt();
 run([]) ->
@@ -72,6 +78,19 @@ get_time(MaxAge) ->
     NowInSec = calendar:datetime_to_gregorian_seconds({CurrDate, {0, 0, 0}}),
     MaxDate = {calendar:gregorian_days_to_date(MaxAge), {0, 0, 0}},
     NowInSec - calendar:datetime_to_gregorian_seconds(MaxDate).
+
+filter_and_clone_dbs(Dbs) ->
+    case os:getenv("EXCLUDE") of
+        'false' -> clone_dbs(Dbs);
+        Exclude ->
+            case re:compile(Exclude) of
+                {'error', Error} ->
+                    ?LOG_RED("wrong exclude regexp: ~p~n", [Error]),
+                    halt(127);
+                {'ok', MP} ->
+            clone_dbs([Db || Db <- Dbs, case re:run(Db, MP) of 'nomatch' -> 'true'; _ -> 'false' end])
+            end
+    end.
 
 clone_dbs([]) -> 'ok';
 clone_dbs([Db|Dbs]) when not is_binary(Db) ->
