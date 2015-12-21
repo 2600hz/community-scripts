@@ -1,29 +1,51 @@
 %% ===========[ MODIFY ]====================
 %% TARGET should be set to the URL of haproxy
 %% for the new database cluster.
--define(TARGET, case os:getenv("TARGET") of false -> "http://127.0.0.1:15984/"; _ -> os:getenv("TARGET") end).
+-define(TARGET,
+        case os:getenv("TARGET") of
+            'false' -> "http://127.0.0.1:15984/";
+            _ -> os:getenv("TARGET")
+        end).
 -define(TARGET_PATH(Path), wh_types:to_list(iolist_to_binary([?TARGET, wh_binary:join(Path, <<"/">>)]))).
 %% SOURCE should be set to a single node
 %% in the old database cluster.
--define(SOURCE, case os:getenv("SOURCE") of false -> "http://127.0.0.1:5984/"; _ -> os:getenv("SOURCE") end).
+-define(SOURCE,
+        case os:getenv("SOURCE") of
+            'false' -> "http://127.0.0.1:5984/";
+            _ -> os:getenv("SOURCE")
+        end).
 -define(SOURCE_PATH(Path), wh_types:to_list(iolist_to_binary([?SOURCE, wh_binary:join(Path, <<"/">>)]))).
 
 %% MAX_CR_AGE is the maxium age (in days)
 %% of the CDRs to copy (IE: last 30 days).
 %% Set to 0 to copy all or 'none'.
--define(MAX_CR_AGE, case os:getenv("MAX_CDR_AGE") of 'false' -> 'none'; "none" -> 'none'; _ -> list_to_integer(os:getenv("MAX_CDR_AGE")) end).
+-define(MAX_CR_AGE,
+        case os:getenv("MAX_CDR_AGE") of
+            'false' -> 'none';
+            "none" -> 'none';
+            _ -> list_to_integer(os:getenv("MAX_CDR_AGE"))
+        end).
 
 %% MAX_VM_AGE is the maxium age (in days)
 %% of the voicemail in a box to copy.
 %% Set to 0 to copy all or 'none'.
--define(MAX_VM_AGE, case os:getenv("MAX_VM_AGE") of 'false' -> 0; "none" -> 'none'; _ -> list_to_integer(os:getenv("MAX_VM_AGE")) end).
+-define(MAX_VM_AGE,
+        case os:getenv("MAX_VM_AGE") of
+            'false' -> 0;
+            "none" -> 'none';
+            _ -> list_to_integer(os:getenv("MAX_VM_AGE"))
+        end).
 
 %% DEAD_ACCOUNT_IDS is the listing of account
 %% IDs that are no longer existent but appear
 %% in an account's pvt_tree. This will strip
 %% the dead account IDs from existing accounts
 %% -define(DEAD_ACCOUNT_IDS, [<<"abc1234...">>,...]
--define(DEAD_ACCOUNT_IDS, case os:getenv("DEAD_ACCOUNTS") of false -> []; _ -> binary:split(os:getenv("DEAD_ACCOUNTS"), <<" ">>) end]).
+-define(DEAD_ACCOUNT_IDS,
+        case os:getenv("DEAD_ACCOUNTS") of
+            'false' -> [];
+            _ -> binary:split(list_to_binary(os:getenv("DEAD_ACCOUNTS")), <<" ">>)
+        end).
 
 %% =========================================
 
