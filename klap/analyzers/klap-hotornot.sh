@@ -14,7 +14,7 @@ for FILE in $(listFiles $@); do
 
         statHeader
 
-	printStat "Rates Found" $(countMatches "using rate definition")
+	printStat "Rates Found" $(countMatches "using rate")
 	printStat "Missing Rates" $(countMatches "no (results|rates)")
 	printStat "Lookup Errors" $(countMatches "rate lookup error")
 

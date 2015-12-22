@@ -15,5 +15,5 @@ for FILE in $(listFiles $@); do
         statHeader
 
         printStat "Unique Account DBs" $(wc -l $TMP_FILE)
-	cat $TMP_FILE | sort | uniq -c | sort -nr | head | printTable "Most Frequent Account DBs"
+	cat $TMP_FILE | sort 2> /dev/null| uniq -c | sort -nr 2> /dev/null | head | printTable "Most Frequent Account DBs"
 done

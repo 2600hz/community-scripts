@@ -14,13 +14,17 @@ for FILE in $(listFiles $@); do
 
         statHeader
 
-        printStat "Found Credentials" $(countMatches "SIP authentication reply")
-        printStat "Missing Credentials" $(countMatches "SIP authentication error")
-        printStat "Disabled Credentials" $(countMatches "rejecting")
+        printStat "Authentication Reply" $(countMatches "SIP authentication reply")
+        printStat "Authentication Error" $(countMatches "SIP authentication error")
+        printStat "Disabled Credentials" $(countMatches "rejecting authn for disabled")
+        printStat "Lookup By IP" $(countMatches "looking up IP")
+        printStat "Ignored IP Realm" $(countMatches "realm is an IP address")
         printStat "Credential Lookup Errors" $(countMatches "failed to look up SIP")
-        printStat "Found Auth-by-IP" $(countMatches "replaying route_req")
-        printStat "Missing Auth-by-IP" $(countMatches "no entry in sip_auth")
-        printStat "Auth-by-IP Lookup Errors" $(countMatches "failed to lookup by ip")
+        printStat "Route Request Replays" $(countMatches "route req was missing account information")
+        printStat "Failed Route Request" $(countMatches "not replaying route req")
 
-        zgrep "auth failure for" ${TMP_FILE}  | rev | cut -d " " -f 2 | rev | sort | uniq -c | sort -rn | head | printTable "Highest failures"
+        zgrep "auth failure for" ${TMP_FILE}  | rev | cut -d " " -f 2 | rev | sort 2> /dev/null | uniq -c | sort -rn 2> /dev/null | head | printTable "Top User Failures"
+        zgrep "trying to authenticate" ${TMP_FILE} | rev | cut -d " " -f 1 | rev | sort 2> /dev/null | uniq -c | sort -rn 2> /dev/null | head | printTable "Top Requested Users"
+        zgrep "trying to authenticate" ${TMP_FILE} | rev | cut -d " " -f 1 | cut -d "@" -f 1 | rev | sort 2> /dev/null | uniq -c | sort -rn 2> /dev/null | head | printTable "Top Realms"
+        zgrep "trying to authenticate" $TMP_FILE | grep -Eo "^\w+ \w+ [0-9]+:[0-9]+" | uniq -c | sort -nr 2> /dev/null | head | printTable "Most Frequent Authentication Requests"
 done
