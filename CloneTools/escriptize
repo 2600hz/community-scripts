@@ -3,7 +3,7 @@
 %%
 -module(escriptize).
 
--record('opts', {dir = "ebin", out}).
+-record('opts', {dirs = ["ebin"], out}).
 
 -export([main/0, main/1]).
 
@@ -15,7 +15,8 @@ main(Args) ->
     main(Args, #opts{}).
 
 main(["-d", Dir | Args], Opts) ->
-    main(Args, Opts#opts{dir = Dir});
+    Dirs = [binary_to_list(D) || D <- re:split(Dir, " ")],
+    main(Args, Opts#opts{dirs = Dirs});
 main(["-o", Out | Args], Opts) ->
     main(Args, Opts#opts{out = Out});
 main([_ | Args], Opts) ->
@@ -23,7 +24,8 @@ main([_ | Args], Opts) ->
 main([], Opts) ->
     run(Opts).
 
-run(#opts{dir = Dir, out = Out}) ->
-    {ok, {"mem", Zip}} = zip:create("mem", filelib:wildcard(Dir ++ "/*.beam"), ['memory']),
-    ok = escript:create(Out, [shebang, {emu_args, "-pa ebin"}, {archive, Zip}]),
+run(#opts{dirs = Dirs, out = Out}) ->
+    Files = lists:foldl(fun(Dir, Acc) -> Acc ++ filelib:wildcard(Dir ++ "/*") end, [], Dirs),
+    {ok, {"mem", Zip}} = zip:create("mem", Files, ['memory']),
+    ok = escript:create(Out, [shebang, {emu_args, "-pa ebin -pa lib/ejson-0.1.0/ebin"}, {archive, Zip}]),
     halt(0).

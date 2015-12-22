@@ -21,7 +21,7 @@ compile: ebin/$(PROJECT).app
 		| sed 's/{modules, \[\]}/{modules, \[$(MODULES)\]}/' \
 		> ebin/$(PROJECT).app
 	-@$(MAKE) ebin/$(PROJECT).app
-	@./escriptize -d ebin -o db_clone
+	@./escriptize -o db_clone -d "ebin lib/ejson-0.1.0/ebin lib/ejson-0.1.0/priv"
 	@chmod +x db_clone
 	@echo "\n\tdb_clone successfuly created\n"
 
