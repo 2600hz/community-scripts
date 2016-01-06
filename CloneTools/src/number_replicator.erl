@@ -1,3 +1,4 @@
+%% Sponsored by CloudPBX Inc. (http://cloudpbx.ca)
 -module(number_replicator).
 
 -include("clone_tools.hrl").
@@ -139,11 +140,9 @@ get_account_ids(FD, AccountIds) ->
             get_account_ids(FD, [wh_binary:strip_right(AccountId, $\n)|AccountIds])
     end.
 
-target_request(Path) ->
-    wh_types:to_list(<<?TARGET, (wh_binary:join(Path, <<"/">>))/binary>>).
-        
-source_request(Path) ->
-    wh_types:to_list(<<?SOURCE, (wh_binary:join(Path, <<"/">>))/binary>>).
+target_request(Path) -> ?TARGET_PATH(Path).
+
+source_request(Path) -> ?SOURCE_PATH(Path).
 
 number_to_db_name(<<NumPrefix:5/binary, _/binary>>) ->
     wh_types:to_binary(

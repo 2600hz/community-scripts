@@ -1,1 +1,3 @@
 *.beam
+*.app
+CloneTools/db_clone

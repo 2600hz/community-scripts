@@ -1,3 +1,4 @@
+%% Sponsored by CloudPBX Inc. (http://cloudpbx.ca)
 -module(audit).
 
 -include("clone_tools.hrl").
@@ -186,8 +187,7 @@ get_all_callflow_phone_numbers(AccountDb) ->
             []
     end.
 
-target_request(Path) ->
-    wh_types:to_list(<<?TARGET, (wh_binary:join(Path, <<"/">>))/binary>>).
+target_request(Path) -> ?TARGET_PATH(Path).
 
 number_to_db_name(<<NumPrefix:5/binary, _/binary>>) ->
     wh_types:to_binary(

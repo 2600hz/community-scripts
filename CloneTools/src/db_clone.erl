@@ -1,3 +1,4 @@
+%% Sponsored by CloudPBX Inc. (http://cloudpbx.ca)
 -module(db_clone).
 
 %% {'ok', Dbs} = couch_mgr:db_info(), [begin case Db of <<"test-", _/binary>> -> couch_mgr:db_delete(wh_util:uri_encode(Db)); _ -> ok end end || Db <- Dbs].
@@ -6,6 +7,7 @@
 
 -export([run/0
          ,run/1
+         ,main/1
         ]).
 
 -define(VIEWS, [{<<"filtered_ids">>, wh_json:from_list([{<<"map">>, update_view(<<"function(doc) { if (doc.pvt_deleted || (doc.pvt_type == 'prviate_media'  && doc.pvt_created < {{date_media}}) || (doc.pvt_type == 'cdr'  && doc.pvt_created < {{date_cdr}}) || doc.pvt_type == 'vmbox' || doc.pvt_type == 'debit' || doc.pvt_type == 'credit' || doc.pvt_type == 'acdc_stat') return; emit(doc._id, null); }">>)}])}
@@ -25,19 +27,48 @@
 run() ->
     inets:start(),
     process_flag('trap_exit', 'true'),
+    ?LOG("cloning ~s to ~s~n", [?SOURCE, ?TARGET]),
     case httpc:request(source_request([<<"_all_dbs">>])) of
         {'ok', {{_, 200, "OK"}, _, Body}} ->
-            clone_dbs(wh_json:decode(Body));
+            Dbs = wh_json:decode(Body),
+            filter_and_clone_dbs(Dbs);
         _Else -> ?LOG("unable to get dbs: ~p~n", [_Else])
     end,
     ?WHITE,
     halt().
 
+run(["-s", Source | Rest]) ->
+    os:putenv("SOURCE", Source),
+    run(Rest);
+run(["-t", Target | Rest]) ->
+    os:putenv("TARGET", Target),
+    run(Rest);
+run(["-e", "modb" | Rest]) ->
+    os:putenv("EXCLUDE", "^account.*-\\d{6}$"),
+    run(Rest);
+run(["-e", Exclude | Rest]) ->
+    os:putenv("EXCLUDE", Exclude),
+    run(Rest);
+run(["-dead_accounts", Accounts | Rest]) ->
+    os:putenv("DEAD_ACCOUNTS", list_to_binary(Accounts)),
+    run(Rest);
+run(["-max_cdr_age", MaxCdrAge | Rest]) ->
+    os:putenv("MAX_CDR_AGE", MaxCdrAge),
+    run(Rest);
+run(["-max_vm_age", MaxVmAge | Rest]) ->
+    os:putenv("MAX_VM_AGE", MaxVmAge),
+    run(Rest);
 run([_|_]=Dbs) ->
+    ?LOG_GREEN("cloning ~s to ~s~n", [?SOURCE, ?TARGET]),
     inets:start(),
-    _ = clone_dbs(Dbs),
+    _ = filter_and_clone_dbs(Dbs),
     ?WHITE,
-    halt().
+    halt();
+run([]) ->
+    run().
+
+main(Opts) ->
+    run(Opts).
 
 update_view(Binary) ->
     Binary1 = update_binary(Binary, <<"date_media">>, ?MAX_VM_AGE),
@@ -57,6 +88,19 @@ get_time(MaxAge) ->
     NowInSec = calendar:datetime_to_gregorian_seconds({CurrDate, {0, 0, 0}}),
     MaxDate = {calendar:gregorian_days_to_date(MaxAge), {0, 0, 0}},
     NowInSec - calendar:datetime_to_gregorian_seconds(MaxDate).
+
+filter_and_clone_dbs(Dbs) ->
+    case os:getenv("EXCLUDE") of
+        'false' -> clone_dbs(Dbs);
+        Exclude ->
+            case re:compile(Exclude) of
+                {'error', Error} ->
+                    ?LOG_RED("wrong exclude regexp: ~p~n", [Error]),
+                    halt(127);
+                {'ok', MP} ->
+            clone_dbs([Db || Db <- Dbs, case re:run(Db, MP) of 'nomatch' -> 'true'; _ -> 'false' end])
+            end
+    end.
 
 clone_dbs([]) -> 'ok';
 clone_dbs([Db|Dbs]) when not is_binary(Db) ->
@@ -719,12 +763,9 @@ update_transactions(JObj, Db) ->
             'error'
     end.
 
-target_request(Path) ->
-    %% Path = [<<"test-", Db/binary>>] ++ Rest,
-    wh_types:to_list(<<?TARGET, (wh_binary:join(Path, <<"/">>))/binary>>).
+target_request(Path) -> ?TARGET_PATH(Path).
 
-source_request(Path) ->
-    wh_types:to_list(<<?SOURCE, (wh_binary:join(Path, <<"/">>))/binary>>).
+source_request(Path) -> ?SOURCE_PATH(Path).
 
 uri_encode(Binary) when is_binary(Binary) ->
     wh_types:to_binary(http_uri:encode(wh_types:to_list(Binary)));
