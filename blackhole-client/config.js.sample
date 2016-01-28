@@ -1,0 +1,14 @@
+var config = {}
+
+config.blackhole = {};
+config.crossbar = {};
+
+config.blackhole.host = 'http://localhost';
+config.blackhole.port = 5555;
+config.crossbar.host = 'http://localhost';
+config.crossbar.port = 8000;
+config.crossbar.username = "username";
+config.crossbar.password = "12341234";
+config.crossbar.account_name = "account name";
+
+module.exports = config;

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say>The redirect was successfully done</Say>
+    <Say>I will now call the 415-676-0469</Say>
+    <Say>Please call the 2002 if you want to test the reject</Say> 
+    <Dial timeout='10' record='false' timeLimit='10'>415-676-0469</Dial>
+</Response>

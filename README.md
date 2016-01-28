@@ -44,4 +44,13 @@ This is a collection of SIPp templates and scripts.
 
 Kazoo Log Analysis Program is a collection of scripts that can determine a lot of information based on a Kazoo platform log.
 
+## pivot-script
+An exmample Pivot script created on Nov 7, 2013 by [frifri](https://github.com/frifri)
 
+## blackhole-client
+
+An example client for the Kazoo websocket application "blackhole" created Mar 20, 2014 by [tickbw](https://github.com/tickbw)
+
+## kazoo-sample-php-app
+
+A Sample PHP App for Kazoo ;)  It is written using the first version of the [kazoo-php-sdk](https://github.com/2600hz/kazoo-php-sdk) on Dec 10, 2013 by [tickbw](https://github.com/tickbw)

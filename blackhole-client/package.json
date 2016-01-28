@@ -1,0 +1,28 @@
+{
+    "name": "blackhole-client",
+    "version": "0.0.1",
+    "private": true,
+    "author": "Ben Wann <ben.wann@gmail.com>",
+    "keywords": [
+        "websockets",
+        "kazoo",
+        "api"
+    ],
+    "scripts": {
+        "start": "node app.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tickbw/blackhole-client.git"
+    },
+    "dependencies": {
+        "crossbar": "https://github.com/macpie/crossbar-nodejs/tarball/master",
+        "socket.io-client": "latest",
+        "socket.io": "latest",
+        "express": "3.4.8"
+    },
+    "license": "MIT",
+    "engines": {
+        "node": ">=0.6"
+    }
+}
