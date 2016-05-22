@@ -1,4 +1,4 @@
-sudo apt-get install build-essential libxslt-dev \
+sudo apt-get install git build-essential libxslt-dev \
     zip unzip expat zlib1g-dev libssl-dev curl \
     libncurses5-dev git-core libexpat1-dev \
     htmldoc
