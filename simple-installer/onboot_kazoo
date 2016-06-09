@@ -21,36 +21,37 @@ dbg " Kazoo IP Configuration "
 
 check_root
 check_lock
-    
+
 ip_address=""; check_info_file
 
 declare -a ip_addresses
 declare -a interfaces
 
 get_interfaces
-get_system_ip 
+get_system_ip
 
 ip_match=""
 for ip_system in ${ip_addresses[@]}; do
     if [[ "${ip_system:-}" == "$ip_address" ]];then
-	info "system IP address matches configured kazoo IP: $ip_address"    
+	info "system IP address matches configured kazoo IP: $ip_address"
         ip_match=1
-    fi			
+    fi
 done
 
-if ! [[ ${ip_match:-} ]];then 
+if ! [[ ${ip_match:-} ]];then
     if [[ ${#ip_addresses[@]:-} -eq 1 ]];then
         system_ip_address=${ip_addresses[0]}
         info "configuring IP address to ${system_ip_address}"
-        set_info_file  
-        /opt/kazoo_install/setup_packages -a -i kamailio -i monster-ui     
-    else  
+        set_info_file
+        /opt/kazoo_install/setup_packages -a -i kamailio -i monster-ui
+        sup crossbar_maintenance init_apps '/var/www/html/monster-ui/apps' "http://${system_ip_address}:8000/v2"
+    else
         echo 'get_ip_address' >> /root/.bash_profile
     fi
 fi
 
 
-	
+
 clean_exit $lockfile
 
 
