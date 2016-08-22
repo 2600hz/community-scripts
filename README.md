@@ -44,6 +44,11 @@ This is a collection of SIPp templates and scripts.
 
 Kazoo Log Analysis Program is a collection of scripts that can determine a lot of information based on a Kazoo platform log.
 
+## management-proxy
+
+Access Kazoo's management tools from one site: CouchDB's Fauxton, RabbitMQ's management plugin and HAProxy's status 
+page.
+
 ## pivot-script
 An exmample Pivot script created on Nov 7, 2013 by [frifri](https://github.com/frifri)
 
