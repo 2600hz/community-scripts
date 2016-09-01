@@ -5,8 +5,6 @@
 ##     Installs Nginx, index page and proxy configs
 ##
 
-##  Sponsored by GBC Networks Oy (http://gbc.fi)
-
 
 ## Detects which OS and if it is Linux then it will detect which Linux Distribution.
 OS=`uname -s`
@@ -27,10 +25,11 @@ else
     NGINX_DIR="/etc/nginx"
     COPY_CMD="cp -p"
 fi
+#echo "Detected   OS = $OS   DIST = $DIST"; # for debug
 
 
 ## Install Nginx if NGINX_DIR missing
-if [ ! -d "$NGINX_DIR" ] ; then
+if [ ! -d $NGINX_DIR ] ; then
     EXIT_CODE=999
     if [ "${OS}" = "Solaris" ] ; then
         if [ -f /opt/csw/bin/pkgutil ] ; then
@@ -61,7 +60,7 @@ if [ ! -d "$NGINX_DIR" ] ; then
         exit 5
     fi
 
-    ## Remove default server
+    ## remove default server
     echo -e "\n\t\tRemoving Nginx default server"
     if [ "${OS}" = "Solaris" ] ; then
         LINE=`grep -in "http {" /etc/opt/csw/nginx/nginx.conf | cut -d: -f1`
@@ -72,18 +71,14 @@ if [ ! -d "$NGINX_DIR" ] ; then
             echo "    include /etc/opt/csw/nginx/conf.d/*.conf;" >> /etc/opt/csw/nginx/nginx.conf
             echo "}" >> /etc/opt/csw/nginx/nginx.conf
         fi
-        # Make symlink since SSL Certificate path is under "/etc/nginx"
+        # make symlink since SSL Certificate path is under "/etc/nginx"
         ln -s /etc/opt/csw/nginx /etc/nginx
-    else
-        if [ -L "/etc/nginx/sites-enabled/default" ] ; then
-            rm -f -v /etc/nginx/sites-enabled/default
-        fi
     fi
 fi
 
 
 ## Recheck NGINX_DIR since install may have changed the situation
-if [ -d "$NGINX_DIR" ] ; then
+if [ -d $NGINX_DIR ] ; then
     echo -e "\n\tFound Nginx configuration directory: $NGINX_DIR"
 else
     echo "Error: Couldn't find Nginx configuration directory: $NGINX_DIR"
@@ -95,18 +90,24 @@ fi
 
 ## Copy files into place
 echo -e "\n\t\tCopying files"
+mkdir -p $NGINX_DIR/conf.d
 ${COPY_CMD} management-proxy.conf $NGINX_DIR/conf.d/
-${COPY_CMD} selfsigned/management-proxy.crt $NGINX_DIR/conf.d/
-${COPY_CMD} selfsigned/management-proxy.key $NGINX_DIR/conf.d/
 mkdir -p /var/www/html
 ${COPY_CMD} index-management.html /var/www/html/
 
+
+## Generate selfsigned certificate and private key
+echo -e "\n\t\tGenerating certificate"
+echo -e "\n\tPress Enter to select default values.\n"
+openssl req -x509 -nodes -days 3650 -newkey rsa:4096 \
+  -config ./openssl-management-proxy.cnf \
+  -keyout $NGINX_DIR/conf.d/management-proxy.key \
+  -out $NGINX_DIR/conf.d/management-proxy.crt
 
 
 ## Enable rabbitmq_management plugin
 echo -e "\n\t\tEnabling rabbitmq_management plugin"
 rabbitmq-plugins enable rabbitmq_management
-
 
 
 ## Enable/Start Nginx
@@ -130,4 +131,3 @@ else
     service nginx stop > /dev/null 2>&1
     service nginx start
 fi
-echo -e "\n"
