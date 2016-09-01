@@ -388,11 +388,11 @@ put_docs(JObjs, Db) ->
     ClientOptions = [{'body_format', 'binary'}],
     case httpc:request('post', Request, HTTPOptions, ClientOptions) of
         {'ok', {{_, 202, "Accepted"}, _, _}} ->
-            ?LOG_WHITE("  ~p documents accepted by source~n", [length(JObjs)]);
+            ?LOG_WHITE("  ~p documents accepted by target~n", [length(JObjs)]);
         {'ok', {{_, 201, "Created"}, _, _}} ->
-            ?LOG_WHITE("  ~p documents created on source~n", [length(JObjs)]);
+            ?LOG_WHITE("  ~p documents created on target~n", [length(JObjs)]);
         {'ok', {{_, 200, "OK"}, _, _}} ->
-            ?LOG_WHITE("  ~p documents created on source~n", [length(JObjs)]);
+            ?LOG_WHITE("  ~p documents created on target~n", [length(JObjs)]);
         {'ok', {{_, Code, Reason}, _, Body}} ->
             ?LOG_RED("  failed to store ~p documents at ~s: ~p ~s ~s"
                      ,[length(JObjs), Target, Code, Reason, Body]);
