@@ -5,7 +5,7 @@ Public Scripts from the 2600hz Community
 
 ## simple-installer
 
-* Simple-installer for installing the stable, staging or latest version of Kazoo on centos 6.5.
+* Simple-installer for installing the stable, staging or latest version of Kazoo on centos 7.2.
 * This is the same script packaged into the ISO.
 
 
