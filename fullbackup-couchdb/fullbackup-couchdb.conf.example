@@ -1,0 +1,59 @@
+##
+##  Config file for fullbackup-couchdb.sh
+##
+
+####  General Config  ####
+
+## Print executed commands and show couchbackup results
+debug=false
+
+
+####  CouchDB server  ####
+
+## CouchDB admin username
+couchdb_username=admin
+
+## CouchDB admin password
+couchdb_password=YOUR_PASSWORD
+
+## Hostname or IP of the CouchDB server
+couchdb_hostname=localhost
+
+## Listening port on CouchDB server
+couchdb_port=5984
+
+## Transfer protocol of CouchDB server (either http or https)
+couchdb_protocol=http
+
+
+####  Alert email  ####
+
+## Enable email alert
+email_enabled=true
+
+# Recipient of alert email
+email_address=alert.recipient@blackhole.io
+
+
+####  Remote storage SSH server  ####
+
+## Enable storage to SSH server
+remote_enabled=true
+
+## Remote SSH server key file
+remote_sshkey=/home/user/.ssh/KEY_TO_REMOTE_SSH_SERVER.pem
+
+## Username for remote backup storage
+remote_username=chjail_user
+
+## Hostname or IP of remote backup storage
+remote_hostname=REMOTE_SSH_SERVER
+
+## SSH port on remote server
+remote_port=22
+
+## Transfer protocol of remote backup storage (either scp or sftp)
+remote_protocol=scp
+
+## Directory to store backup 
+remote_directory=/home/chjail_user/backup

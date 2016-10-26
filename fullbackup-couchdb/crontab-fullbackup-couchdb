@@ -1,0 +1,3 @@
+# Run full backup of CouchDB databases
+# Default schedule = every day at 03:30
+30 03 * * *   root  /opt/community-scripts/fullbackup-couchdb/fullbackup-couchdb.sh > /dev/null

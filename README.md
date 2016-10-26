@@ -22,6 +22,11 @@ Bash completion scripts for the sup utility! Tab completion for sup module names
 ## dashboards
 Want to set up some beautiful Kazoo dashboards? Look no further! This will set up InfluxDB, Grafana, Graphite-API, and everything around it thats necessary.
 
+## fullbackup-couchdb
+
+Script that takes a backup of all CouchDB databases and transfers the backup to an SSH-enabled server. 
+A detailed alert email is sent in the event of an error.
+
 ## kazoo-puppet
 
 Puppet scripts for deploying Kazoo (requires an update, only valid for single server currently)
