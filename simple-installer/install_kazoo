@@ -38,13 +38,13 @@ declare -A selected_packages
 declare -A packages
 
 #yum package names
-kazoo_package="kazoo-R15B.x86_64"
-freeswitch_package="kazoo-freeswitch-R15B.x86_64"
-kamailio_package="kazoo-kamailio.x86_64"
-bigcouch_package="kazoo-bigcouch-R15B.x86_64"
+kazoo_package="kazoo-applications"
+freeswitch_package="kazoo-freeswitch"
+kamailio_package="kazoo-kamailio"
+bigcouch_package="kazoo-bigcouch"
 kazoo_ui_package="monster-ui*"
-haproxy_package="haproxy.x86_64"
-rabbitmq_package=""
+haproxy_package="kazoo-haproxy"
+rabbitmq_package="kazoo-rabbitmq"
 
 #Assign package names to packages Associative array for use in menus
 packages['kazoo']=$kazoo_package
@@ -67,40 +67,40 @@ NC='\e[0m'
 blue='\e[0;36m'
 
 dbg(){ 
-    echo -e " - ${green}$* ${NC} " 
-    echo -e " - ${green}$* ${NC} " >> $install_log 
+    printf " - ${green}$* ${NC} \n" 
+    printf " - ${green}$* ${NC} \n" >> $install_log 
 }
 
 info(){ 
-    echo -e "${blue}$* ${NC} "; 
-    echo -e "${blue}$* ${NC} " >> $install_log
+    printf "${blue}$* ${NC} \n"; 
+    printf "${blue}$* ${NC} \n" >> $install_log
 }
 
 error(){ 
-    echo -e "${red}ERROR: $* ${NC} " 
-    echo -e "${red}ERROR: $* ${NC} " >> $install_log 
+    printf "${red}ERROR: $* ${NC} \n" 
+    printf "${red}ERROR: $* ${NC} \n" >> $install_log 
 }
 
 warn(){ 
-    echo -e "${yellow}$* ${NC} "; 
-    echo -e "${yellow}$* ${NC} " >> $install_log 
+    printf "${yellow}$* ${NC} \n"; 
+    printf "${yellow}$* ${NC} \n" >> $install_log 
 }
 
 
 log_print(){
     while read line; do 
-        echo -e $line
-        echo -e $line >> $install_log
+        printf "%s\n" "$line"
+        printf "%s\n" "$line" >> $install_log
     done
 }
 
 
 #You must be root to run this script!
 if [[ $EUID -ne 0 ]]; then
-   echo -e "${red}ERROR:${NC}" 
-   echo -e "${yellow}This script must be executed by a root or sudo user${NC}"
-   echo -e "${yellow}You can rerun the script as root by issuing  'su' or 'sudo ${0}'${NC}"
-   echo -e "${red}EXITING due to insufficient privileges${NC}"
+   printf "${red}ERROR:${NC}\n" 
+   printf "${yellow}This script must be executed by a root or sudo user${NC}\n"
+   printf "${yellow}You can rerun the script as root by issuing  'su' or 'sudo ${0}'${NC}\n"
+   printf "${red}EXITING due to insufficient privileges${NC}\n"
    exit 1
 fi
 
@@ -126,7 +126,7 @@ check_lock(){
 }
 
 int_exit(){
-    echo -e "${NC}"
+    printf "${NC}\n"
     echo ${@:-}
     echo "Exiting installer due to user interrupt"
     echo "    you can rerun with $0"
@@ -136,7 +136,7 @@ int_exit(){
 }
 
 error_exit(){
-    echo -e "${NC}"
+    printf "${NC}\n"
     echo "Exiting due to error see $install_log for details"
     clear_lock
     trap - EXIT
@@ -144,7 +144,7 @@ error_exit(){
 }
 
 clean_exit(){
-    echo -e "${NC}"
+    printf "${NC}\n"
     clear_lock
     trap - EXIT
     exit 
@@ -160,7 +160,7 @@ trap int_exit SIGINT SIGQUIT
 banner(){
 reset
 echo ""
-echo -e ${blue}
+printf ${blue}
 echo ""
 echo ""
 echo "    ___   _____ ____  ____  __  __                  "
@@ -184,7 +184,7 @@ echo ""
 echo "================================================================================"
 echo ""
 echo ""
-echo -e ${NC}
+printf ${NC}
 
 }
 
@@ -644,7 +644,7 @@ yum_loop(){
     pack="$1"
     ret=0
     while read line; do
-        echo -en "\r${ceol}$line"         
+        printf "\r${ceol}$line\n" 
     done < <(yum install -y $pack |& log_print || ret=1  )
     echo
    
@@ -689,60 +689,63 @@ set_hostname
 install_prereqs
 
 # 4.0 repo
-wget https://packages.2600hz.com/centos/7/staging/2600hz-release/2600hz-release-4.0-1.el7.centos.noarch.rpm --no-check-certificate
-yum install -y 2600hz-release-4.0-1.el7.centos.noarch.rpm
+if ! [[ "yum list installed | grep 2600hz-release" ]];then
+	wget https://packages.2600hz.com/centos/7/staging/2600hz-release/2600hz-release-4.0-1.el7.centos.noarch.rpm --no-check-certificate
+	yum install -y 2600hz-release-4.0-1.el7.centos.noarch.rpm
+	echo "YUMMING HERE"
+fi
+	echo "no yum  HERE"
 
-'
-#if all_in_one is already set we are doing auto pilot install via handle_args
-! [[ ${install_source:-} ]] && main_menu
+# #if all_in_one is already set we are doing auto pilot install via handle_args
+ ! [[ ${install_source:-} ]] && main_menu
+# 
+# if [[ "$install_source" == "network" ]];then   
+#     ! [[ ${install_repo_url:-}  ]] && repo_ask 
+#     
+#     repo_add $install_repo_url
+#     get_available_versions
+#     
+#     ! [[ ${install_release:-}  ]] && repo_menu 
+#     
+#     repo_disable 
+#     repo_enable $install_release
+#     repo_enable $install_base
+# elif [[ "$install_source" == "local" ]];then
+#     repo_disable
+#     repo_enable "2600hz.local"
+# fi  
+# 
+ ! [[ ${all_in_one:-} ]] && package_menu 
+ 
+ echo 
+ info "=================================: Installation :==============================="
+ echo
+ 
+ install_packages 
+ 
+# dbg "Installed kazoo using version: ${install_version:-}\n     From repositories: [$install_release, $install_base]\n     Hosted on: $install_repo_url"
+# 
+# echo 
+# info "====================================: Setup :==================================="
+# echo
+# 
+# arg=""
+# 
+# [[ ${all_in_one:-} ]] && arg="-a"
+# 
+# dbg "Package setup list:"
+# for pack in ${!selected_packages[@]}; 
+# do
+#     arg="$arg -i $pack"
+#     printf "${green}     $pack pending configuration${NC}"
+# done
+# 
+# dbg "running /opt/kazoo_install/setup_packages $arg"
+# 
+# /opt/kazoo_install/setup_packages $arg 
+# 
+# [ -e /root/.bashrc ] && sed -i "s|.*install_kazoo.*||" /root/.bashrc 
+# [ -e /etc/rc.d/rc.local ] && sed -i "s|.*install_kazoo.*||" /etc/rc.d/rc.local 
 
-if [[ "$install_source" == "network" ]];then   
-    ! [[ ${install_repo_url:-}  ]] && repo_ask 
-    
-    repo_add $install_repo_url
-    get_available_versions
-    
-    ! [[ ${install_release:-}  ]] && repo_menu 
-    
-    repo_disable 
-    repo_enable $install_release
-    repo_enable $install_base
-elif [[ "$install_source" == "local" ]];then
-    repo_disable
-    repo_enable "2600hz.local"
-fi  
-'
-
-! [[ ${all_in_one:-} ]] && package_menu 
-
-echo 
-info "=================================: Installation :==============================="
-echo
-
-install_packages 
-
-dbg "Installed kazoo using version: ${install_version:-}\n     From repositories: [$install_release, $install_base]\n     Hosted on: $install_repo_url"
-
-echo 
-info "====================================: Setup :==================================="
-echo
-
-arg=""
-
-[[ ${all_in_one:-} ]] && arg="-a"
-
-dbg "Package setup list:"
-for pack in ${!selected_packages[@]}; 
-do
-    arg="$arg -i $pack"
-    echo -e "${green}     $pack pending configuration${NC}"
-done
-
-dbg "running /opt/kazoo_install/setup_packages $arg"
-
-/opt/kazoo_install/setup_packages $arg 
-
-[ -e /root/.bashrc ] && sed -i "s|.*install_kazoo.*||" /root/.bashrc 
-[ -e /etc/rc.d/rc.local ] && sed -i "s|.*install_kazoo.*||" /etc/rc.d/rc.local 
-
+echo "right before clean exit"
 clean_exit 
