@@ -653,6 +653,7 @@ yum_loop(){
 
 install_prereqs(){
     dbg "Installing prerequisite packages."
+    #no package for system-config-network-tui
     yum_loop "yum-utils curl sed rsyslog system-config-network-tui" || error_exit "install prerequisite failed!"
 }
 
@@ -687,6 +688,11 @@ set_hostname
 
 install_prereqs
 
+# 4.0 repo
+wget https://packages.2600hz.com/centos/7/staging/2600hz-release/2600hz-release-4.0-1.el7.centos.noarch.rpm --no-check-certificate
+yum install -y 2600hz-release-4.0-1.el7.centos.noarch.rpm
+
+'
 #if all_in_one is already set we are doing auto pilot install via handle_args
 ! [[ ${install_source:-} ]] && main_menu
 
@@ -705,6 +711,7 @@ elif [[ "$install_source" == "local" ]];then
     repo_disable
     repo_enable "2600hz.local"
 fi  
+'
 
 ! [[ ${all_in_one:-} ]] && package_menu 
 
