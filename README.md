@@ -36,6 +36,10 @@ Kazoo install tool that can be used to set up an all-in-one server or assist wit
 
 Erlang tool to copy all databases from one Bigcouch cluster to another, with options for CDRs and voicemails
 
+## CloneToolsFS
+
+Fork of CloneTools. Allows copying databases between Bigcouch and the filesystem.
+
 ## sipp
 
 This is a collection of SIPp templates and scripts.
