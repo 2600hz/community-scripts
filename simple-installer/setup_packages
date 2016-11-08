@@ -53,103 +53,107 @@ setup_apps_error='Setup apps failed!'
 # restart commands 
 #
 
-restart_epmd_dbg="Start EPMD with: ${NC} /usr/bin/epmd -daemon"
-restart_epmd_cmd="/usr/bin/epmd -daemon"
-restart_epmd_error="epmd daemon failed to start, start with: ${NC}/usr/bin/epmd -daemon"
+# is starting epmd still required?
+#restart_epmd_dbg="Start EPMD with: ${NC} /usr/bin/epmd -daemon"
+#restart_epmd_cmd="/usr/bin/epmd -daemon"
+#restart_epmd_error="epmd daemon failed to start, start with: ${NC}/usr/bin/epmd -daemon"
 
-restart_freeswitch_cmd="/sbin/service freeswitch restart"
-restart_freeswitch_dbg="Restart FreeSWITCH with: ${NC}service freeswitch restart"
-restart_freeswitch_error="Freeswitch restart failed, restart with: ${NC}service freeswitch restart"
+restart_freeswitch_cmd="/usr/bin/systemctl restart kazoo-freeswitch"
+restart_freeswitch_dbg="Restart FreeSWITCH with: ${NC}systemctl restart kazoo-freeswitch"
+restart_freeswitch_error="Freeswitch restart failed, restart with: ${NC}systemctl restart kazoo-freeswitch"
 
-restart_bigcouch_cmd="/sbin/service bigcouch restart"
-restart_bigcouch_dbg="Restart Bigcouch to apply changes with: ${NC}service bigcouch restart"
-restart_bigcouch_error="Bigcouch restart failed, restart with: ${NC}/sbin/service bigcouch restart"
+restart_bigcouch_cmd="/usr/bin/systemctl restart kazoo-bigcouch"
+restart_bigcouch_dbg="Restart Bigcouch to apply changes with: ${NC}systemctl restart kazoo-bigcouch"
+restart_bigcouch_error="Bigcouch restart failed, restart with: ${NC}/usr/bin/systemctl restart kazoo-bigcouch"
 
-restart_kamailio_dbg="Restart Kamailio to apply the changes with: ${NC}service kamailio restart"
-restart_kamailio_cmd="/sbin/service kamailio restart"
-restart_kamailio_error="Kamailio restart failed, restart with: ${NC}service kamailio restart"
+restart_kamailio_cmd="/usr/bin/systemctl restart kazoo-kamailio"
+restart_kamailio_dbg="Restart Kamailio to apply the changes with: ${NC}systemctl restart kazoo-kamailio"
+restart_kamailio_error="Kamailio restart failed, restart with: ${NC}systemctl restart kazoo-kamailio"
 
-restart_rabbitmq_dbg="Restart RabbitMQ with: ${NC} service rabbitmq-server restart"
-restart_rabbitmq_cmd="/sbin/service rabbitmq-server restart" 
-restart_rabbitmq_error="Rabbitqm restart failed, restart with:  ${NC}service rabbitmq-server restart"
+restart_rabbitmq_cmd="/usr/bin/systemctl restart kazoo-rabbitmq" 
+restart_rabbitmq_dbg="Restart RabbitMQ with: ${NC} systemctl restart kazoo-rabbitmq"
+restart_rabbitmq_error="Rabbitqm restart failed, restart with:  ${NC}systemctl restart kazoo-rabbitmq"
 
 #KZ-WHISTLE_APPS RESTART
-restart_whistle_apps_dbg="Restarting Whapps with: ${NC}service kz-whistle_apps restart"
-restart_whistle_apps_cmd="/sbin/service kz-whistle_apps restart" 
-restart_whistle_apps_error="kz-whistle_apps restart failed, restart with: ${NC}service kz-whistle_apps restart" 
+restart_whistle_apps_dbg="Restarting Whapps with: ${NC}systemctl restart kazoo-applications"
+restart_whistle_apps_cmd="/usr/bin/systemctl restart kazoo-applications" 
+restart_whistle_apps_error="kz-whistle_apps restart failed, restart with: ${NC}systemctl restart kazoo-applications" 
 
 #KZ-ECALLMGR RESTART 
-restart_ecallmgr_dbg="Restarting ecallmgr with: ${NC}service kz-ecallmgr restart"
-restart_ecallmgr_cmd="/sbin/service kz-ecallmgr restart" 
-restart_ecallmgr_error="kz-ecallmgr restart failed, restart with: ${NC}service kz-ecallmgr restart"
+restart_ecallmgr_dbg="Restarting ecallmgr with: ${NC}systemctl restart kazoo-ecallmgr"
+restart_ecallmgr_cmd="/usr/bin/systemctl restart kazoo-ecallmgr" 
+restart_ecallmgr_error="kz-ecallmgr restart failed, restart with: ${NC}systemctl restart kazoo-ecallmgr"
 
 #RESTART HTTPD
-restart_httpd_dbg="Starting httpd with: ${NC}service httpd restart"
-restart_httpd_cmd="/sbin/service httpd restart"
-restart_httpd_error="httpd restart failed, restart with: ${NC}service httpd restart"
+restart_httpd_dbg="Starting httpd with: ${NC}systemctl restart httpd"
+restart_httpd_cmd="/usr/bin/systemctl restart httpd"
+restart_httpd_error="httpd restart failed, restart with: ${NC}systemctl restart httpd"
 
 #restart rsyslog
-restart_rsyslog_dbg="Restart rsyslog with: ${NC}service rsyslog restart"
-restart_rsyslog_cmd="/sbin/service rsyslog restart"
-restart_rsyslog_error="rsyslog failed to start, restart with: ${NC}service rsyslog restart"
+restart_rsyslog_dbg="Restart rsyslog with: ${NC}systemctl restart rsyslog"
+restart_rsyslog_cmd="/usr/bin/systemctl restart rsyslog"
+restart_rsyslog_error="rsyslog failed to start, restart with: ${NC}systemctl restart rsyslog"
 
 #restart haproxy
-restart_haproxy_dbg="Restart HAProxy to apply changes with: ${NC}service haproxy restart"
-restart_haproxy_cmd="/sbin/service haproxy restart"
-restart_haproxy_error="haproxy restart failed, restart with: ${NC}service haproxy restart"
+restart_haproxy_dbg="Restart HAProxy to apply changes with: ${NC}systemctl restart kazoo-haproxy"
+restart_haproxy_cmd="/usr/bin/systemctl restart kazoo-haproxy"
+restart_haproxy_error="haproxy restart failed, restart with: ${NC}systemctl restart kazoo-haproxy"
 
 
 #
 # Enable services on boot
 #
 
-boot_rabbitmq_dbg="Enabling rabbitmq on boot with: ${NC}chkconfig rabbitmq-server on"
-boot_rabbitmq_cmd="chkconfig rabbitmq-server on"
-boot_rabbitmq_error="Failed to enable rabbitmq chkconfig"
+boot_rabbitmq_dbg="Enabling rabbitmq on boot with: ${NC}systemctl enable kazoo-rabbitmq"
+boot_rabbitmq_cmd="systemctl enable kazoo-rabbitmq"
+boot_rabbitmq_error="Failed to enable kazoo-rabbitmq on boot"
 
-boot_whistle_apps_dbg="Enabling kz-whistle_apps on boot with: ${NC}chkconfig kz-whistle_apps on" 
-boot_whistle_apps_cmd="chkconfig kz-whistle_apps on"   
-boot_whistle_apps_error="Failed to enable rabbitmq-server to chkconfig"
+boot_whistle_apps_dbg="Enabling kazoo-applications on boot with: ${NC}systemctl enable kazoo-applications" 
+boot_whistle_apps_cmd="systemctl enable kazoo-applications"   
+boot_whistle_apps_error="Failed to enable kazoo-applications to chkconfig"
         
-boot_ecallmgr_dbg="Enabling ecallmgr on boot with: ${NC}chkconfig kz-ecallmgr on"        
-boot_ecallmgr_cmd="chkconfig kz-ecallmgr on"
+boot_ecallmgr_dbg="Enabling ecallmgr on boot with: ${NC}systemctl enable kazoo-ecallmgr"        
+boot_ecallmgr_cmd="systemctl enable kazoo-ecallmgr"
 boot_ecallmgr_error="Failed to enable rabbitmq-to chkconfig"
 
-boot_bigcouch_dbg="Enabling bigcouch on boot with: ${NC}chkconfig bigcouch on"
-boot_bigcouch_cmd="chkconfig bigcouch on"
-boot_bigcouch_error="Failed to enable bigcouch in chkconfig"
+boot_bigcouch_dbg="Enabling bigcouch on boot with: ${NC}systemctl enable kazoo-bigcouch"
+boot_bigcouch_cmd="systemctl enable kazoo-bigcouch"
+boot_bigcouch_error="Failed to enable kazoo-bigcouch on boot"
 
-boot_freeswitch_dbg="Enabling freeswithc on boot with: ${NC}chkconfig freeswitch on" 
-boot_freeswitch_cmd="chkconfig freeswitch on" 
-boot_freeswitch_error="Failed to enable freeswitch in chkconfig"
+boot_freeswitch_dbg="Enabling freeswithc on boot with: ${NC}systemctl enable kazoo-freeswitch" 
+boot_freeswitch_cmd="systemctl enable kazoo-freeswitch" 
+boot_freeswitch_error="Failed to enable kazoo-freeswitch on boot"
 
-boot_kamailio_dbg="Enabling kamailio on boot with: ${NC}chkconfig kamailio on"
-boot_kamailio_cmd="chkconfig kamailio on"
-boot_kamailio_error="Failed to enable kamailio in chkconfig"
+boot_kamailio_dbg="Enabling kamailio on boot with: ${NC}systemctl enable kazoo-kamailio"
+boot_kamailio_cmd="systemctl enable kazoo-kamailio"
+boot_kamailio_error="Failed to enable kazoo-kamailio on boot"
 
-boot_haproxy_dbg="Enabling haproxy on boot with: ${NC}chkconfig haproxy on"
-boot_haproxy_cmd="chkconfig haproxy on"
-boot_haproxy_error="Failed to enable haproxy in chkconfig"
+boot_haproxy_dbg="Enabling haproxy on boot with: ${NC}systemctl enable kazoo-haproxy"
+boot_haproxy_cmd="systemctl enable kazoo-haproxy"
+boot_haproxy_error="Failed to enable haproxy on boot"
 
-boot_httpd_dbg="Enabling kamailio on boot with: ${NC}chkconfig httpd on"
-boot_httpd_cmd="chkconfig httpd on"
-boot_httpd_error="Failed to enable httpd in chkconfig"
+boot_httpd_dbg="Enabling kamailio on boot with: ${NC}systemctl enable httpd"
+boot_httpd_cmd="systemctl enable httpd"
+boot_httpd_error="Failed to enable httpd on boot"
 
 #
-#setup commands to get services configured
+#setup commands to get systemctl configured
 #
 
-symlink_haproxy_dbg="Creating symlink to use HA proxy config in /etc/kazoo/haproxy instead of /etc/haproxy"
-symlink_haproxy_cmd="rm -rf /etc/haproxy/haproxy.cfg;ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg"
-symlink_haproxy_error="create symlink failed,  create with: ${NC}ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg" 
+#TODO: still required?
+#symlink_haproxy_dbg="Creating symlink to use HA proxy config in /etc/kazoo/haproxy instead of /etc/haproxy"
+#symlink_haproxy_cmd="rm -rf /etc/haproxy/haproxy.cfg;ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg"
+#symlink_haproxy_error="create symlink failed,  create with: ${NC}ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg" 
 
-attach_ecallmgr_dbg="Attach ecallmgr to FreeSWITCH with: ${NC} sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
-attach_ecallmgr_cmd="/opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
-attach_ecallmgr_error="Attach ecallmgr failed, rerun with: ${NC}sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
+#TODO: double check this command
+#attach_ecallmgr_dbg="Attach ecallmgr to FreeSWITCH with: ${NC} sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
+#attach_ecallmgr_cmd="/opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
+#attach_ecallmgr_error="Attach ecallmgr failed, rerun with: ${NC}sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
 
-update_bigcouch_views_dbg="Updating all Bigcouch views with: ${NC}sup whapps_maintenance migrate"
-update_bigcouch_views_cmd="/opt/kazoo/utils/sup/sup whapps_maintenance migrate"
-update_bigcouch_views_error="whapps blocking_refresh failed! rerun with: ${NC}sup whapps_maintenance migrate"
+#TODO: ?
+#update_bigcouch_views_dbg="Updating all Bigcouch views with: ${NC}sup whapps_maintenance migrate"
+#update_bigcouch_views_cmd="/opt/kazoo/utils/sup/sup whapps_maintenance migrate"
+#update_bigcouch_views_error="whapps blocking_refresh failed! rerun with: ${NC}sup whapps_maintenance migrate"
 
 if [ -d /opt/kazoo/system_media/en-us ]; then  
     media_dir="/opt/kazoo/system_media/en-us"
@@ -255,11 +259,11 @@ info " : Restarting services : "
 #TODO: SETUP BASIC IP TABLES ENTRIES PER SERVICE!!!!!!
 warn "WARNING:  Stopping IP tables, that means your shields are down!"
 warn "          You should setup some firewall rules, before you are haxored!!"
-service iptables stop 
-chkconfig iptables off 
+#service iptables stop 
+#chkconfig iptables off 
 
 
-run_cmd 'restart_rsyslog'
+#run_cmd 'restart_rsyslog'
 
 if  [[ ${install_list['haproxy']:-} ]]; then
     run_cmd 'symlink_haproxy'
@@ -280,8 +284,8 @@ if [[ ${install_list['kazoo']:-} ]];then
     run_cmd 'restart_ecallmgr'
     wait_apps_running
     
-    dbg "Displaying whistle_apps status with: ${NC}service kz-whistle_apps status "
-    /sbin/service kz-whistle_apps status 
+    dbg "Displaying whistle_apps status with: ${NC}sup kz_nodes status "
+    /usr/sbin/sup kz_nodes status 
 fi  
 
 if [[ ${install_list['freeswitch']:-} &&  ${install_list['kazoo']:-} ]];then 

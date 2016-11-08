@@ -16,7 +16,7 @@ echo "Stopping Services"
 
 echo "Removing Packages"
 
-yum remove -y monster-ui-* kazoo-* 
+yum remove -y monster-ui-* kazoo-* httpd 2600hz-release
 
 echo "removing old directories"
 

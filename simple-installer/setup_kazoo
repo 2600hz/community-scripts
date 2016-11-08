@@ -11,7 +11,7 @@ trap clean_exit SIGHUP SIGTERM ERR EXIT
 trap int_exit SIGINT SIGQUIT
 
 
-kazoo_config="/etc/kazoo/config.ini"
+kazoo_config="/etc/kazoo/core/config.ini"
 
 #KAZOO COOKIE
 cookie=""

@@ -134,17 +134,21 @@ int_exit(){
 #gets list of Ethernet interfaces and puts in array interfaces
 get_interfaces(){
     local interface
-    for interface in `ifconfig | grep Ethernet |cut -d" " -f1`;do
+    for interface in `ip addr | grep mtu | cut -d' ' -f2 | sed s/://g | grep -v lo`;do
         interfaces+=("$interface")
     done
 }
 
 #gets list of ip addresses from interfaces list
 get_system_ip(){
+	echo "Getting IP 1"
     local ip_address
+	echo "Getting IP 2"
     for interface in ${interfaces[@]}; do
-        for ip_address in `ifconfig $interface | grep "inet addr" | cut -d: -f2 | cut -d" " -f1`;
+	echo "Getting IP 3"
+        for ip_address in `ip addr | grep "inet " | awk '{print $2}' | cut -d'/' -f1| grep -v 127.0.0.1`
         do
+	echo "Getting IP 4"
             ip_addresses+=("$ip_address")
         done
     done
@@ -201,11 +205,15 @@ ask_ip_selection(){
              echo 
          info "Please select the ${red}IP address${blue} to use for handling traffic on this server: "
              echo 
+
+	     echo "ask_ip_here_1"
          PS3="Select IP address: "
          select opt in ${ip_addresses[@]}; do
+	     echo "ask_ip_here_2"
              case $opt in
                  *)
                      system_ip_address=$opt
+	     echo "ask_ip_here_3"
                      break
                      ;;
              esac

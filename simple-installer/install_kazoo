@@ -679,20 +679,20 @@ install_packages(){
 # End functions
 #
 
-handle_args $@
-check_lock
+#handle_args $@
+#check_lock
 banner
-set_hostname
+#set_hostname
 
-! [[ ${all_in_one:-} ]] && set_network
+#! [[ ${all_in_one:-} ]] && set_network
 
 install_prereqs
 
 # 4.0 repo
-if ! [[ "yum list installed | grep 2600hz-release" ]];then
+if !  yum list installed | grep 2600hz-release ;then
+	echo "repo setup here!!"
 	wget https://packages.2600hz.com/centos/7/staging/2600hz-release/2600hz-release-4.0-1.el7.centos.noarch.rpm --no-check-certificate
 	yum install -y 2600hz-release-4.0-1.el7.centos.noarch.rpm
-	echo "YUMMING HERE"
 fi
 	echo "no yum  HERE"
 
@@ -714,7 +714,7 @@ fi
 #     repo_disable
 #     repo_enable "2600hz.local"
 # fi  
-# 
+ 
  ! [[ ${all_in_one:-} ]] && package_menu 
  
  echo 
@@ -723,29 +723,29 @@ fi
  
  install_packages 
  
-# dbg "Installed kazoo using version: ${install_version:-}\n     From repositories: [$install_release, $install_base]\n     Hosted on: $install_repo_url"
-# 
-# echo 
-# info "====================================: Setup :==================================="
-# echo
-# 
-# arg=""
-# 
-# [[ ${all_in_one:-} ]] && arg="-a"
-# 
-# dbg "Package setup list:"
-# for pack in ${!selected_packages[@]}; 
-# do
-#     arg="$arg -i $pack"
-#     printf "${green}     $pack pending configuration${NC}"
-# done
-# 
-# dbg "running /opt/kazoo_install/setup_packages $arg"
-# 
-# /opt/kazoo_install/setup_packages $arg 
-# 
-# [ -e /root/.bashrc ] && sed -i "s|.*install_kazoo.*||" /root/.bashrc 
-# [ -e /etc/rc.d/rc.local ] && sed -i "s|.*install_kazoo.*||" /etc/rc.d/rc.local 
+ dbg "Installed kazoo using version: ${install_version:-}\n     From repositories: [$install_release, $install_base]\n     Hosted on: $install_repo_url"
+ 
+ echo 
+ info "====================================: Setup :==================================="
+ echo
+ 
+ arg=""
+ 
+ [[ ${all_in_one:-} ]] && arg="-a"
+ 
+ dbg "Package setup list:"
+ for pack in ${!selected_packages[@]}; 
+ do
+     arg="$arg -i $pack"
+     printf "${green}     $pack pending configuration${NC}\n"
+ done
+ 
+ dbg "running /opt/kazoo_install/setup_packages $arg"
+ 
+ /opt/kazoo_install/setup_packages $arg 
+ 
+ [ -e /root/.bashrc ] && sed -i "s|.*install_kazoo.*||" /root/.bashrc 
+ [ -e /etc/rc.d/rc.local ] && sed -i "s|.*install_kazoo.*||" /etc/rc.d/rc.local 
 
 echo "right before clean exit"
 clean_exit 
