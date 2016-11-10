@@ -155,18 +155,18 @@ boot_httpd_error="Failed to enable httpd on boot"
 #update_bigcouch_views_cmd="/opt/kazoo/utils/sup/sup whapps_maintenance migrate"
 #update_bigcouch_views_error="whapps blocking_refresh failed! rerun with: ${NC}sup whapps_maintenance migrate"
 
-if [ -d /opt/kazoo/system_media/en-us ]; then  
-    media_dir="/opt/kazoo/system_media/en-us"
+if [ -d /opt/kazoo/sounds/en/us/ ]; then  
+    media_dir="/opt/kazoo/sounds/en/us/"
 else 
     media_dir="/opt/kazoo/system_media"
 fi
 
 import_media_files_dbg="Importing media files with: ${NC}sup whistle_media_maintenance import_prompts ${media_dir} en-us "
-import_media_files_cmd="sup whistle_media_maintenance import_prompts ${media_dir} en-us"
+import_media_files_cmd="sup kazoo_media_maintenance import_prompts ${media_dir}"
 import_media_files_error="Media prompt import failed with: ${NC}sup whistle_media_maintenance import_prompts ${media_dir} en-us"
 
 create_account_dbg="Creating admin account with: ${NC}sup crossbar_maintenance create_account TOKEN"
-create_account_cmd="/opt/kazoo/utils/sup/sup crossbar_maintenance create_account TOKEN"
+create_account_cmd="sup crossbar_maintenance create_account TOKEN"
 create_account_error="Account creation failed, you can create an account with: ${NC}sup crossbar_maintenance create_account TOKEN"
 
 handle_args(){
@@ -266,11 +266,11 @@ warn "          You should setup some firewall rules, before you are haxored!!"
 #run_cmd 'restart_rsyslog'
 
 if  [[ ${install_list['haproxy']:-} ]]; then
-    run_cmd 'symlink_haproxy'
+#    run_cmd 'symlink_haproxy'
     run_cmd 'restart_haproxy'  
 fi 
 
-[[ ${install_list['freeswitch']:-} ]] && run_cmd 'restart_epmd'
+#[[ ${install_list['freeswitch']:-} ]] && run_cmd 'restart_epmd'
 [[ ${install_list['bigcouch']:-}   ]] && run_cmd 'restart_bigcouch'
 [[ ${install_list['kazoo']:-} && ${run_rabbit:-}  ]] && run_cmd 'restart_rabbitmq'
 
@@ -344,6 +344,3 @@ echo
 
 info "Installation completed! Welcome to Kazoo!"
 clean_exit
-
-
-

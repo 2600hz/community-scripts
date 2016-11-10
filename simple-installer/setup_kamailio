@@ -65,20 +65,24 @@ EOF
 dispatcher_setid_ref="dispatcher_setid"
 
 set_dispatcher(){
-    local tempfile="${kamailio_dispatcher}.tmp"
-    while read line;do
-        if [[ $line =~ [[:digit:]]+[[:space:]]sip.* ]];then
-            for dispatch in "${dispatch_list[@]}";do
-                dbg "Adding dispatcher line to $kamailio_dispatcher file - ${dispatch}"
-                echo "${dispatch}" >> $tempfile
-            done
-            #dispatcher file ends with these entries
-            mv $tempfile $kamailio_dispatcher
-            return 
-        else
-            echo $line >> $tempfile 
-        fi
-    done < $kamailio_dispatcher
+#    local tempfile="${kamailio_dispatcher}.tmp"
+    for dispatch in "${dispatch_list[@]}";do
+	dbg "Adding dispatcher line to $kamailio_dispatcher file - ${dispatch}"
+	echo "${dispatch}" >> $kamailio_dispatcher
+    done
+    #while read line;do
+    #    if [[ $line =~ [[:digit:]]+[[:space:]]sip.* ]];then
+    #        for dispatch in "${dispatch_list[@]}";do
+    #            dbg "Adding dispatcher line to $kamailio_dispatcher file - ${dispatch}"
+    #            echo "${dispatch}" >> $tempfile
+    #        done
+    #        #dispatcher file ends with these entries
+    #        mv $tempfile $kamailio_dispatcher
+    #        return 
+    #    else
+    #        echo $line >> $tempfile 
+    #    fi
+    #done < $kamailio_dispatcher
 }
 
 ask_dispatcher(){
@@ -118,7 +122,8 @@ if [  ${all_in_one:-} ];then
    #if allinone we default everything!
    ip_address=$system_ip_address
    hostname=$system_hostname
-   dispatch_list+=("1 sip:$system_ip_address:11000 1") 
+#   dispatch_list+=("1 sip:$system_ip_address:11000 1") 
+   dispatch_list+=(":1:sip\:$system_ip_address\:11000:0:0::") 
    ports+=("11000")
    setids+=("1")
 else
@@ -133,6 +138,7 @@ if [[ ${system_ip_address:-} ]];then
 else
     set_value ip_address $ip_address
 fi 
+
 
 set_value system_hostname $system_hostname
 

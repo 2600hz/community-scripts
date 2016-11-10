@@ -38,7 +38,7 @@ declare -A selected_packages
 declare -A packages
 
 #yum package names
-kazoo_package="kazoo-applications"
+kazoo_package="kazoo-application*"
 freeswitch_package="kazoo-freeswitch"
 kamailio_package="kazoo-kamailio"
 bigcouch_package="kazoo-bigcouch"
@@ -679,12 +679,12 @@ install_packages(){
 # End functions
 #
 
-#handle_args $@
-#check_lock
+handle_args $@
+check_lock
 banner
-#set_hostname
+set_hostname
 
-#! [[ ${all_in_one:-} ]] && set_network
+! [[ ${all_in_one:-} ]] && set_network
 
 install_prereqs
 
@@ -696,32 +696,32 @@ if !  yum list installed | grep 2600hz-release ;then
 fi
 	echo "no yum  HERE"
 
-# #if all_in_one is already set we are doing auto pilot install via handle_args
+ #if all_in_one is already set we are doing auto pilot install via handle_args
  ! [[ ${install_source:-} ]] && main_menu
-# 
-# if [[ "$install_source" == "network" ]];then   
-#     ! [[ ${install_repo_url:-}  ]] && repo_ask 
-#     
-#     repo_add $install_repo_url
-#     get_available_versions
-#     
-#     ! [[ ${install_release:-}  ]] && repo_menu 
-#     
-#     repo_disable 
-#     repo_enable $install_release
-#     repo_enable $install_base
-# elif [[ "$install_source" == "local" ]];then
-#     repo_disable
-#     repo_enable "2600hz.local"
-# fi  
  
- ! [[ ${all_in_one:-} ]] && package_menu 
+ #if [[ "$install_source" == "network" ]];then   
+ #    ! [[ ${install_repo_url:-}  ]] && repo_ask 
+ #    
+ #    repo_add $install_repo_url
+ #    get_available_versions
+ #    
+ #    ! [[ ${install_release:-}  ]] && repo_menu 
+ #    
+ #    repo_disable 
+ #    repo_enable $install_release
+ #    repo_enable $install_base
+ #elif [[ "$install_source" == "local" ]];then
+ #    repo_disable
+ #    repo_enable "2600hz.local"
+ #fi  
+ 
+! [[ ${all_in_one:-} ]] && package_menu 
  
  echo 
  info "=================================: Installation :==============================="
  echo
  
- install_packages 
+install_packages 
  
  dbg "Installed kazoo using version: ${install_version:-}\n     From repositories: [$install_release, $install_base]\n     Hosted on: $install_repo_url"
  

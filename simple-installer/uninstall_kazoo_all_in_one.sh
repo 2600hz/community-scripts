@@ -13,14 +13,25 @@ fi
 
 echo "Stopping Services"
 
+systemctl stop kazoo-applications
+systemctl stop kazoo-ecallmgr
+systemctl stop kazoo-bigcouch
+systemctl stop kazoo-rabbitmq
+systemctl stop kazoo-haproxy
+systemctl stop kazoo-freeswitch
+systemctl stop kazoo-kamailio
+
 
 echo "Removing Packages"
 
-yum remove -y monster-ui-* kazoo-* httpd 2600hz-release
+yum remove -y monster-ui-* kazoo-* httpd 2600hz-release bigcouch* freeswitch* haproxy rabbitmq-server kamailio-kazoo
 
 echo "removing old directories"
 
 rm -rf /etc/kazoo
+rm -rf /opt/kazoo
+rm -rf /opt/bigcouch
+rm -rf /tmp/*
 rm -rf /etc/haproxy
 rm -rf /srv
 rm -rf /var/log/kamailio
@@ -32,6 +43,3 @@ rm -rf /var/log/bigcouch
 rm /var/log/kazoo_install.log 
 rm -rf /etc/httpd
 rm -rf /var/lib/rabbitmq
-
-
-

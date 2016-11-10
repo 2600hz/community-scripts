@@ -234,7 +234,7 @@ wait_apps_running(){
     dbg "Waiting for whapps to start by polling: ${NC}/opt/kazoo/utils/sup/sup whapps_controller list_apps"
 
     while
-    /opt/kazoo/utils/sup/sup whapps_controller list_apps &>> $logfile
+    sup kz_nodes status &>> $logfile
     (( $? != 0 ))
     do
         continue
@@ -243,7 +243,7 @@ wait_apps_running(){
     dbg "Waiting for ecallmgr to start by polling: ${NC}/opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes"
 
     while
-    /opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes &>> $logfile
+    sup -necallmgr ecallmgr_maintenance list_fs_nodes &>> $logfile
     (( $? != 0 ))
     do
         continue
