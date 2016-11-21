@@ -10,7 +10,7 @@
 ##  Sponsored by GBC Networks Oy (http://gbc.fi)
 
 
-declare -a programs=(basename curl date dirname echo logger sed tar ./couchdb-backup.sh)
+declare -a programs=(basename curl date dirname echo logger printf rm sed tar ./couchdb-backup.sh)
 
 RED='\033[0;31m'
 NC='\033[0m' # No Color

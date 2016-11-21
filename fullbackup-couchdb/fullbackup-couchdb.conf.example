@@ -1,5 +1,5 @@
 ##
-##  Config file for backup-couchdb.sh
+##  Config file for fullbackup-couchdb.sh
 ##
 
 ####  General Config  ####
@@ -31,6 +31,9 @@ couchdb_protocol=http
 ## Enable E-mail alert
 email_enabled=true
 
+# Recipient of alert E-mail
+email_address=alert.recipient@blackhole.io
+
 ## Hostname or IP of mail server
 email_hostname=localhost
 
@@ -43,6 +46,9 @@ remote_enabled=true
 ## Remote SSH server key file
 remote_sshkey=/home/user/.ssh/KEY_TO_REMOTE_SSH_SERVER.pem
 
+## Username for remote backup storage
+remote_username=backup_user
+
 ## Hostname or IP of remote backup storage
 remote_hostname=REMOTE_SSH_SERVER
 
@@ -51,3 +57,6 @@ remote_port=22
 
 ## Transfer protocol of remote backup storage (either scp or sftp)
 remote_protocol=scp
+
+## Directory to store backup 
+remote_directory=/home/chjail_user/backup

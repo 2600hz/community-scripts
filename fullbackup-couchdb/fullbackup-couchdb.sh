@@ -33,6 +33,7 @@ if [ -z ${email_enabled+x} ];    then logger -t $TAG -s "Error: Email enabled/di
 if [ "${email_enabled^^}" != "TRUE" ]; then email_enabled=0; fi
 if [ "${email_enabled^^}" == "TRUE" ]; then email_enabled=1; fi
 if [ ${email_enabled} -eq 1 ]; then
+    if [ -z ${email_address+x} ];      then logger -t $TAG -s "Error: Email address for alert email is not set in the config file!"; exit 5; fi
     if [ -z ${email_hostname+x} ];      then logger -t $TAG -s "Error: Email server hostname/IP is not set in the config file!"; exit 5; fi
 fi
 
@@ -41,9 +42,11 @@ if [ "${remote_enabled^^}" != "TRUE" ]; then remote_enabled=0; fi
 if [ "${remote_enabled^^}" == "TRUE" ]; then remote_enabled=1; fi
 if [ ${remote_enabled} -eq 1 ]; then
     if [ -z ${remote_sshkey+x} ];       then logger -t $TAG -s "Error: Remote SSH server key file is not set in the config file!"; exit 5; fi
+    if [ -z ${remote_username+x} ];     then logger -t $TAG -s "Error: Remote SSH server username is not set in the config file!"; exit 5; fi
     if [ -z ${remote_hostname+x} ];     then logger -t $TAG -s "Error: Remote SSH server hostname/IP is not set in the config file!"; exit 5; fi
     if [ -z ${remote_port+x} ];         then logger -t $TAG -s "Error: Remote SSH server port is not set in the config file!"; exit 5; fi
     if [ -z ${remote_protocol+x} ];     then logger -t $TAG -s "Error: Remote SSH server transfer protocol is not set in the config file!"; exit 5; fi
+    if [ -z ${remote_directory+x} ];     then logger -t $TAG -s "Error: Remote SSH server directory is not set in the config file!"; exit 5; fi
 fi
 
 # missing debug parameter is not an error
@@ -75,6 +78,8 @@ set +f
 
 ## backup each database
 echo -e "Running backup....\n"
+#for i in 0 1 2 3 9
+# CHANGE-ME ####################################################################################
 for i in "${!array[@]}"
 do
     # initialize success flag only on first iteration
@@ -163,6 +168,49 @@ if [ ${error_code} -gt 0 ]; then
 fi
 
 
+## Move to SSH server
+echo "Moving backup to remote server...."
+if [ ${remote_enabled} -eq 1 ]; then
+    unset IFS       # all separators
+    if [ "${remote_protocol^^}" == "SCP" ]; then
+        exec_cmd="scp -p -i ${remote_sshkey} -P ${remote_port} ${COMPRESSED_FILE} ${remote_username}@${remote_hostname}:${remote_directory}/ "
+        if [ ${debug} -eq 1 ]; then echo -e "\nDEBUG: Executing command = ${exec_cmd}\n"; fi
+        result=$( ${exec_cmd} 2>&1 )
+        error_code=$?
+    elif [ "${remote_protocol^^}" == "SFTP" ]; then
+        exec_cmd="sftp -i ${remote_sshkey} -P ${remote_port} ${remote_username}@${remote_hostname}"
+        if [ ${debug} -eq 1 ]; then echo -e "\nDEBUG: Executing command = ( printf \"cd ${remote_directory} \\\nput couchbackup_2016-11-21.tgz \\\nquit\" ) | ${exec_cmd}\n"; fi
+        result=$( ( printf "cd ${remote_directory} \nput couchbackup_2016-11-21.tgz \nquit" ) | ${exec_cmd} 2>&1 )
+        error_code=$?
+    else
+        error_code=0
+        backup_success=0
+        logger -t $TAG -s "Error: Unknown Remote SSH server transfer protocol \" ${remote_protocol}\" "
+    fi
+
+    # check the error code and delete file if everything is OK
+    if [ ${error_code} -eq 0 ]; then
+        rm -f ${COMPRESSED_FILE}
+    else
+        backup_success=0
+        error_message=${error_message}"Error: ${remote_protocol} command failed with error code ${error_code}.\n"
+        # store first 2 lines of STDOUT for the error_message / alert E-mail
+        line_count=0
+        IFS=$'\n'       # make newlines the only separator
+        for line in $result; do
+            error_message=${error_message}"Failure cause: ${line}\n"
+            ((line_count++))
+            if [ ${line_count} -gt 2 ]; then
+                unset IFS       # all separators
+                break
+            fi
+        done
+        unset IFS       # all separators
+    fi
+
+fi
+
+
 ## exit 0 if no error
 if [ -z ${backup_success+x} ]; then
     backup_success=0;
@@ -172,7 +220,7 @@ if [ ${backup_success} -eq 1 ]; then
     exit 0
 else
     (>&2 echo -e "\n")
-    logger -t $TAG -s "Backup was not successful!";
+    logger -t $TAG -s "Backup was not successful!"
     (>&2 echo -e "\n")
     if [ ! -z ${error_message+x} ]; then
         (>&2 echo -e ${error_message})
