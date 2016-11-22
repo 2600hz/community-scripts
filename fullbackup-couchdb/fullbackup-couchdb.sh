@@ -34,7 +34,6 @@ if [ "${email_enabled^^}" != "TRUE" ]; then email_enabled=0; fi
 if [ "${email_enabled^^}" == "TRUE" ]; then email_enabled=1; fi
 if [ ${email_enabled} -eq 1 ]; then
     if [ -z ${email_address+x} ];      then logger -t $TAG -s "Error: Email address for alert email is not set in the config file!"; exit 5; fi
-    if [ -z ${email_hostname+x} ];      then logger -t $TAG -s "Error: Email server hostname/IP is not set in the config file!"; exit 5; fi
 fi
 
 if [ -z ${remote_enabled+x} ];   then logger -t $TAG -s "Error: Remote storage enabled/disabled state is not set in the config file!"; exit 5; fi
@@ -87,20 +86,22 @@ do
         backup_success=1
     fi
 
+    db_name=${array[i]}
+
     # quicky URL-encode
-    array[i]=$(echo ${array[i]} | sed -e "s/\//%2F/g")
-    array[i]=$(echo ${array[i]} | sed -e "s/\+/%2B/g")
+    db_name=$(echo ${db_name} | sed -e "s/\//%2F/g")
+    db_name=$(echo ${db_name} | sed -e "s/\+/%2B/g")
 
     # remove " "
-    array[i]=${array[i]%"\""}
-    array[i]=${array[i]#"\""}
+    db_name=${db_name%"\""}
+    db_name=${db_name#"\""}
 
-    out_file=couchdb-${array[i]}_${BACK_DATE}.txt
+    out_file=couchdb-${db_name}_${BACK_DATE}.txt
     echo -e "Backup #$i \t${out_file}"
 
     # run couchdb-backup.sh
     script_args="-b -u ${couchdb_username} -p ${couchdb_password} -H ${couchdb_protocol}://${couchdb_hostname} -P ${couchdb_port}"
-    script_args=${script_args}" -d ${array[i]} -f ${BACK_DIR}/${out_file} "
+    script_args=${script_args}" -d ${db_name} -f ${BACK_DIR}/${out_file} "
     exec_cmd=$(dirname "${BASH_SOURCE[0]}")"/couchdb-backup.sh"
     if [ ${debug} -eq 1 ]; then echo -e "\nDEBUG: Executing command = ${exec_cmd} ${script_args}\n"; fi
     unset IFS       # all separators
@@ -110,20 +111,17 @@ do
     # check the error code and that the backup file exists and size is non-zero
     if [ ${error_code} -eq 0 ]; then
         if [ -f ${BACK_DIR}/${out_file} ]; then
-            if [ -s ${BACK_DIR}/${out_file} ]; then
-                # if all is OK, output only the last line of STDOUT
-                result="${result##*$'\n'}"
-            else
+            if [ ! -s ${BACK_DIR}/${out_file} ]; then
                 backup_success=0
-                error_message=${error_message}"Error: Backup of ${array[i]} produced a zero byte backup file.\n"
+                error_message=${error_message}"Error: Backup of ${db_name} produced a zero byte backup file.\n"
             fi
         else
             backup_success=0
-            error_message=${error_message}"Error: Backup of ${array[i]} failed to produce a backup file.\n"
+            error_message=${error_message}"Error: Backup of ${db_name} failed to produce a backup file.\n"
         fi
     else
         backup_success=0
-        error_message=${error_message}"Error: Backup of ${array[i]} failed with error code ${error_code}.\n"
+        error_message=${error_message}"Error: Backup of ${db_name} failed with error code ${error_code}.\n"
         # store first 2 lines of STDOUT for the error_message / alert E-mail
         line_count=0
         IFS=$'\n'       # make newlines the only separator
@@ -219,11 +217,22 @@ if [ ${backup_success} -eq 1 ]; then
     echo -e "Backup done!\n"
     exit 0
 else
+    # show error messages
     (>&2 echo -e "\n")
     logger -t $TAG -s "Backup was not successful!"
     (>&2 echo -e "\n")
     if [ ! -z ${error_message+x} ]; then
-        (>&2 echo -e ${error_message})
+        IFS=$'\n'       # make newlines the only separator
+        for line in $(echo -e ${error_message}); do
+            logger -t $TAG -s ${line}
+        done
+        unset IFS       # all separators
+    fi
+    # send alert E-mail
+    if [ ${email_enabled} -eq 1 ]; then
+        header="-a From:fullbackup-couchdb@$( hostname )"
+        error_message="Backup was not successful!\nBackup host $( hostname )\n\n\tError messages:\n"${error_message}
+        echo -e ${error_message} | mailx ${header} -s "Alert: Backup of CouchDB failed!" ${email_address}
     fi
     exit 1
 fi

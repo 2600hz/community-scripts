@@ -34,9 +34,6 @@ email_enabled=true
 # Recipient of alert E-mail
 email_address=alert.recipient@blackhole.io
 
-## Hostname or IP of mail server
-email_hostname=localhost
-
 
 ####  Config for remote storage SSH server  ####
 
@@ -47,7 +44,7 @@ remote_enabled=true
 remote_sshkey=/home/user/.ssh/KEY_TO_REMOTE_SSH_SERVER.pem
 
 ## Username for remote backup storage
-remote_username=backup_user
+remote_username=chjail_user
 
 ## Hostname or IP of remote backup storage
 remote_hostname=REMOTE_SSH_SERVER
