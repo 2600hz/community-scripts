@@ -10,7 +10,8 @@
 ##  Sponsored by GBC Networks Oy (http://gbc.fi)
 
 
-declare -a programs=(basename bash curl date dirname echo hostname logger mailx printf rm sed tar ./couchdb-backup.sh)
+declare -a gnu_programs=(basename bash cat date dirname echo hostname mkdir printf rm source)
+declare -a other_programs=(logger mailx scp sftp ./couchdb-backup.sh)
 
 RED='\033[0;31m'
 NC='\033[0m' # No Color
@@ -29,8 +30,12 @@ check_file(){
 ## END FUNCTION
 
 
-echo "Checking programs..."
-for program in "${programs[@]}"; do
+echo "Checking standard GNU software..."
+for program in "${gnu_programs[@]}"; do
+    check_file $program
+done
+echo "Checking other programs..."
+for program in "${other_programs[@]}"; do
     check_file $program
 done
 echo "Check completed."
