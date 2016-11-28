@@ -8,7 +8,7 @@
 debug=false
 
 
-####  Config for CouchDB server  ####
+####  CouchDB server  ####
 
 ## CouchDB admin username
 couchdb_username=admin
@@ -26,16 +26,16 @@ couchdb_port=5984
 couchdb_protocol=http
 
 
-####  Config for alert E-mail  ####
+####  Alert email  ####
 
-## Enable E-mail alert
+## Enable email alert
 email_enabled=true
 
-# Recipient of alert E-mail
+# Recipient of alert email
 email_address=alert.recipient@blackhole.io
 
 
-####  Config for remote storage SSH server  ####
+####  Remote storage SSH server  ####
 
 ## Enable storage to SSH server
 remote_enabled=true

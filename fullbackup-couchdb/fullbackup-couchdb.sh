@@ -5,7 +5,7 @@
 ##
 ##  This script runs couchdb-backup.sh on every database.
 ##  It then tar/gzips the resulting files and send them to a backup server.
-##  If the script fails, it will send an alert E-mail.
+##  If the script fails, it will send an alert email.
 ##
 ##  This script requires Daniele Bailo's couchdb-dump
 ##  https://github.com/danielebailo/couchdb-dump
@@ -61,7 +61,7 @@ mkdir -p ${BACK_DIR}
 
 
 ## get databases
-echo "Getting CouchDB databases...."
+echo -e "Getting CouchDB databases....\n"
 HOST="${couchdb_protocol}://${couchdb_username}:${couchdb_password}@${couchdb_hostname}:${couchdb_port}"
 JSON_CONTENT="Content-Type: application/json"
 if [ ${debug} -eq 1 ]; then echo -e "\nDEBUG: Executing command = curl -X GET ${HOST}/_all_dbs -H \"${JSON_CONTENT}\"\n"; fi
@@ -76,9 +76,7 @@ set +f
 
 
 ## backup each database
-echo -e "Running backup....\n"
-#for i in 0 1 2 3 9
-# CHANGE-ME ####################################################################################
+echo -e "Taking backups....\n"
 for i in "${!array[@]}"
 do
     # initialize success flag only on first iteration
@@ -88,7 +86,7 @@ do
 
     db_name=${array[i]}
 
-    # quicky URL-encode
+    # URL-encode
     db_name=$(echo ${db_name} | sed -e "s/\//%2F/g")
     db_name=$(echo ${db_name} | sed -e "s/\+/%2B/g")
 
@@ -108,7 +106,7 @@ do
     result=$( ${exec_cmd} ${script_args} 2>/dev/null )
     error_code=$?
 
-    # check the error code and that the backup file exists and size is non-zero
+    # check the error code, that the backup file exists and size is non-zero
     if [ ${error_code} -eq 0 ]; then
         if [ -f ${BACK_DIR}/${out_file} ]; then
             if [ ! -s ${BACK_DIR}/${out_file} ]; then
@@ -122,7 +120,7 @@ do
     else
         backup_success=0
         error_message=${error_message}"Error: Backup of ${db_name} failed with error code ${error_code}.\n"
-        # store first 2 lines of STDOUT for the error_message / alert E-mail
+        # store first 2 lines of STDOUT for the error_message / alert email
         line_count=0
         IFS=$'\n'       # make newlines the only separator
         for line in $result; do
@@ -151,7 +149,7 @@ error_code=$?
 if [ ${error_code} -gt 0 ]; then
     backup_success=0
     error_message=${error_message}"Error: Compression of directory ${BACK_DIR} failed with error code ${error_code}.\n"
-    # store first 2 lines of STDOUT for the error_message / alert E-mail
+    # store first 2 lines of STDOUT for the error_message / alert email
     line_count=0
     IFS=$'\n'       # make newlines the only separator
     for line in $result; do
@@ -192,7 +190,7 @@ if [ ${remote_enabled} -eq 1 ]; then
     else
         backup_success=0
         error_message=${error_message}"Error: ${remote_protocol} command failed with error code ${error_code}.\n"
-        # store first 2 lines of STDOUT for the error_message / alert E-mail
+        # store first 2 lines of STDOUT for the error_message / alert email
         line_count=0
         IFS=$'\n'       # make newlines the only separator
         for line in $result; do
@@ -228,7 +226,7 @@ else
         done
         unset IFS       # all separators
     fi
-    # send alert E-mail
+    # send alert email
     if [ ${email_enabled} -eq 1 ]; then
         header="-a From:fullbackup-couchdb@$( hostname )"
         error_message="Backup was not successful!\nBackup host $( hostname )\n\n\tError messages:\n"${error_message}
