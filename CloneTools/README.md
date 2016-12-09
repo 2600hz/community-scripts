@@ -44,7 +44,7 @@ Clone `accounts` and `system_config` databases from `http://source.example.com/`
 ```
 
 ```bash
-./db_clone -e motd
+./db_clone -e modb
 ```
 
 ```bash
