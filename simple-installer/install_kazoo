@@ -20,12 +20,9 @@ hostname_check_re="(?=^.{4,255}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,
 repo_url_re="^(https?:\/\/)?([0-9a-z\.-\.]+)([a-z\.]{2,6})?([:][0-9]+)?([\/\w\.-]*)*\/[a-zA-Z0-9\-\_]+.repo$"
 
 #repo names
-stable_release="2600hz_R15B"
-stable_base="2600hz_base"
-staging_release="2600hz_R15B_staging"
-staging_base="2600hz_base_staging"
-latest_release="2600hz_R15B_latest"
-latest_base="2600hz_base_latest"
+stable_release="2600hz-stable"
+staging_release="2600hz-staging"
+latest_release="2600hz-experimental"
 
 #release info for menus
 stable_version=""
@@ -38,7 +35,7 @@ declare -A selected_packages
 declare -A packages
 
 #yum package names
-kazoo_package="kazoo-application*"
+kazoo_package="kazoo-applications kazoo-application*"
 freeswitch_package="kazoo-freeswitch"
 kamailio_package="kazoo-kamailio"
 bigcouch_package="kazoo-bigcouch"
@@ -271,15 +268,12 @@ set_install_release(){
 
     if [[ $release_version =~ [Ss]table ]];then
       install_release=$stable_release
-      install_base=$stable_base
       install_version=$stable_version
     elif  [[ $release_version =~ [Ss]taging ]];then
       install_release=$staging_release
-      install_base=$staging_base
       install_version=$staging_version
-    elif [[ $release_version =~ [Ll]atest ]];then
+    elif [[ $release_version =~ [Ee]xperimental ]];then
       install_release=$latest_release
-      install_base=$latest_base
       install_version=$latest_version
     else
       return 1
@@ -571,7 +565,7 @@ repo_menu(){
     info 'Please choose the release version to install. '
 
     PS3='release: '
-	local options=("Stable  ($stable_version) - recommended" "Staging ($staging_version) - testing/development" "Latest  ($latest_version) - expert")
+	local options=("Stable  ($stable_version) - recommended" "Staging ($staging_version) - testing/development" "Experimental  ($latest_version) - expert")
     select opt in "${options[@]}"; do
         case $opt in
             Stable*)
@@ -582,8 +576,8 @@ repo_menu(){
                 set_install_release "Staging"
                 break
                 ;;
-            Latest*)
-                set_install_release "Latest"
+            Experimental*)
+                set_install_release "Experimental"
                 break
                 ;;
             *)
