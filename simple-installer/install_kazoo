@@ -35,13 +35,13 @@ declare -A selected_packages
 declare -A packages
 
 #yum package names
-kazoo_package="kazoo-applications kazoo-application*"
-freeswitch_package="kazoo-freeswitch"
-kamailio_package="kazoo-kamailio"
-bigcouch_package="kazoo-bigcouch"
+kazoo_package="kazoo-applications kazoo-application* kazoo-configs-core"
+freeswitch_package="kazoo-freeswitch kazoo-configs-freeswitch"
+kamailio_package="kazoo-kamailio kazoo-configs-kamailio"
+bigcouch_package="kazoo-bigcouch kazoo-configs-bigcouch"
 kazoo_ui_package="monster-ui*"
-haproxy_package="kazoo-haproxy"
-rabbitmq_package="kazoo-rabbitmq"
+haproxy_package="kazoo-haproxy kazoo-configs-haproxy"
+rabbitmq_package="kazoo-rabbitmq kazoo-configs-rabbitmq"
 
 #Assign package names to packages Associative array for use in menus
 packages['kazoo']=$kazoo_package
