@@ -231,7 +231,7 @@ ask_ip_selection(){
 }
 
 wait_apps_running(){
-    dbg "Waiting for whapps to start by polling: ${NC}/opt/kazoo/utils/sup/sup whapps_controller list_apps"
+    dbg "Waiting for whapps to start by polling: ${NC}sup kz_nodes status"
 
     while
     sup kz_nodes status &>> $logfile
@@ -240,7 +240,7 @@ wait_apps_running(){
         continue
     done
 
-    dbg "Waiting for ecallmgr to start by polling: ${NC}/opt/kazoo/utils/sup/sup -necallmgr ecallmgr_maintenance list_fs_nodes"
+    dbg "Waiting for ecallmgr to start by polling: ${NC}sup -necallmgr ecallmgr_maintenance list_fs_nodes"
 
     while
     sup -necallmgr ecallmgr_maintenance list_fs_nodes &>> $logfile
