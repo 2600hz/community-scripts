@@ -471,6 +471,7 @@ repo_add(){
 repo_enable(){
     dbg "Enabling repo $1"
     yum-config-manager --enable $1 &>> $install_log || error_exit "repo_enable failed enabling repo $1"
+    yum clean all
 }
 
 repo_list_version(){
