@@ -12,15 +12,25 @@ trap int_exit SIGINT SIGQUIT
 
 
 kazoo_config="/etc/kazoo/core/config.ini"
+kazoo_vmargs="/etc/kazoo/core/vm.args"
 
 #KAZOO COOKIE
 cookie=""
-cookie_dbg="setting $kazoo_config - setcookie = TOKEN"
+cookie_dbg="setting $kazoo_config - cookie = TOKEN"
 cookie_cmd="sed -i 's|cookie = .*|cookie = TOKEN|' $kazoo_config"
 cookie_question="Please enter your erlang cookie (string): "
 cookie_re=".*"
 cookie_hint="Cookie should be longish, like 32 chars at least"
-cookie_ref="ip_address"
+cookie_ref="cookie"
+
+#KAZOO VM ARGS COOKIE
+vm_cookie=""
+vm_cookie_dbg="setting $kazoo_vmargs - setcookie TOKEN"
+vm_cookie_cmd="sed -i 's|-setcookie .*|-setcookie TOKEN|' $kazoo_vmargs"
+vm_cookie_question="Please enter your erlang cookie (string): "
+vm_cookie_re=".*"
+vm_cookie_hint="Cookie should be longish, like 32 chars at least"
+vm_cookie_ref="vm_cookie"
 
 #KAZOO IP
 ip_address=""
@@ -28,13 +38,13 @@ ip_address_dbg="setting $kazoo_config - ip = \"TOKEN\""
 ip_address_cmd="sed -i 's|ip = .*|ip = \"TOKEN\"|' $kazoo_config"
 ip_address_question="What IP should we use for kazoo to talk to bigcouch (normally: 127.0.0.1)?: "
 ip_address_re="$ip_address_regex"
-ip_address_hint="This is generally the haProxy ip address which is normally available via localhost" 
+ip_address_hint="This is generally the haProxy ip address which is normally available via localhost"
 ip_address_ref="ip_address"
 
 ####KAZOO AMQP CONFIG
 amqp_string=""
 amqp_string_dbg="setting amqp config in $kazoo_config - TOKEN"
-amqp_string_cmd="sed -i 's|\"amqp://.*\"|\"amqp://TOKEN\"|' $kazoo_config"  
+amqp_string_cmd="sed -i 's|\"amqp://.*\"|\"amqp://TOKEN\"|' $kazoo_config"
 
 #AMQP IP
 amqp_ip=""
@@ -43,14 +53,13 @@ amqp_ip_re="$ip_address_regex"
 amqp_ip_hint="This is the ip address of your rabbitmq server?"
 amqp_ip_ref="amqp_ip"
 
-
 ask_amqp_config(){
     ask amqp_ip
     amqp_string="guest:guest@${amqp_ip}:5672"
 }
 
 interactive(){
-    ask_amqp_config 
+    ask_amqp_config
     ask ip_address
 }
 
@@ -65,9 +74,6 @@ else
     ask cookie
     set_cookie_file $cookie
 fi
-
-
-set_value cookie $default_cookie
 
 if [[ ${1:-} =~ -a ]];then
     all_in_one=1
@@ -86,6 +92,7 @@ dbg "Applying Kazoo configuration..."
 
 set_value amqp_string $amqp_string
 set_value cookie $cookie
+set_value vm_cookie $cookie
 set_value ip_address $ip_address
 
 clean_exit $lockfile
