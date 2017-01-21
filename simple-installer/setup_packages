@@ -257,10 +257,10 @@ info " : Restarting services : "
 
 
 #TODO: SETUP BASIC IP TABLES ENTRIES PER SERVICE!!!!!!
-warn "WARNING:  Stopping IP tables, that means your shields are down!"
+warn "WARNING:  Stopping firewalld, that means your shields are down!"
 warn "          You should setup some firewall rules, before you are haxored!!"
-#service iptables stop 
-#chkconfig iptables off 
+systemctl stop firewalld 
+systemctl disable firewalld
 
 
 #run_cmd 'restart_rsyslog'
