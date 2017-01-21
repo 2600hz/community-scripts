@@ -24,7 +24,7 @@ systemctl stop kazoo-kamailio
 
 echo "Removing Packages"
 
-yum remove -y monster-ui-* kazoo-* httpd 2600hz-release bigcouch* freeswitch* haproxy rabbitmq-server kamailio-kazoo
+yum remove -y "monster-ui-*" "kazoo-*" httpd 2600hz-release
 
 echo "removing old directories"
 
