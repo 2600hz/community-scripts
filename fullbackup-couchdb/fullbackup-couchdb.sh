@@ -118,6 +118,14 @@ do
             error_message=${error_message}"Error: Backup of ${db_name} failed to produce a backup file.\n"
         fi
     else
+        # skip errors for _metadata and _replicator databases
+        if [ ${db_name} == '_metadata' ]; then
+                if [ ${debug} -eq 1 ]; then echo -e "DEBUG: skipping errors for '_metadata' database\n"; fi
+                continue
+        elif [ ${db_name} == '_replicator' ]; then
+                if [ ${debug} -eq 1 ]; then echo -e "DEBUG: skipping errors for '_replicator' database\n"; fi
+                continue
+        fi
         backup_success=0
         error_message=${error_message}"Error: Backup of ${db_name} failed with error code ${error_code}.\n"
         # store first 2 lines of STDOUT for the error_message / alert email
@@ -230,6 +238,8 @@ else
     if [ ${email_enabled} -eq 1 ]; then
         header="-a From:fullbackup-couchdb@$( hostname )"
         error_message="Backup was not successful!\nBackup host $( hostname )\n\n\tError messages:\n"${error_message}
+        # replace password with XXXXXXXXXX
+        error_message=${error_message//${couchdb_password}/XXXXXXXXXX}
         echo -e ${error_message} | mailx ${header} -s "Alert: Backup of CouchDB failed!" ${email_address}
     fi
     exit 1
