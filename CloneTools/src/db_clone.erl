@@ -137,7 +137,7 @@ clone_db(Db) ->
         'false' -> 'ok';
         'true' ->
             put('errors', []),
-            _ = clone_all_docs(Db),
+            _ = clone_all_docs(Db, 0, ?MAX_BULK),
             %% _ = clone_attachments(Db),
             [?LOG_RED("~s", [Error])
              || Error <- get('errors')
@@ -159,25 +159,29 @@ clone_account_db(Db) ->
             ]
     end.
 
-clone_all_docs(Db) ->
-    case find_missing_ids(Db) of
-        [] -> ?LOG_GREEN("  documents are in sync~n", []);
-        Ids ->
-            ?LOG_CYAN("  found ~p missing documents~n"
-                      ,[length(Ids)]),
-            clone_docs(Ids, Db, 'true')
-    end.
+clone_all_docs(Db, Skip, Limit) ->
+  case find_missing_ids(Db, Skip, Limit) of
+    [] -> case Skip =:= 0 of
+            true -> ?LOG_GREEN("  documents are in sync~n", []);
+            _ -> 'ok'
+          end;
+    Ids ->
+      ?LOG_CYAN("  found ~p missing documents~n"
+        ,[length(Ids)]),
+      clone_docs(Ids, Db, 'true'),
+      clone_all_docs(Db, Skip + Limit, Limit)
+  end.
 
-find_missing_ids(Db) ->
-    Source = source_request([Db
-                             ,<<"_all_docs">>
-                            ]),
-    Target = target_request([Db
-                             ,<<"_all_docs">>
-                            ]),
-    SourceIds = sets:from_list(get_ids(Source)),
-    TargetIds = sets:from_list(get_ids(Target)),
-    sets:to_list(sets:subtract(SourceIds, TargetIds)).
+find_missing_ids(Db, Skip, Limit) ->
+  Source = source_request([Db
+    ,lists:concat(["_all_docs?skip=\"", Skip, "\"&=limit\"", Limit,"\""])
+  ]),
+  Target = target_request([Db
+    ,lists:concat(["_all_docs?skip=\"", Skip, "\"&=limit\"", Limit,"\""])
+  ]),
+  SourceIds = sets:from_list(get_ids(Source)),
+  TargetIds = sets:from_list(get_ids(Target)),
+  sets:to_list(sets:subtract(SourceIds, TargetIds)).
 
 clone_design_docs(Db) ->
     _ = put_clone_view(Db),
