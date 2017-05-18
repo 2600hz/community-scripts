@@ -26,16 +26,20 @@ function find_did {
     print_column "${datetime/ /_}" "${did%@*}" "${did##*@}" "$call_id"
 }
 
+function search_log_file {
+    md5_hash=$(md5sum $1 | cut -d ' ' -f 1)
+    tmp_file="/tmp/$md5_hash.${1##*.}"
+
+    if [ ! -f $tmp_file ]; then
+        cp $1 $tmp_file
+    fi
+
+    for failed_call in $(zgrep "context_2 not found" $tmp_file | cut -d ' ' -f 1 | sort | uniq); do
+        find_did $failed_call $tmp_file
+    done
+}
+
 print_column "Datetime" "DID" "IP" "Call-ID"
 for log_file in $@; do
-        MD5=$(md5sum $log_file | cut -d ' ' -f 1)
-        TMP_FILE="/tmp/$MD5.${1##*.}"
-
-        if [ ! -f $TMP_FILE ]; then
-            cp $1 $TMP_FILE
-        fi
-
-        for failed_call in $(zgrep "context_2 not found" $TMP_FILE | cut -d ' ' -f 1 | sort | uniq); do
-                find_did $failed_call $TMP_FILE
-        done
+    search_log_file $log_file
 done
