@@ -9,8 +9,6 @@
 ## Works with glob patterns too
 ## ./context_2_failures.bash /var/log/freeswitch/kazoo_debug.log.3?.gz
 
-#!/bin/bash
-
 function print_column {
     printf "%28s | %15s | %20s | %s\n" $1 $2 $3 $4
 }
