@@ -9,7 +9,7 @@
 ## Pipe to count numbers that failed:
 ## ./context_2_failures.bash /var/log/freeswitch/kazoo_debug.log | awk -F ' +' '{print $2}' | sort | uniq -c | sort
 
-MD5=$(echo "$1" | md5sum | cut -d ' ' -f 1)
+MD5=$(md5sum $1 | cut -d ' ' -f 1)
 TMP_FILE="/tmp/$MD5.${1##*.}"
 
 if [ ! -f $TMP_FILE ]; then
