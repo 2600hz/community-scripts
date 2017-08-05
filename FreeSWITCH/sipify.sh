@@ -3,7 +3,7 @@
 # 2600hz - The Future of Cloud Telecom
 usage() {
 cat<<'EOF'
- Usage: grep -EC 50 -e 'regex or your_call_ids' /var/log/freeswitch/debug.log | ./sipify.sh | grep -e 'regex or your_call_ids'
+ Usage: grep -EC 50 -e 'regex of your_call_ids' /var/log/freeswitch/debug.log | ./sipify.sh | grep -e 'regex of your_call_ids'
 
  The reason for grepping first is grep is much faster than awk (sipify script):
  https://davidlyness.com/post/the-functional-and-performance-differences-of-sed-awk-and-other-unix-parsing-utilities
@@ -71,67 +71,89 @@ EOF
 sipify(){
 awk '
 BEGIN{
-    I = 0
-    MSGFLDOFFSET = 0
-    ADDCALLIDAT = -1
-    CALLID = ""
+    PktLnCnt = 0
+    FldOfPktByte = 0
+    AddCallidAt = -1
+    CallID = ""
 }
-MSGFLDOFFSET == 0 && /send|recv/ && /(send|recv) [0-9]* bytes (to|from)/ {
-    # find the awk field that has the send or recv to auto support both FS direct
-    # logs and ones with stuff like date-time in front of packet data like syslog
+#{
+#another way to remove file name present from grepping multiple files
+#sub(/^[^ :]+:/, "")
+#}
+FldOfPktByte == 0 && /send|recv/ && /(send|recv) [0-9]* bytes (to|from)/ {
+    # find the awk field that has the send or recv to auto support FS direct
+    # logs and ones with stuff like date-time or log file name in front of packet 
+    # data like syslog and grep multiple files
     i = 0
-    while ( i++ <= NF && MSGFLDOFFSET == 0 ) {
-        if ( $i == "send" || $i == "recv" ) {
-            MSGFLDOFFSET = i
-        }
-    }
+    while ( i++ <= NF && FldOfPktByte == 0 )
+        if ( $i == "bytes" ) #send|recv not in own field when from grep multi file
+            FldOfPktByte = i
 }
-$MSGFLDOFFSET == "send" || $MSGFLDOFFSET == "recv" {
-    # another part to auto support syslog or FS direct
+$FldOfPktByte == "bytes" && AddCallidAt < 0 && /(send|recv) [0-9]* bytes (to|from)/ {
+    # found start of packet
     # find char pos to insert the call-id
-    t = $0
-    sub(/(send|recv) [0-9]* bytes (to|from).*/, "", t)
-    ADDCALLIDAT = length(t)
+    OffsetStr = $0
+    sub(/(send|recv) [0-9]* bytes (to|from).*/, "", OffsetStr)
+    AddCallidAt = length(OffsetStr) + 1
+    if ( $(FldOfPktByte - 2) ~ ".(send|recv)$" ) {
+        HeaderFldOffset = FldOfPktByte - 1
+    } else {
+       HeaderFldOffset = FldOfPktByte - 2
+    }
+    PktLines[PktLnCnt++] = $0
+    next
 }
-ADDCALLIDAT < 0 {
+AddCallidAt < 0 {
     # not in a sip packet dump print whole line as is
     print $0
+    next
 }
-ADDCALLIDAT >= 0 {
+AddCallidAt >= 0 {
     # in a sip packet dump
-    # buffer line till end of packet
-    PACKET[I++] = $0
-    if ($MSGFLDOFFSET == "Call-ID:" || $MSGFLDOFFSET == "i:") {
-        #found packet call-id save for print insert
-        CALLID = $(MSGFLDOFFSET + 1)
+    if ( $0 == "--" || $0 ~ "[^-]--$" ) {
+        #end of grep context, print the packet we have so far
+        printpacket()
+        print $0 # the end of grep context
+        next
     }
-    if (substr($MSGFLDOFFSET, 0, 5) == "-----") {
-        # packet delimiter
-        if(CALLID != ""){
-            # end of packet, print each line
-            for( i = 0; i < I ; i++ ){
-                print substr(PACKET[i], 0, ADDCALLIDAT) CALLID, substr(PACKET[i], (ADDCALLIDAT + 1))
-                delete PACKET[i]
-            }
-            I = 0
-            CALLID = ""
-            ADDCALLIDAT = -1
+    if ( substr($0, (AddCallidAt), 3) != "   " && $HeaderFldOffset != "" ) {
+        # some log line mixed in the middle of the packet dump. Print ahead of packet dump.
+        print $0
+        next  
+    }
+    # buffer line till end of packet
+    PktLines[PktLnCnt++] = $0
+    if ($HeaderFldOffset == "Call-ID:" || $HeaderFldOffset == "i:") {
+        #found packet call-id save for print insert
+        CallID = $(HeaderFldOffset + 1)
+        next
+    }
+    if (substr($HeaderFldOffset, 0, 5) == "-----" ) {
+        # packet delimiter or end of grep context
+        if(PktLnCnt > 2 ){
+            # end of packet (line 2 of packet also has "----")
+            printpacket()
         }
     }
 }
 END{
-    if ( CALLID != "" ){
-        #end of file but not end of packet and we have the call-id
-        for(i=0;i<I;i++){
-            print substr(PACKET[i], 0, ADDCALLIDAT) PRESP CALLID, substr(PACKET[i], (ADDCALLIDAT + 1))
-            #delete PACKET[i]
-        }
+    #end of file but maybe not end of packet and need to print the lines
+    printpacket()
+}
+function printpacket(){
+    for(i=0;i<PktLnCnt;i++){
+        print substr(PktLines[i], 0, AddCallidAt - 1) CallID, substr(PktLines[i], (AddCallidAt))
+        delete PktLines[i]
     }
+    PktLnCnt = 0
+    CallID = ""
+    AddCallidAt = -1
 }
 ' "$@"
 }
 if [[ ( -z "$@" || "$1" == "-h" || "$1" == "--help" ) && -t 0 ]] ; then
     usage
 else
-    sipify "$@" <&0
+     #sed 's/^[^ :]\+://' "$@" <&0 | sipify # strip file path from a multi file grep that puts the file/path in front of every log line. FYI: "grep --no-filename" will surpress the file name
+     sipify "$@" <&0
 fi
