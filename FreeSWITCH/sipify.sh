@@ -99,6 +99,17 @@ ADDCALLIDAT < 0 {
 }
 ADDCALLIDAT >= 0 {
     # in a sip packet dump
+    if ( $0 == "--" || $0 ~ "[^-]--$" ) {
+        #end of grep context, print the packet we have so far
+        printpacket()
+        print $0 # the end of grep context
+        next
+    }
+    if ( substr($0, (AddCallidAt - 1), 3) != "   " && $HeaderFldOffset != "" ) {
+        # some log line mixed in the middle of the packet dump. Print ahead of packet dump.
+        print $0
+        next
+    }
     # buffer line till end of packet
     PACKET[I++] = $0
     if ($MSGFLDOFFSET == "Call-ID:" || $MSGFLDOFFSET == "i:") {
