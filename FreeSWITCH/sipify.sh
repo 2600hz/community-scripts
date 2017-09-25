@@ -116,7 +116,7 @@ AddCallidAt >= 0 {
         print $0 # the end of grep context
         next
     }
-    if ( substr($0, (AddCallidAt), 3) != "   " && $HeaderFldOffset != "" ) {
+    if ( substr($0, (AddCallidAt - 1), 3) != "   " && $HeaderFldOffset != "" ) {
         # some log line mixed in the middle of the packet dump. Print ahead of packet dump.
         print $0
         next  
