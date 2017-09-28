@@ -3,7 +3,7 @@
 # 2600hz - The Future of Cloud Telecom
 usage() {
 cat<<'EOF'
- Usage: grep -EC 50 -e 'regex of your_call_ids' /var/log/freeswitch/debug.log | ./sipify.sh | grep -e 'regex of your_call_ids'
+ Usage: grep -EC 100 -e 'regex of your_call_ids' /var/log/freeswitch/debug.log | ./sipify.sh | grep -EC 5 -e 'regex of your_call_ids'
 
  The reason for grepping first is grep is much faster than awk (sipify script):
  https://davidlyness.com/post/the-functional-and-performance-differences-of-sed-awk-and-other-unix-parsing-utilities
