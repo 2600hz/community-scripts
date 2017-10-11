@@ -3,7 +3,7 @@
 # 2600hz - The Future of Cloud Telecom
 usage() {
 cat<<'EOF'
- Usage: grep -EC 50 -e 'regex or your_call_ids' /var/log/freeswitch/debug.log | ./sipify.sh | grep -e 'regex or your_call_ids'
+ Usage: grep -EC 100 -e 'regex of your_call_ids' /var/log/freeswitch/debug.log | ./sipify.sh | grep -EC 5 -e 'regex of your_call_ids'
 
  The reason for grepping first is grep is much faster than awk (sipify script):
  https://davidlyness.com/post/the-functional-and-performance-differences-of-sed-awk-and-other-unix-parsing-utilities
@@ -27,14 +27,14 @@ zgrep -EC 100 -e 'your_call_id|leg-2-call_id|leg-3-call-id' | \
 
  First grep is done with zgrep which will auto detect and unzip a compressed file
  or compressed piped stream. Grep is also way faster then awk for simple searches
- and the awk script is much more complex than a simple search. So grep 
- is used before awk to efficiently filter a larg file to at most a few thousand 
+ and the awk script is much more complex than a simple search. So grep
+ is used before awk to efficiently filter a larg file to at most a few thousand
  log lines are passed to sipify (awk). Since the SIP packet lines don't all have
  the call id on them this grep needs to output context (lines before and after a
- match), the -C 100 option. It uses -E for extended regex so the pipe symbol will 
+ match), the -C 100 option. It uses -E for extended regex so the pipe symbol will
  mean logical OR in the search string. That way you can specifiy multiple call ids.
  Finally the -e signifies what follows is the pattern match. This can be important
- because of the way it calls the normal grep internally and in somecases the 
+ because of the way it calls the normal grep internally and in somecases the
  call-id may have characters that confuse grep.
 
 ./sipify.sh | \
@@ -55,15 +55,15 @@ tee /tmp/ticket_num_`date +%b%d`_`hostname -f`.log
 
  This part is mostly personal preference. I like to use tee so it outputs to the
  file and screen so I can see that something was actually found without checking
- afterword the output file. The filename I like to have be something meaningful 
+ afterword the output file. The filename I like to have be something meaningful
  so make it have the ticket number, the month/day like Jan03 and the hostname.
- 
- if your /tmp dir has lots of files, recordings and inbound faxes are put there, 
+
+ if your /tmp dir has lots of files, recordings and inbound faxes are put there,
  and your desktop SCP client wants to list all the files before you can find and
  copy it, make a dir like /tmp/log/ and put the log in it.
 
- NOTE pv is pipe verbose. it has the ability to throttle data passed through it 
-   as well its other primary feature. Nice for preventing grep from overloading  
+ NOTE pv is pipe verbose. it has the ability to throttle data passed through it
+   as well its other primary feature. Nice for preventing grep from overloading
    disk or CPU. Installed with yum install pv from epel repo.
 EOF
 }
