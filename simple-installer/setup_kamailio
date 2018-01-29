@@ -40,69 +40,10 @@ amqp_address_re=".*"
 amqp_address_hint="This is the ip address of your rabbitmq-server"
 amqp_address_ref="amqp_address"
 
-#KAMAILIO FREESWITCH DISPATCH IP ADDRESS, PORT, SETID
-dispatcher_ip_address="" 
-dispatcher_ip_address_question="Please enter your dispatch server IP address (ip_address))"
-dispatcher_ip_address_re="$ip_address_regex"
-dispatcher_ip_address_hint="This should be your freeswitch IP"
-dispatcher_ip_address_ref="dispatcher_ip_address"
 
-dispatcher_port=""
-dispatcher_port_question="Please enter the the port for the selected dispatch IP"
-dispatcher_port_re="[0-9]+"
-dispatcher_port_hint="This is normally 11000"
-dispatcher_port_ref="dispatcher_port"
 
-dispatcher_setid=""
-dispatcher_setid_question="Please enter the value for setid 1=primary, 2=backup, 3=alternate, 10=Presence, 20=Registrar"
-dispatcher_setid_re="[0-9]+"
-dispatcher_setid_hint=$(cat << EOF 
-This is the dispatcher list, which tells kamailio where to route specific traffic,
-use ${red}1${NC}, ${red}2${NC} or ${red}3${NC} for freeswitch, use {$red}10-20${NC} if you have a kamailio or NKSip destination 
-you want to use for Presence/Registrar
-EOF
-)
-dispatcher_setid_ref="dispatcher_setid"
-
-set_dispatcher(){
-#    local tempfile="${kamailio_dispatcher}.tmp"
-    for dispatch in "${dispatch_list[@]}";do
-	dbg "Adding dispatcher line to $kamailio_dispatcher file - ${dispatch}"
-	echo "${dispatch}" >> $kamailio_dispatcher
-    done
-    #while read line;do
-    #    if [[ $line =~ [[:digit:]]+[[:space:]]sip.* ]];then
-    #        for dispatch in "${dispatch_list[@]}";do
-    #            dbg "Adding dispatcher line to $kamailio_dispatcher file - ${dispatch}"
-    #            echo "${dispatch}" >> $tempfile
-    #        done
-    #        #dispatcher file ends with these entries
-    #        mv $tempfile $kamailio_dispatcher
-    #        return 
-    #    else
-    #        echo $line >> $tempfile 
-    #    fi
-    #done < $kamailio_dispatcher
-}
-
-ask_dispatcher(){
-    local dispatcher_ip_address
-    ask dispatcher_ip_address
-    local dispatcher_port
-    ask dispatcher_port
-    local dispatcher_setid
-    ask dispatcher_setid
-    dispatch_list+=("${dispatcher_setid} sip:${dispatcher_ip_address}:${dispatcher_port} 1")
-   
-    local answer 
-    confirm "Do you want to add another freeswitch to dispatch list? [y|n]"
-    if [[ $answer =~ ^[yY] ]];then
-        ask_dispatcher
-    fi
-}
 
 interactive(){
-    ask_dispatcher
     ask amqp_address
     ask ip_address
 }
@@ -122,8 +63,6 @@ if [  ${all_in_one:-} ];then
    #if allinone we default everything!
    ip_address=$system_ip_address
    hostname=$system_hostname
-#   dispatch_list+=("1 sip:$system_ip_address:11000 1") 
-   dispatch_list+=(":1:sip\:$system_ip_address\:11000:0:0::") 
    ports+=("11000")
    setids+=("1")
 else
@@ -142,6 +81,5 @@ fi
 
 set_value system_hostname $system_hostname
 
-set_dispatcher
 
 clean_exit 

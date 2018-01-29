@@ -75,14 +75,14 @@ restart_rabbitmq_dbg="Restart RabbitMQ with: ${NC} systemctl restart kazoo-rabbi
 restart_rabbitmq_error="Rabbitqm restart failed, restart with:  ${NC}systemctl restart kazoo-rabbitmq"
 
 #KZ-WHISTLE_APPS RESTART
-restart_whistle_apps_dbg="Restarting Whapps with: ${NC}systemctl restart kazoo-applications"
-restart_whistle_apps_cmd="/usr/bin/systemctl restart kazoo-applications" 
-restart_whistle_apps_error="kz-whistle_apps restart failed, restart with: ${NC}systemctl restart kazoo-applications" 
+restart_kazoo_apps_dbg="Restarting Whapps with: ${NC}systemctl restart kazoo-applications"
+restart_kazoo_apps_cmd="/usr/bin/systemctl restart kazoo-applications" 
+restart_kazoo_apps_error="kazoo-applications restart failed, restart with: ${NC}systemctl restart kazoo-applications" 
 
 #KZ-ECALLMGR RESTART 
 restart_ecallmgr_dbg="Restarting ecallmgr with: ${NC}systemctl restart kazoo-ecallmgr"
 restart_ecallmgr_cmd="/usr/bin/systemctl restart kazoo-ecallmgr" 
-restart_ecallmgr_error="kz-ecallmgr restart failed, restart with: ${NC}systemctl restart kazoo-ecallmgr"
+restart_ecallmgr_error="ecallmgr restart failed, restart with: ${NC}systemctl restart kazoo-ecallmgr"
 
 #RESTART HTTPD
 restart_httpd_dbg="Starting httpd with: ${NC}systemctl restart httpd"
@@ -108,9 +108,9 @@ boot_rabbitmq_dbg="Enabling rabbitmq on boot with: ${NC}systemctl enable kazoo-r
 boot_rabbitmq_cmd="systemctl enable kazoo-rabbitmq"
 boot_rabbitmq_error="Failed to enable kazoo-rabbitmq on boot"
 
-boot_whistle_apps_dbg="Enabling kazoo-applications on boot with: ${NC}systemctl enable kazoo-applications" 
-boot_whistle_apps_cmd="systemctl enable kazoo-applications"   
-boot_whistle_apps_error="Failed to enable kazoo-applications to chkconfig"
+boot_kazoo_apps_dbg="Enabling kazoo-applications on boot with: ${NC}systemctl enable kazoo-applications" 
+boot_kazoo_apps_cmd="systemctl enable kazoo-applications"   
+boot_kazoo_apps_error="Failed to enable kazoo-applications to chkconfig"
         
 boot_ecallmgr_dbg="Enabling ecallmgr on boot with: ${NC}systemctl enable kazoo-ecallmgr"        
 boot_ecallmgr_cmd="systemctl enable kazoo-ecallmgr"
@@ -140,20 +140,15 @@ boot_httpd_error="Failed to enable httpd on boot"
 #setup commands to get systemctl configured
 #
 
-#TODO: still required?
-#symlink_haproxy_dbg="Creating symlink to use HA proxy config in /etc/kazoo/haproxy instead of /etc/haproxy"
-#symlink_haproxy_cmd="rm -rf /etc/haproxy/haproxy.cfg;ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg"
-#symlink_haproxy_error="create symlink failed,  create with: ${NC}ln -s /etc/kazoo/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg" 
-
 #TODO: double check this command
-#attach_ecallmgr_dbg="Attach ecallmgr to FreeSWITCH with: ${NC} sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
-#attach_ecallmgr_cmd="/opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
-#attach_ecallmgr_error="Attach ecallmgr failed, rerun with: ${NC}sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
+attach_ecallmgr_dbg="Attach ecallmgr to FreeSWITCH with: ${NC} sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
+attach_ecallmgr_cmd="/opt/kazoo/utils/sup/sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
+attach_ecallmgr_error="Attach ecallmgr failed, rerun with: ${NC}sup -n ecallmgr ecallmgr_maintenance add_fs_node freeswitch@TOKEN"
 
 #TODO: ?
-#update_bigcouch_views_dbg="Updating all Bigcouch views with: ${NC}sup whapps_maintenance migrate"
-#update_bigcouch_views_cmd="/opt/kazoo/utils/sup/sup whapps_maintenance migrate"
-#update_bigcouch_views_error="whapps blocking_refresh failed! rerun with: ${NC}sup whapps_maintenance migrate"
+update_bigcouch_views_dbg="Updating all Bigcouch views with: ${NC}sup kapps_maintenance migrate"
+update_bigcouch_views_cmd="/opt/kazoo/utils/sup/sup kapps_maintenance migrate"
+update_bigcouch_views_error="kapps blocking_refresh failed! rerun with: ${NC}sup kapps_maintenance migrate"
 
 if [ -d /opt/kazoo/sounds/en/us/ ]; then  
     media_dir="/opt/kazoo/sounds/en/us/"
@@ -161,9 +156,9 @@ else
     media_dir="/opt/kazoo/system_media"
 fi
 
-import_media_files_dbg="Importing media files with: ${NC}sup whistle_media_maintenance import_prompts ${media_dir} en-us "
+import_media_files_dbg="Importing media files with: ${NC}sup kazoo_media_maintenance import_prompts ${media_dir} en-us "
 import_media_files_cmd="sup kazoo_media_maintenance import_prompts ${media_dir}"
-import_media_files_error="Media prompt import failed with: ${NC}sup whistle_media_maintenance import_prompts ${media_dir} en-us"
+import_media_files_error="Media prompt import failed with: ${NC}sup kazoo_media_maintenance import_prompts ${media_dir} en-us"
 
 create_account_dbg="Creating admin account with: ${NC}sup crossbar_maintenance create_account TOKEN"
 create_account_cmd="sup crossbar_maintenance create_account TOKEN"
@@ -280,11 +275,11 @@ sleep 5
 [[ ${install_list['kamailio']:-}   ]] && run_cmd 'restart_kamailio' 
 
 if [[ ${install_list['kazoo']:-} ]];then 
-    run_cmd 'restart_whistle_apps'
+    run_cmd 'restart_kazoo_apps'
     run_cmd 'restart_ecallmgr'
     wait_apps_running
     
-    dbg "Displaying whistle_apps status with: ${NC}sup kz_nodes status "
+    dbg "Displaying kazoo_apps status with: ${NC}sup kz_nodes status "
     /usr/sbin/sup kz_nodes status 
 fi  
 
@@ -298,7 +293,7 @@ fi
 
 if [[ ${install_list['kazoo']:-} ]];then
     [[ ${run_rabbit:-} ]] && run_cmd 'boot_rabbitmq'
-    run_cmd 'boot_whistle_apps' 
+    run_cmd 'boot_kazoo_apps' 
     run_cmd 'boot_ecallmgr' 
 fi  
 

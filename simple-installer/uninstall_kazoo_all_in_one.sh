@@ -4,7 +4,7 @@
 
 
 
-echo "Are you sure you want to stop all serveices and remove the kazoo packages and files? [y|n]"
+echo "Are you sure you want to stop all services and remove the kazoo packages and files? [y|n]"
 read $question answer
 if ! [[ $answer =~ [yY] ]];then 
     echo "Whew, scared me. Goodbye!"

@@ -4,7 +4,7 @@ set -o nounset
 DEBUG="0"
 ceol=`tput el`
 
-default_repo_url="http://repo.2600hz.com/2600hz.repo"
+default_repo_url="http://packages.2600hz.com"
 
 #global values for menu selection
 install_source=""
@@ -17,7 +17,7 @@ auto_pilot=""
 
 #re
 hostname_check_re="(?=^.{4,255}$)(^((?!-)[a-zA-Z0-9-]{1,63}(?<!-)\.)+[a-zA-Z]{2,63}$)"
-repo_url_re="^(https?:\/\/)?([0-9a-z\.-\.]+)([a-z\.]{2,6})?([:][0-9]+)?([\/\w\.-]*)*\/[a-zA-Z0-9\-\_]+.repo$"
+repo_url_re="^(https?:\/\/)?([0-9a-z\.-\.]+)([a-z\.]{2,6})?([:][0-9]+)?([\/\w\.-]*)*"
 
 #repo names
 stable_release="2600hz-stable"
@@ -35,13 +35,13 @@ declare -A selected_packages
 declare -A packages
 
 #yum package names
-kazoo_package="kazoo-applications kazoo-application* kazoo-configs-core"
-freeswitch_package="kazoo-freeswitch kazoo-configs-freeswitch"
-kamailio_package="kazoo-kamailio kazoo-configs-kamailio"
-bigcouch_package="kazoo-bigcouch kazoo-configs-bigcouch"
-kazoo_ui_package="monster-ui*"
-haproxy_package="kazoo-haproxy kazoo-configs-haproxy"
-rabbitmq_package="kazoo-rabbitmq kazoo-configs-rabbitmq"
+kazoo_package="kazoo-applications "
+freeswitch_package="kazoo-freeswitch"
+kamailio_package="kazoo-kamailio"
+bigcouch_package="kazoo-bigcouch"
+kazoo_ui_package="monster-ui"
+haproxy_package="kazoo-haproxy"
+rabbitmq_package="kazoo-rabbitmq"
 
 #Assign package names to packages Associative array for use in menus
 packages['kazoo']=$kazoo_package
@@ -228,7 +228,7 @@ confirm(){
 
 ping_test(){
    repo_url=$1
-   repo_host=$(echo $repo_url | sed -n "s|^https*://\(.*\)/.*|\1|p")
+   repo_host=$(basename $repo_url)
  
    dbg "pinging $repo_host to verify it is reachable"   
 
@@ -286,11 +286,9 @@ set_repo_url(){
 
     if ! [[ ${url:-} ]];then
         install_repo_url=$default_repo_url
-    elif [[ ${url:-} =~ [a-zA-Z0-9]+.repo ]];then
+    else
         check_re $url $repo_url_re || return 1       
         install_repo_url=$url
-    else 
-        return 1
     fi
     
 }
@@ -357,7 +355,7 @@ set_network(){
     local answer  
     confirm "Do you want to setup your network configuration? [y|n]"
     if [[ ${answer:-} =~ [yY] ]];then
-         system-config-network 
+         nmtui
          set_interfaces_up
          dbg "restarting network service to apply changes"
          service network restart
@@ -438,7 +436,7 @@ set_hostname(){
 
 repo_ask(){
     local answer
-    confirm "Install from repo.2600hz.com ('n' to use your own repo) [y|n]?" 
+    confirm "Install from packages.2600hz.com ('n' to use your own repo) [y|n]?" 
 
     if [[ $answer =~ [nN] ]]; then 
         echo "Please enter the yum .repo file url for your repo or hit enter for default. "
@@ -457,15 +455,6 @@ repo_ask(){
 repo_disable(){
     dbg "Disabling all repos for 2600hz*"
     yum-config-manager --disable 2600hz* &>> $install_log || error_exit "repo_disable failed!"
-}
-
-repo_add(){
-    dbg "Adding 2600hz repo from $1"
-    repo_file=$(echo -n $1| sed -n "s|.*/\(.*.repo\)|\1|p")
-   
-    [ -e /etc/yum.repos.d/$1 ] && rm /etc/yum.repos.d/$1 
-    
-    yum-config-manager --add-repo $1 &>> $install_log || error_exit "repo_add failed to add $1!"
 }
 
 repo_enable(){
@@ -570,15 +559,15 @@ repo_menu(){
     select opt in "${options[@]}"; do
         case $opt in
             Stable*)
-                set_install_release "Stable"
+                set_install_release "2600hz-Stable"
                 break
                 ;;
             Staging*)
-                set_install_release "Staging"
+                set_install_release "2600hz-Staging"
                 break
                 ;;
             Experimental*)
-                set_install_release "Experimental"
+                set_install_release "2600hz-Experimental"
                 break
                 ;;
             *)
@@ -649,7 +638,7 @@ yum_loop(){
 install_prereqs(){
     dbg "Installing prerequisite packages."
     #no package for system-config-network-tui
-    yum_loop "yum-utils curl sed rsyslog system-config-network-tui" || error_exit "install prerequisite failed!"
+    yum_loop "yum-utils curl sed rsyslog NetworkManager-tui wget" || error_exit "install prerequisite failed!"
 }
 
 install_packages(){
@@ -686,7 +675,7 @@ install_prereqs
 # 4.0 repo
 if !  yum list installed | grep 2600hz-release ;then
 	echo "repo setup here!!"
-	wget https://packages.2600hz.com/centos/7/staging/2600hz-release/2600hz-release-4.0-1.el7.centos.noarch.rpm --no-check-certificate
+	wget https://packages.2600hz.com/centos/7/stable/2600hz-release/4.1/2600hz-release-4.1-0.el7.centos.noarch.rpm --no-check-certificate
 	yum install -y 2600hz-release-4.0-1.el7.centos.noarch.rpm
 fi
 	echo "no yum  HERE"
@@ -694,21 +683,19 @@ fi
  #if all_in_one is already set we are doing auto pilot install via handle_args
  ! [[ ${install_source:-} ]] && main_menu
  
- #if [[ "$install_source" == "network" ]];then   
- #    ! [[ ${install_repo_url:-}  ]] && repo_ask 
- #    
- #    repo_add $install_repo_url
- #    get_available_versions
- #    
- #    ! [[ ${install_release:-}  ]] && repo_menu 
- #    
- #    repo_disable 
- #    repo_enable $install_release
- #    repo_enable $install_base
- #elif [[ "$install_source" == "local" ]];then
- #    repo_disable
- #    repo_enable "2600hz.local"
- #fi  
+ if [[ "$install_source" == "network" ]];then   
+     ! [[ ${install_repo_url:-}  ]] && repo_ask 
+     
+     get_available_versions
+     
+     ! [[ ${install_release:-}  ]] && repo_menu 
+     
+     repo_disable 
+     repo_enable $install_release
+ elif [[ "$install_source" == "local" ]];then
+     repo_disable
+     repo_enable "2600hz.local"
+ fi  
  
 ! [[ ${all_in_one:-} ]] && package_menu 
  
