@@ -1,8 +1,6 @@
 #!/bin/bash
 
-cd `dirname $0`
-
-. ../klap-utils.sh
+. $(dirname $(dirname $0))/klap-utils.sh
 
 for FILE in $(listFiles $@); do
         createTmpFile "\|omnip_"

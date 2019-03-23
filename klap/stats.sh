@@ -1,16 +1,15 @@
 #!/bin/bash
 
-cd `dirname $0`
-
 export AGGREGATE_STATS=1
 
-. ./klap-utils.sh
+. $(dirname $0)/klap-utils.sh
 
 for FILE in $(listFiles $@); do
 	echo $FILE
 	fileInfo "$FILE"
-	for ANALYZER in analyzers/klap-*; do
-		./$ANALYZER $FILE
+	for ANALYZER in $(dirname $0)/analyzers/klap-*; do
+            echo 'running: ' $ANALYZER $FILE
+	    $ANALYZER $FILE
 	done
 	echo
 done

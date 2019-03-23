@@ -1,8 +1,8 @@
 #!/bin/bash
 
-cd `dirname $0`
+set -e
 
-. ../klap-utils.sh
+. $(dirname $(dirname $0))/klap-utils.sh
 
 for FILE in $(listFiles $@); do
         createTmpFile "\|callflow_|\|cf_"
@@ -14,7 +14,7 @@ for FILE in $(listFiles $@); do
 
         statHeader
 
-        printStat "Route Requests" $(countMatches "received a request asking if callflows can route this call")
+        printStat "Route Requests" $(countMatches "asking if callflows can route")
         printStat "Lookup Errors" $(countMatches "unable to find callflow")
         printStat "Denied 'no_match'" $(countMatches "nomatch for a unauthorized call")
         printStat "No Audio Service" $(countMatches "does not have audio service")
@@ -38,7 +38,7 @@ for FILE in $(listFiles $@); do
         printStat "MWI Probe Replies" $(countMatches "replying to mwi presence prob")
 
         zgrep "moving to action" $TMP_FILE | egrep -o "'cf_.+'$" | sort | uniq -c | sort -nr | head | printTable "Most Frequent Callflow Modules"
-        zgrep "received a request asking if callflows can route this call" $TMP_FILE | grep -Eo "^\w+ \w+ [0-9]+:[0-9]+" | uniq -c | sort -nr 2> /dev/null | head | printTable "Most Frequent Route Requests"
+        zgrep "asking if callflows can route the call to" $TMP_FILE | grep -Eo "call to [0-9]+" | uniq -c | sort -nr 2> /dev/null | head | printTable "Most Frequent Route Requests"
         zgrep "received a route win" $TMP_FILE | grep -Eo "^\w+ \w+ [0-9]+:[0-9]+" | uniq -c | sort -nr 2> /dev/null | head | printTable "Most Frequent Route Wins"
         zgrep "execution has been stopped" $TMP_FILE | grep -Eo "^\w+ \w+ [0-9]+:[0-9]+" | uniq -c | sort -nr 2> /dev/null | head | printTable "Most Frequent Execution Stop"
 	zgrep -Eo "callflow [A-Za-z0-9]+ in [A-Za-z0-9]+ satisfies request" $TMP_FILE | cut -d' ' -f4 | sort 2> /dev/null | uniq -c |  sort -nr 2> /dev/null | head | printTable "Top Accounts"

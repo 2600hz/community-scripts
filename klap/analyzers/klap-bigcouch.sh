@@ -1,8 +1,6 @@
 #!/bin/bash
 
-cd `dirname $0`
-
-. ../klap-utils.sh
+. $(dirname $(dirname $0))/klap-utils.sh
 
 for FILE in $(listFiles $@); do
     zgrep -Eo "(GET|PUT|POST|DELETE) /.*" "${FILE}" | grep -v "GET / " > "${TMP_FILE}"
@@ -52,7 +50,7 @@ for FILE in $(listFiles $@); do
     grep "POST" "${TMP_FILE}" | egrep -o "\w+\, \w+ \w+ \w+ [0-9]+" | uniq -c | sort -rn | head -n 25 | printTable "Most Active POST"
     grep "DELETE" "${TMP_FILE}" | egrep -o "\w+\, \w+ \w+ \w+ [0-9]+" | uniq -c | sort -rn | head -n 25 | printTable "Most Active DELETE"
     egrep "_compact|_view_cleanup" "${TMP_FILE}" | egrep -o "\w+\, \w+ \w+ \w+ [0-9]+" | uniq -c | sort -rn | head -n 25 | printTable "Most Active Compaction"
-    
+
     if [ -d "/srv/db/shards/" ]; then
         find /srv/db/shards/ -size +50M -exec ls -hl {} \; | awk '{ print $5, $9 }' | sort -rn | head -25 | printTable "Largest Shards"
     fi
