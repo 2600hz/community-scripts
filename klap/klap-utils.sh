@@ -51,7 +51,7 @@ createTmpFile() {
 		local _PATTERN="$2"
 	fi
 
-	zgrep -E "$_PATTERN" "$_FILE" > "$TMP_FILE"
+	zgrep -aE "$_PATTERN" "$_FILE" > "$TMP_FILE"
 }
 
 createExactTmpFile() {
@@ -67,11 +67,11 @@ createExactTmpFile() {
 }
 
 isTmpFileEmpty() {
-	if [ -s "$TMP_FILE" ]; then
-		return 0;
-	else
-		return 1
-	fi
+    if [ -s "$TMP_FILE" ]; then
+	return 0;
+    else
+	return 1
+    fi
 }
 
 countMatches() {
@@ -80,11 +80,11 @@ countMatches() {
 
 fileInfo() {
 	if [ "${1##*.}" = "gz" ]; then
-        START_TIMEDATE=`zcat $1 | head -n 1 | grep -Po "^\w+\s+\d+\s+\d+:\d+:\d+"`
-        END_TIMEDATE=`zcat $1 | tail -1 | grep -Po "^\w+\s+\d+\s+\d+:\d+:\d+"`
+        START_TIMEDATE=`zcat $1 | head -n 2 | grep -aPo "^\w+\s+\d+\s+\d+:\d+:\d+"`
+        END_TIMEDATE=`zcat $1 | tail -2 | grep -aPo "^\w+\s+\d+\s+\d+:\d+:\d+"`
 	else
-        START_TIMEDATE=`cat $1 | head -n 1 | grep -Po "^\w+\s+\d+\s+\d+:\d+:\d+"`
-        END_TIMEDATE=`cat $1 | tail -1 | grep -Po "^\w+\s+\d+\s+\d+:\d+:\d+"`
+        START_TIMEDATE=`cat $1 | head -n 2 | grep -aPo "^\w+\s+\d+\s+\d+:\d+:\d+"`
+        END_TIMEDATE=`cat $1 | tail -2 | grep -aPo "^\w+\s+\d+\s+\d+:\d+:\d+"`
 	fi
 
         START_EPOCH=`date -d "$START_TIMEDATE" "+%s"`

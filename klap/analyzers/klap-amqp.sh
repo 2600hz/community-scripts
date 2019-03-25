@@ -1,13 +1,10 @@
 #!/bin/bash
 
-set -e
-
 . $(dirname $(dirname $0))/klap-utils.sh
 
 for F in $(listFiles $@); do
     FILE=$(realpath $F)
     CWD=$(pwd)
-    echo $F in $FILE in $CWD
 
 	createTmpFile "\|wh_amqp_| Channel |amqp_|kz_amqp_"
 
