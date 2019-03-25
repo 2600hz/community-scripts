@@ -41,6 +41,6 @@ for FILE in $(listFiles $@); do
         zgrep "asking if callflows can route the call to" $TMP_FILE | grep -Eo " \+?[0-9]+$" | sort -n | uniq -c | sort -nr 2> /dev/null | head | printTable "Most Frequent Calls To"
         zgrep "received a route win" $TMP_FILE | grep -Eo "^\w+ \w+ [0-9]+:[0-9]+" | sort | uniq -c | sort -nr 2> /dev/null | head | printTable "Most Frequent Route Wins Received"
         zgrep "execution has been stopped" $TMP_FILE | grep -Eo "^\w+ \w+ [0-9]+:[0-9]+" | sort | uniq -c | sort -nr 2> /dev/null | head | printTable "Most Frequent CF Execution Stop"
-	zgrep -Eo "callflow [A-Za-z0-9]+ in [A-Za-z0-9]+ satisfies request" $TMP_FILE | cut -d' ' -f4 | sort 2> /dev/null | uniq -c |  sort -nr 2> /dev/null | head | printTable "Top Accounts"
-	zgrep -Eo "callflow [A-Za-z0-9]+ in [A-Za-z0-9]+ satisfies request" $TMP_FILE | cut -d' ' -f2 | sort 2> /dev/null | uniq -c |  sort -nr 2> /dev/null | head | printTable "Top Callflows"
+	zgrep -Eo "callflow [A-Za-z0-9]+ in [A-Za-z0-9]+ satisfies request" $TMP_FILE | awk 'BEGIN{FS=" "} {print $4, $2}' | sort | uniq -c |  sort -nr 2> /dev/null | head | printTable "Top Account Callflows"
+
 done
