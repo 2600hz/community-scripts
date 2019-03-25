@@ -3,7 +3,7 @@
 . $(dirname $(dirname $0))/klap-utils.sh
 
 for FILE in $(listFiles $@); do
-        createExactTmpFile "account%2F[0-9a-fA-F%]+"
+        createExactTmpFile "account%2[Ff][0-9a-fA-F%]+"
 
         isTmpFileEmpty
         if [ $? != 0 ]; then
