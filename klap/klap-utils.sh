@@ -92,7 +92,7 @@ fileInfo() {
     START_TIMEDATE=`eval "$START_CMD"`
     END_TIMEDATE=`eval "$END_CMD"`
 
-    if [ -z $START_TIMEDATE ]; then
+    if [ -z "$START_TIMEDATE" ]; then
         START_CMD="${CAT_PREFIX}cat $1 | grep -aPo -m1 \"$FS_TIMESTAMP_FORMAT\""
         START_TIMEDATE=`eval "$START_CMD"`
 
