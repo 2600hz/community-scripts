@@ -31,5 +31,8 @@ for F in $(listFiles $@); do
         grep -Pa "ecallmgr_fs_authn.+user directory " $TMP_FILE | grep -Po 'freeswitch@([^|]+)' | sort | uniq -c | sort -nr | printTable "Directory Reqs by FreeSWITCH"
         grep -Pa "ecallmgr_fs_route.+fetch request " $TMP_FILE | grep -Po 'freeswitch@([^|]+)' | sort | uniq -c | sort -nr | printTable "Dialplan Reqs by FreeSWITCH"
 
-        grep -a "failed to decode packet from" $TMP_FILE | cut -d' ' -f3,13,14,15,17 | printTable "FreeSWITCH decoding errors"
+        # FreeSWITCH event streams
+        grep -a "event stream for " $TMP_FILE | cut -d' ' -f3,14 | uniq -c | sort -rn | printTable "FreeSWITCH event streams closing"
+        grep -a "failed to decode packet from" $TMP_FILE | cut -d' ' -f3,13,14,15,17 | printTable "FreeSWITCH event stream decoding errors"
+
 done
