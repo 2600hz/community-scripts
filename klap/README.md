@@ -3,12 +3,12 @@
 Kazoo Log Analysis Program
 
 ## stats.sh \<path\>
-Runs all the analyzers on kazoo log(s). 
+Runs all the analyzers on kazoo log(s).
 
 _Note:_ Each analyzer can be run individually.
 
 ```bash
-[root@apps001-dev klap]# ./stats.sh /var/log/2600hz/kazoo.log 
+[root@apps001-dev klap]# ./stats.sh /var/log/2600hz/kazoo.log
 /var/log/2600hz/kazoo.log
   Start                    : Sep 12 00:26:36
   End                      : Sep 12 18:02:24
@@ -118,4 +118,12 @@ _Note:_ Each analyzer can be run individually.
     138    Sep 12 16:55
   OS Processes
     2600hz[3960]
+```
+
+## Splitting kazoo.log
+
+When running multiple kazoo nodes on the same server (like ecallmgr and kazoo_apps) it can be helpful to split the logs up by OS PIDs.
+
+```bash
+grep -aF "2600hz[{PID}]" kazoo.log  > {NODE}.log
 ```
