@@ -89,8 +89,6 @@ fileInfo() {
     START_CMD="${CAT_PREFIX}cat $1 | head -n 2 | grep -aPo \"$KZ_TIMESTAMP_FORMAT\""
     END_CMD="${CAT_PREFIX}cat $1 | tail -2 | grep -aPo \"$KZ_TIMESTAMP_FORMAT\""
 
-    echo "start: $START_CMD"
-
     START_TIMEDATE=`eval "$START_CMD"`
     END_TIMEDATE=`eval "$END_CMD"`
 
