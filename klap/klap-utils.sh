@@ -79,21 +79,34 @@ countMatches() {
 }
 
 fileInfo() {
-	if [ "${1##*.}" = "gz" ]; then
-        START_TIMEDATE=`zcat $1 | head -n 2 | grep -aPo "^\w+\s+\d+\s+\d+:\d+:\d+"`
-        END_TIMEDATE=`zcat $1 | tail -2 | grep -aPo "^\w+\s+\d+\s+\d+:\d+:\d+"`
-	else
-        START_TIMEDATE=`cat $1 | head -n 2 | grep -aPo "^\w+\s+\d+\s+\d+:\d+:\d+"`
-        END_TIMEDATE=`cat $1 | tail -2 | grep -aPo "^\w+\s+\d+\s+\d+:\d+:\d+"`
-	fi
+    if [ "${1##*.}" = "gz" ]; then
+        CAT_PREFIX="z"
+    fi
 
-        START_EPOCH=`date -d "$START_TIMEDATE" "+%s"`
-        END_EPOCH=`date -d "$END_TIMEDATE" "+%s"`
-        DURATION=$(expr $END_EPOCH - $START_EPOCH)
+    KZ_TIMESTAMP_FORMAT="^\w+\s+\d+\s+\d+:\d+:\d+"
+    FS_TIMESTAMP_FORMAT="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}"
 
-        printStat 'Start' "$START_TIMEDATE"
-        printStat 'End' "$END_TIMEDATE"
-        printStat 'Duration' "${DURATION}s"
+    START_CMD="${CAT_PREFIX}cat $1 | head -n 1 | grep -aPo \"$KZ_TIMESTAMP_FORMAT\""
+    END_CMD="${CAT_PREFIX}cat $1 | tail -1 | grep -aPo \"$KZ_TIMESTAMP_FORMAT\""
+
+    START_TIMEDATE=`eval "$START_CMD"`
+    END_TIMEDATE=`eval "$END_CMD"`
+
+    if [ -z $START_TIMEDATE ]; then
+        START_CMD="${CAT_PREFIX}cat $1 | grep -aPo -m1 \"$FS_TIMESTAMP_FORMAT\""
+        START_TIMEDATE=`eval "$START_CMD"`
+
+        END_CMD="${CAT_PREFIX}cat $1 | tail -n 100 | grep -aPo -m1 \"$FS_TIMESTAMP_FORMAT\""
+        END_TIMEDATE=`eval "$END_CMD"`
+    fi
+
+    START_EPOCH=`date -d "$START_TIMEDATE" "+%s"`
+    END_EPOCH=`date -d "$END_TIMEDATE" "+%s"`
+    DURATION=$(expr $END_EPOCH - $START_EPOCH)
+
+    printStat 'Start' "$START_TIMEDATE"
+    printStat 'End' "$END_TIMEDATE"
+    printStat 'Duration' "${DURATION}s"
 }
 
 listFiles() {
