@@ -28,7 +28,7 @@ for F in $(listFiles $@); do
         grep -a " channel is authorized by account " $TMP_FILE | cut -d' ' -f13,15 | sort | uniq -c | sort -nr | head | printTable "Authz type by AccountId"
         grep -a " channel is authorized by reseller " $TMP_FILE | cut -d' ' -f13,15 | sort | uniq -c | sort -nr | head | printTable "Authz type by ResellerId"
 
-        grep -Pa "ecallmgr_fs_authn.+user directory " $TMP_FILE | sed -re 's/.*freeswitch@([^|]+).*/\1/p' | sort | uniq -c | sort -nr | printTable "Authn Reqs by FreeSWITCH"
-        grep -Pa "ecallmgr_fs_route.+fetch request " $TMP_FILE | sed -re 's/.*freeswitch@([^|]+).*/\1/p' | sort | uniq -c | sort -nr | printTable "Route Reqs by FreeSWITCH"
+        grep -Pa "ecallmgr_fs_authn.+user directory " $TMP_FILE | grep -Po 'freeswitch@([^|]+)' | sort | uniq -c | sort -nr | printTable "Directory Reqs by FreeSWITCH"
+        grep -Pa "ecallmgr_fs_route.+fetch request " $TMP_FILE | grep -Po 'freeswitch@([^|]+)' | sort | uniq -c | sort -nr | printTable "Dialplan Reqs by FreeSWITCH"
 
 done
