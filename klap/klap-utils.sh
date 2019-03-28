@@ -86,8 +86,10 @@ fileInfo() {
     KZ_TIMESTAMP_FORMAT="^\w+\s+\d+\s+\d+:\d+:\d+"
     FS_TIMESTAMP_FORMAT="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}"
 
-    START_CMD="${CAT_PREFIX}cat $1 | head -n 1 | grep -aPo \"$KZ_TIMESTAMP_FORMAT\""
-    END_CMD="${CAT_PREFIX}cat $1 | tail -1 | grep -aPo \"$KZ_TIMESTAMP_FORMAT\""
+    START_CMD="${CAT_PREFIX}cat $1 | head -n 2 | grep -aPo \"$KZ_TIMESTAMP_FORMAT\""
+    END_CMD="${CAT_PREFIX}cat $1 | tail -2 | grep -aPo \"$KZ_TIMESTAMP_FORMAT\""
+
+    echo "start: $START_CMD"
 
     START_TIMEDATE=`eval "$START_CMD"`
     END_TIMEDATE=`eval "$END_CMD"`
