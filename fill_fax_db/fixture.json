@@ -1,0 +1,39 @@
+{
+   "from_name": "testing",
+   "fax_identity_name": "Fax Printer",
+   "from_number": "+15025551234",
+   "fax_identity_number": "+1 502 555 1234",
+   "fax_timezone": "America/New_York",
+   "to_name": "+15025551234",
+   "to_number": "+15025551235",
+   "retries": 1,
+   "notifications": {
+       "email": {
+           "send_to": [
+               "testing@gmail.com",
+               "testing@test.com"
+           ]
+       }
+   },
+   "faxbox_id": "63a3255675edd737d8478896ddd12d56",
+   "folder": "outbox",
+   "attempts": 1,
+   "pvt_reseller_id": "12a3255675edd737d8478896ddd12d57",
+   "pvt_account_db": "faxes",
+   "pvt_account_id": "12a3255675edd737d8478896ddd12d57",
+   "pvt_modified": 63708060942,
+   "pvt_created": 63708060890,
+   "pvt_job_status": "failed",
+   "pvt_type": "fax",
+   "pvt_size": 722016,
+   "pvt_pages": 2,
+   "pvt_job_node": "kazoo_apps@api001.your.test.env",
+   "tx_result": {
+       "success": false,
+       "result_code": 500,
+       "result_text": "USER_BUSY",
+       "pages_sent": 0,
+       "time_elapsed": 52
+   },
+   "retry_after": 300
+}
