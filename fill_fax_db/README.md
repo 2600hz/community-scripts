@@ -10,7 +10,9 @@ pip3 install couchdb
 
 then run with
 
-./fill_faxes_db.py <number of docmuments to create>
+./fill_faxes_db.py {number of docmuments to create}
+
+You can edit the account_id used if you want to test migrations to real accounts. 
 
 
 
