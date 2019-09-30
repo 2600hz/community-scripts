@@ -217,7 +217,7 @@ var DTMF = (function() {
             }
             else
             {
-                console.warn("DTMF.js: Unable to steop unsupported touch-tone key '" + key + "'");
+                console.warn("DTMF.js: Unable to stop unsupported touch-tone key '" + key + "'");
             }
         }
     };
