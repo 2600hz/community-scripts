@@ -169,46 +169,56 @@ var DTMF = (function() {
 
         playKey: function(key) {
 
-            if(key_data[key].playing == false)
+            if(key in key_data) // Test to ensure that the key is supported
             {
-                key_data[key].playing = true;
+                if(key_data[key].playing == false)
+                {
+                    key_data[key].playing = true;
 
-                // =========================================================================
-                // Play low tone
-                // =========================================================================
-                var low_dtmf_buffer_source = audio_context.createBufferSource();
-                low_dtmf_buffer_source.buffer = key_data[key].low_dtmf_audio_buffer;
-                low_dtmf_buffer_source.connect(audio_context.destination);
-                low_dtmf_buffer_source.loop = true;
-                low_dtmf_buffer_source.start(0); // 0 is the channel
+                    // =========================================================================
+                    // Play low tone
+                    // =========================================================================
+                    var low_dtmf_buffer_source = audio_context.createBufferSource();
+                    low_dtmf_buffer_source.buffer = key_data[key].low_dtmf_audio_buffer;
+                    low_dtmf_buffer_source.connect(audio_context.destination);
+                    low_dtmf_buffer_source.loop = true;
+                    low_dtmf_buffer_source.start(0); // 0 is the channel
 
-                // Store buffer source so that we can stop playback based on key number
-                key_data[key].low_dtmf_buffer_source = low_dtmf_buffer_source;
+                    // Store buffer source so that we can stop playback based on key number
+                    key_data[key].low_dtmf_buffer_source = low_dtmf_buffer_source;
 
-                // =========================================================================
-                // play high tone
-                // =========================================================================
-                var high_dtmf_buffer_source = audio_context.createBufferSource();
-                high_dtmf_buffer_source.buffer = key_data[key].high_dtmf_audio_buffer;
-                high_dtmf_buffer_source.connect(audio_context.destination);
-                high_dtmf_buffer_source.loop = true;
-                high_dtmf_buffer_source.start(0); // 0 is the channel
+                    // =========================================================================
+                    // play high tone
+                    // =========================================================================
+                    var high_dtmf_buffer_source = audio_context.createBufferSource();
+                    high_dtmf_buffer_source.buffer = key_data[key].high_dtmf_audio_buffer;
+                    high_dtmf_buffer_source.connect(audio_context.destination);
+                    high_dtmf_buffer_source.loop = true;
+                    high_dtmf_buffer_source.start(0); // 0 is the channel
 
-                // Store buffer source so that we can stop playback based on key number
-                key_data[key].high_dtmf_buffer_source = high_dtmf_buffer_source;
+                    // Store buffer source so that we can stop playback based on key number
+                    key_data[key].high_dtmf_buffer_source = high_dtmf_buffer_source;
+                }
+            }
+            else
+            {
+                console.warn("DTMF.js: Unable to play unsupported touch-tone key '" + key + "'");
             }
         },
 
         stopKey: function(key) {
 
-            if(key_data[key].low_dtmf_buffer_source != null) {
-                key_data[key].low_dtmf_buffer_source.stop();
-            }
-            if(key_data[key].high_dtmf_buffer_source != null) {
-                key_data[key].high_dtmf_buffer_source.stop();
-            }
+            if(key in key_data) // Test to ensure that the key is supported
+            {
+                if(key_data[key].low_dtmf_buffer_source != null) key_data[key].low_dtmf_buffer_source.stop();
+                if(key_data[key].high_dtmf_buffer_source != null) key_data[key].high_dtmf_buffer_source.stop();
 
-            key_data[key].playing = false;
+                key_data[key].playing = false;
+            }
+            else
+            {
+                console.warn("DTMF.js: Unable to steop unsupported touch-tone key '" + key + "'");
+            }
         }
     };
 })();
