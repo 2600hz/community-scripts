@@ -1,7 +1,7 @@
 # DTMF tones using Javascript
 
 ## Contents
-- [DEMO](#demo)
+- [Demo](#demo)
 - [Description](#description)
 - [Usage](#usage)
 - [Author](#author)
@@ -14,7 +14,7 @@ See tones.html in this repository for a simple demo.
 ## Description
 
 DTMF.js is a simple Javascript module for generating DTMF (Dual Tone – Multi Frequency)
-tones.  This is handy for simulating the sounds that touch tone phones produce.
+tones.  This is handy for simulating the sounds that touch-tone phones produce.
 
 ## Usage
 
