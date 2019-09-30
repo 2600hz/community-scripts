@@ -124,7 +124,6 @@ var DTMF = (function() {
             audio_context = new AudioContext();
 
             var sample_rate = audio_context.sampleRate;
-            // var audio_length_in_seconds = 1;
             var duration_in_samples;
             var channel_data;
 
@@ -161,7 +160,6 @@ var DTMF = (function() {
                 duration_in_samples = sample_rate / frequency;
                 key_data[key].high_dtmf_audio_buffer = audio_context.createBuffer(number_of_channels, duration_in_samples, sample_rate);
                 channel_data = key_data[key].high_dtmf_audio_buffer.getChannelData(0);
-
 
                 for (var i = 0; i < duration_in_samples; i++) {
                     channel_data[i] = Math.sin(2 * Math.PI * frequency * i / (sample_rate));
