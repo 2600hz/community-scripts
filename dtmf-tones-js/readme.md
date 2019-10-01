@@ -44,6 +44,8 @@ This will play the appropriate DTMF tone.  You need to stop the tone using
 DTFM.stopKey('2');
 ```
 
+Supported tones are 0-9, #, and *.
+
 ## Author
 This library is based on code by [Ifti Khan](https://www.agiletrailblazers.com/blog/modernized-technology/quick-start-to-generate-tones-in-javascript) and humbly modified by Bret Truchan.
 
