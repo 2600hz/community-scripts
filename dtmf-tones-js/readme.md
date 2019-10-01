@@ -7,9 +7,14 @@
 - [Author](#author)
 - [License](#license)
 
-## Demo
+## Demos
 
-See tones.html in this repository for a simple demo.
+See keypress-demo.html in this repository for a simple demo for playing DTMF
+tones using the computer keyboard.
+
+See ui-demo.html in this repository for a simple demo for playing DTMF
+tones using the mouse.
+
 
 ## Description
 

@@ -1,0 +1,23 @@
+/* from Stack Overflow: https://stackoverflow.com/questions/38261294/how-i-can-make-nice-looking-matrix-of-buttons-with-bootstrap-3 */
+
+.btn-matrix { flex-wrap: wrap; }
+
+.btn-matrix > .btn:nth-child(Xn+X+1) {
+  clear: left;
+  margin-left: 0;
+}
+.btn-matrix > .btn:nth-child(n+X+1) {
+  margin-top: -1px;
+}
+.btn-matrix > .btn:first-child {
+  border-bottom-left-radius: 0;
+}
+.btn-matrix > .btn:nth-child(X) {
+  border-top-right-radius: 4px !important;
+}
+.btn-matrix > .btn:nth-last-child(X) {
+  border-bottom-left-radius: 4px !important;
+}
+.btn-matrix > .btn:last-child {
+  border-top-right-radius: 0;
+}
