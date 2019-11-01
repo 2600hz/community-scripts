@@ -219,6 +219,12 @@ var DTMF = (function() {
             {
                 console.warn("DTMF.js: Unable to stop unsupported touch-tone key '" + key + "'");
             }
+        },
+
+        stopAll: function() {
+            Object.keys(key_data).forEach(function(key) {
+                DTMF.stopKey(key);
+            })
         }
     };
 })();
