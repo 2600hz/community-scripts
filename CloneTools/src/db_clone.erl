@@ -191,10 +191,10 @@ clone_design_docs(Db) ->
 
 find_missing_design_ids(Db) ->
     Source = source_request([Db
-                             ,<<"_all_docs?startkey=\"_design/\"&endkey=\"_design0\"">>
+                             ,<<"_all_docs?startkey=%22_design/%22&endkey=%22_design0%22">>
                             ]),
     Target = target_request([Db
-                             ,<<"_all_docs?startkey=\"_design/\"&endkey=\"_design0\"">>
+                             ,<<"_all_docs?startkey=%22_design/%22&endkey=%22_design0%22">>
                             ]),
     SourceIds = sets:from_list(get_ids(Source)),
     TargetIds = sets:from_list(get_ids(Target)),
