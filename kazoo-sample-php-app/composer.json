@@ -16,7 +16,7 @@
         }
     ],
     "require": {
-        "laravel/framework": "4.0.*",
+        "laravel/framework": "4.0.* || 6.20.*",
         "ext-curl": "*",
         "guzzle/guzzle": ">=3.7",
         "2600hz/kazoo-php-sdk": "dev-master"
