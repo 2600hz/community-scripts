@@ -1,3 +1,5 @@
+COMMUNITY SUPORTED SCRIPT!
+
 Weyoun, leader of the Vorta, a race that brutally imposed their masters' will across the galaxy
 
 As the name implies, this script applies order by force. Although this script's original intent was to
