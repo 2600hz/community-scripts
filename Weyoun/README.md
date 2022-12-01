@@ -10,3 +10,5 @@ all sub-accounts.
 To install, just download, make a venv, install requirements.txt and run weyoun.py. It's all you need to do, everything else is interactive. Pretty typical python script...
 
 Python 3.7+ required
+
+Youtube Install Vid: https://youtu.be/ZB9lZASWNh4
