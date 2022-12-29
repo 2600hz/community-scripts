@@ -1,5 +1,4 @@
 import json
-
 import kazoo
 from kazoo.request_objects import KazooRequest
 import helperfunctions
@@ -95,8 +94,14 @@ def billingReport(KazSess, acctId, acctName, kwargsNotUsed):
 
     billableItems = {**billableItems, **countObjects(acctId, 'users')}
     billableItems = {**billableItems, **countObjects(acctId, 'devices', ['device_type'])}
-    billableItems = {**billableItems, **countObjects(acctId, 'qubicle_queues', ['offering'])}
-    billableItems = {**billableItems, **countObjects(acctId, 'qubicle_recipients', ['recipient','offering'])}
+    try:
+        billableItems = {**billableItems, **countObjects(acctId, 'qubicle_queues', ['offering'])}
+    except:
+            pass
+    try:
+        billableItems = {**billableItems, **countObjects(acctId, 'qubicle_recipients', ['recipient','offering'])}
+    except:
+            pass
 
     return billableItems
 
