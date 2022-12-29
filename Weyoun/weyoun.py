@@ -72,7 +72,7 @@ def main():
     files = [f for f in os.listdir('.') if os.path.isfile(f)]
     for f in files:
         if f[-4:] == '.csv':
-            print("Please move your olf .csv files out of the working directory before continuing!")
+            print("Please move your old .csv files out of the working directory before continuing!")
             quit()
     functions = [x[1] for x in getmembers(weyounFunctions, isfunction)]
     functionToRun = pickAFunction(functions)
