@@ -25,9 +25,18 @@ def pagedApiCallToEnd(KazSess, method, basepath, start_key=None):
     resp = KazSess._execute_request(request)
 
     if 'next_start_key' in resp:
-        return resp['data'] + pagedApiCallToEnd(KazSess, method, basepath, resp['next_start_key'])
+        # :/ numbers API's payload is substantally different... grr. compensating for that...
+        if "numbers" in resp['data'] and "/phone_numbers" in basepath:
+            return {**resp['data']['numbers'], **pagedApiCallToEnd(KazSess, method, basepath, resp['next_start_key'])}
+        # Everything else works just fine combining them normally!
+        else:
+            return resp['data'] + pagedApiCallToEnd(KazSess, method, basepath, resp['next_start_key'])
     else:
-        return resp['data']
+        # More special handling for numbers
+        if "numbers" in resp['data'] and "/phone_numbers" in basepath:
+            return resp['data']['numbers']
+        else:
+            return resp['data']
 
 
 def objectNormalize(KazSess, acctId, acctName, objectType, valuesToSet, updateOnlyIfSet=False):
