@@ -4,7 +4,6 @@ import kazoo
 from kazoo.request_objects import KazooRequest
 import helperfunctions
 
-
 def enableVmTrans(KazSess, acctId, acctName, kwargsNotUsed):
     '''
     Enables transcription on all devices on all sub accounts
@@ -40,7 +39,8 @@ def billingReport(KazSess, acctId, acctName, kwargsNotUsed):
             billableItems["app_store_" + appStoreDatum['name']] = 1
 
     # Numbers need special handling!
-    phoneNumbers = helperfunctions.pagedApiCallToEnd(KazSess, 'get', '/accounts/%s/phone_numbers' % (acctId,)).get("numbers", {})
+    phoneNumbers = helperfunctions.pagedApiCallToEnd(KazSess, 'get', '/accounts/%s/phone_numbers' % (acctId,))
+
     agNumberData = {}
     for phoneNumber, numberData in phoneNumbers.items():
         numberPrefix = phoneNumber[0:5]
@@ -55,7 +55,7 @@ def billingReport(KazSess, acctId, acctName, kwargsNotUsed):
             else:
                 agNumberData["did_local"] += 1
         for feature in numberData.get("features", []):
-            featureKey = "did_" + feature
+            featureKey = "did_feature_" + feature
             if featureKey not in agNumberData:
                 agNumberData[featureKey] = 1
             else:
