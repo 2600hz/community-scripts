@@ -3,6 +3,29 @@ import kazoo
 from kazoo.request_objects import KazooRequest
 import helperfunctions
 
+
+def getUserData(KazSess, acctId, acctName, kwargsNotUsed):
+    '''
+    Gets all Users first name, last name, email and if they are an admin
+
+    Whats the worst that could happen: Pretty safe! Might overwhelm API server, but extremely unlikely.
+    Careful about what you do with this data, it's your customers PII!
+    '''
+    thisAccountsUsers = []
+    users = helperfunctions.pagedApiCallToEnd(KazSess, 'get', '/accounts/%s/users' % (acctId,))
+    for user in users:
+        thisAccountsUsers.append(
+            {
+                "account_name": acctName,
+                "first_name": user.get("first_name", ""),
+                "last_name": user.get("last_name", ""),
+                "email": user.get("email", ""),
+                "priv_level": user.get("priv_level", "")
+            }
+        )
+
+    return thisAccountsUsers
+
 def enableVmTrans(KazSess, acctId, acctName, kwargsNotUsed):
     '''
     Enables transcription on all devices on all sub accounts
@@ -94,14 +117,8 @@ def billingReport(KazSess, acctId, acctName, kwargsNotUsed):
 
     billableItems = {**billableItems, **countObjects(acctId, 'users')}
     billableItems = {**billableItems, **countObjects(acctId, 'devices', ['device_type'])}
-    try:
-        billableItems = {**billableItems, **countObjects(acctId, 'qubicle_queues', ['offering'])}
-    except:
-            pass
-    try:
-        billableItems = {**billableItems, **countObjects(acctId, 'qubicle_recipients', ['recipient','offering'])}
-    except:
-            pass
+    billableItems = {**billableItems, **countObjects(acctId, 'qubicle_queues', ['offering'])}
+    billableItems = {**billableItems, **countObjects(acctId, 'qubicle_recipients', ['recipient','offering'])}
 
     return billableItems
 
