@@ -53,6 +53,7 @@ def billingReport(KazSess, acctId, acctName, kwargsNotUsed):
     Whats the worst that could happen: Pretty safe! Might overwhelm API server, but unlikely
     '''
     billableItems = {}
+    billableItems['acctName'] = acctName
 
     # App store needs special handling!
     appStoreData = helperfunctions.pagedApiCallToEnd(KazSess, 'get', '/accounts/%s/apps_store' % (acctId,))
@@ -117,8 +118,14 @@ def billingReport(KazSess, acctId, acctName, kwargsNotUsed):
 
     billableItems = {**billableItems, **countObjects(acctId, 'users')}
     billableItems = {**billableItems, **countObjects(acctId, 'devices', ['device_type'])}
-    billableItems = {**billableItems, **countObjects(acctId, 'qubicle_queues', ['offering'])}
-    billableItems = {**billableItems, **countObjects(acctId, 'qubicle_recipients', ['recipient','offering'])}
+    try:
+        billableItems = {**billableItems, **countObjects(acctId, 'qubicle_queues', ['offering'])}
+    except:
+        pass
+    try:
+        billableItems = {**billableItems, **countObjects(acctId, 'qubicle_recipients', ['recipient','offering'])}
+    except:
+        pass
 
     return billableItems
 
