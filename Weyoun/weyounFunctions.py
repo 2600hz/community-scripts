@@ -20,6 +20,7 @@ def getUserData(KazSess, acctId, acctName, kwargsNotUsed):
                 "first_name": user.get("first_name", ""),
                 "last_name": user.get("last_name", ""),
                 "email": user.get("email", ""),
+                "presence_id": user.get("presence_id", ""),
                 "priv_level": user.get("priv_level", "")
             }
         )
