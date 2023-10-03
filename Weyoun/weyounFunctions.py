@@ -56,6 +56,14 @@ def billingReport(KazSess, acctId, acctName, kwargsNotUsed):
     billableItems = {}
     billableItems['acctName'] = acctName
 
+    # VM Transcription needs  special handling!
+    vmboxTranscriptionData = helperfunctions.pagedApiCallToEnd(KazSess, 'get', '/accounts/%s/vmboxes?has_key=transcribe&filter_transcribe=true' % (acctId,), None, False)
+    for vmbox in vmboxTranscriptionData:
+        if "vm_transcription" in billableItems:
+            billableItems["vm_transcription"] += 1
+        else:
+            billableItems["vm_transcription"] = 1
+
     # App store needs special handling!
     appStoreData = helperfunctions.pagedApiCallToEnd(KazSess, 'get', '/accounts/%s/apps_store' % (acctId,))
     for appStoreDatum in appStoreData:
