@@ -4,7 +4,7 @@ import requests
 import json
 import base64
 
-def pagedApiCallToEnd(KazSess, method, basepath, start_key=None):
+def pagedApiCallToEnd(KazSess, method, basepath, start_key=None, AppendQuestionMarkToUrl=True):
     global pagedApiCallToEndPageSize
     try:
         pagedApiCallToEndPageSize
@@ -15,9 +15,15 @@ def pagedApiCallToEnd(KazSess, method, basepath, start_key=None):
         ))
 
     if int(pagedApiCallToEndPageSize) == 0:
-        fullpath = basepath + "?paginate=false"
+        if AppendQuestionMarkToUrl:
+            fullpath = basepath + "?paginate=false"
+        else:
+            fullpath = basepath + "&paginate=false"
     else:
-        fullpath = basepath + "?page_size=%s" % (str(pagedApiCallToEndPageSize))
+        if AppendQuestionMarkToUrl:
+            fullpath = basepath + "?page_size=%s" % (str(pagedApiCallToEndPageSize))
+        else:
+            fullpath = basepath + "&page_size=%s" % (str(pagedApiCallToEndPageSize))
 
     if start_key is not None:
         fullpath += "&start_key=%s" % (start_key)
