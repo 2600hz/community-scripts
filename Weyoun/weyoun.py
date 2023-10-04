@@ -101,7 +101,7 @@ def main():
                             csvHeaders.append(resultKey)
             else:
                 print("Unknown output format. Sorry, CSV output may not be supported on this function")
-        with open(filepath, 'w', newline='') as output_file:
+        with open(filepath, 'w', newline='', encoding="utf-8") as output_file:
             dict_writer = csv.DictWriter(output_file, csvHeaders)
             dict_writer.writeheader()
             dict_writer.writerows(listForCsvOutput)
