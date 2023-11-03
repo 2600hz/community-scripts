@@ -19,7 +19,7 @@
         "crossbar": "https://github.com/macpie/crossbar-nodejs/tarball/master",
         "socket.io-client": "latest",
         "socket.io": "latest",
-        "express": "3.4.8"
+        "express": "4.17.1"
     },
     "license": "MIT",
     "engines": {
