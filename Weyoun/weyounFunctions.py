@@ -1,8 +1,102 @@
 import json
+import sys
+
 import kazoo
 from kazoo.request_objects import KazooRequest
+from datetime import datetime, timedelta
+import pytz
+import time
 import helperfunctions
 
+
+def getCDRsForMonth(KazSess, acctId, acctName, kwargsNotUsed):
+    '''
+    Gets all call records for a given month and year
+
+    Whats the worst that could happen: Pretty safe! Might overwhelm API server, but extremely unlikely.
+    This is very new functionality. Please double and triple check any output especially if you intend to use it for billing
+    '''
+    def get_month_year():
+        today = datetime.today()
+        while True:
+            user_input = input("Enter month and year (MM-YYYY): ")
+            try:
+                date_obj = datetime.strptime(user_input, "%m-%Y")
+                if date_obj.year < today.year or (date_obj.year == today.year and date_obj.month < today.month):
+                    return {"month": date_obj.month, "year": date_obj.year}
+                else:
+                    print("Date must be in the past and not the current month.")
+            except ValueError:
+                print("Invalid format. Please use MM-YYYY (e.g., 01-1983).")
+
+    def get_month_start_end_timestamps(month, year):
+        while True:
+            timezone_str = input("Enter the time zone (e.g., 'UTC', 'America/New_York', 'Pacific/Auckland'): ")
+            try:
+                tz = pytz.timezone(timezone_str)
+                break
+            except pytz.UnknownTimeZoneError:
+                print("Invalid time zone. Please try again.")
+
+        start_dt = tz.localize(datetime(year, month, 1, 0, 0, 0))
+
+        if month == 12:
+            next_month_dt = tz.localize(datetime(year + 1, 1, 1, 0, 0, 0))
+        else:
+            next_month_dt = tz.localize(datetime(year, month + 1, 1, 0, 0, 0))
+
+        end_dt = next_month_dt - timedelta(seconds=1)
+        return {
+            "start_ts": int(start_dt.timestamp()) + 62167219200,
+            "end_ts": int(end_dt.timestamp()) + 62167219200
+        }
+    global cdr_time_range
+    try:
+        cdr_time_range
+    except:
+        month_year = get_month_year()
+        cdr_time_range = get_month_start_end_timestamps(month_year['month'], month_year['year'])
+    collected_cdrs = []
+    next_start_key = None
+    last_ts = cdr_time_range['end_ts']
+    kaz_exceptions_since = 0
+    while last_ts >= cdr_time_range['start_ts'] or next_start_key is not None:
+        # if the last_ts minus a day is less than cdr_time_range['end_ts'] then use cdr_time_range['end_ts']
+        # else, use last_ts minus a day
+        if (last_ts - 86400) > cdr_time_range['end_ts']:
+            next_ts = cdr_time_range['end_ts']
+        else:
+            next_ts = last_ts - 86400
+        try:
+            # use the start_key from the last loop if there is one...
+            if next_start_key is None:
+                request = KazooRequest(f'/accounts/{acctId}/cdrs/interaction?created_from={next_ts}&created_to={last_ts}&page_size=1000', method='get')
+            else:
+                request = KazooRequest(f'/accounts/{acctId}/cdrs/interaction?created_from={next_ts}&created_to={last_ts}&start_key={next_start_key}&page_size=1000',method='get')
+            # execute the request...
+            resp = KazSess._execute_request(request)
+        except kazoo.exceptions.KazooApiError as e:
+            # handle retries on db faults. This is expected sometimes...
+            if kaz_exceptions_since == 0:
+                kaz_exceptions_since = time.time()
+            if time.time() - kaz_exceptions_since > 600:
+                print("We encountered kazoo exceptions for over 10 minutes. Please check the health of the cluster and try again later.")
+                sys.exit()
+            print("Getting DB error waiting 30 seconds for indices to generate and then will try again")
+            time.sleep(30)
+            continue
+        # Add the CDRs to the collected data
+        collected_cdrs += resp['data'].copy()
+        # Reset kazoo exception tracker
+        kaz_exceptions_since = 0
+        # Pull the next_start_key if there is one
+        next_start_key = resp.get("next_start_key", None)
+        print(f"Successful fetch of {len(resp['data'])} records from account {acctName} ({acctId}) from {last_ts} to {next_ts}. next_start_key is {next_start_key}")
+        # If there is no next_start_key, then we go everything and lets set last_ts to reflect this
+        if next_start_key is None:
+            last_ts = next_ts
+
+    return collected_cdrs
 
 def getUserData(KazSess, acctId, acctName, kwargsNotUsed):
     '''
