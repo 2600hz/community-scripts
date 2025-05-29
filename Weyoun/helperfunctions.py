@@ -86,6 +86,15 @@ def objectNormalize(KazSess, acctId, acctName, objectType, valuesToSet, updateOn
 
     return objModList
 
+def getInt(question):
+    outputVal = input('%s: ' % (question, ))
+    try:
+        outputVal = int(outputVal)
+    except:
+        print("Please enter an integer value!")
+        outputVal = getInt(question)
+    return outputVal
+
 
 def getYesNo(question):
     yn = input('%s (y/n): ' % (question, ))

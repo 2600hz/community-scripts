@@ -9,6 +9,32 @@ import time
 import helperfunctions
 
 
+def findLongRunningCalls(KazSess, acctId, acctName, kwargsNotUsed):
+    '''
+    Gets all calls that have been running for longer than X hours
+
+    Whats the worst that could happen: Pretty safe! Might overwhelm API server, but extremely unlikely.
+    '''
+    global howLong_sec
+    try:
+        howLong_sec
+    except:
+        howLong_sec = helperfunctions.getInt("What is the maximum call length before a call is considered long running? (hours)") * 3600
+    longCalls = []
+    request = KazooRequest(f'/accounts/{acctId}/channels?page_size=0', method='get')
+    resp = KazSess._execute_request(request)
+    for call in resp.get("data", []):
+        call_duration_sec = call.get("timestamp", (time.time() + 62167219200)) - time.time()
+        if call_duration_sec > howLong_sec:
+            call_info = {
+                "account_id": acctId, "account_name": acctName,
+                "interaction_id": call.get("interaction_id", "No interaction_id found"),
+                "call_id": call.get("uuid", "No call_id found"),
+                "other_leg": call.get("other_leg", "No other_leg found")
+            }
+            longCalls.append(call_info)
+    return longCalls
+
 def getCDRsForMonth(KazSess, acctId, acctName, kwargsNotUsed):
     '''
     Gets all call records for a given month and year
