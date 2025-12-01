@@ -112,34 +112,45 @@ def interactiveKazooAuth ():
     Interactively gets credentials with a user via shell
     :return: kazoo session
     '''
-    KazBaseUrl = input("Please enter your API URL here (default - https://ui.zswitch.net/v2): ")
-    if KazBaseUrl == "":
-        print("defaulting to https://ui.zswitch.net/v2")
-        KazBaseUrl = "https://ui.zswitch.net/v2"
-    # trim off the last character if it's a /
-    if(KazBaseUrl[-1] == "/"):
-        KazBaseUrl = KazBaseUrl[:-1]
-    authmethod = input("Type 'up' to auth with a username/password, 'ak' to use an API key or 'tk' to use an auth token (uses an auth token to get an api key for auth): ")
+    try:
+        KazBaseUrl = input("Please enter your API URL here (default - https://ui.zswitch.net/v2): ")
+        if KazBaseUrl == "":
+            print("defaulting to https://ui.zswitch.net/v2")
+            KazBaseUrl = "https://ui.zswitch.net/v2"
+        # trim off the last character if it's a /
+        if(KazBaseUrl[-1] == "/"):
+            KazBaseUrl = KazBaseUrl[:-1]
+        authmethod = input("Type 'up' to auth with a username/password, 'ak' to use an API key or 'tk' to use an auth token: ")
 
-    if authmethod == 'up':
-        KazUser = input("Please enter your KAZOO username: ")
-        KazPass = input("Please enter your KAZOO password: ")
-        KazAcct = input("Please enter your KAZOO account name: ")
-        KazSess = kazoo.Client(username=KazUser, password=KazPass, account_name=KazAcct, base_url=KazBaseUrl)
-    elif authmethod == 'ak':
-        KazApiKey = input("Please enter your KAZOO API Key: ")
-        KazSess = kazoo.Client(api_key=KazApiKey, base_url=KazBaseUrl)
-    elif authmethod == 'tk':
-        KazAuthTok = input("Please enter your auth token: ")
-        try:
+        if authmethod == 'up':
+            KazUser = input("Please enter your KAZOO username: ")
+            KazPass = input("Please enter your KAZOO password: ")
+            KazAcct = input("Please enter your KAZOO account name: ")
+            KazSess = kazoo.Client(username=KazUser, password=KazPass, account_name=KazAcct, base_url=KazBaseUrl)
+            KazSess.authenticate()
+        elif authmethod == 'ak':
+            KazApiKey = input("Please enter your KAZOO API Key: ")
+            KazSess = kazoo.Client(api_key=KazApiKey, base_url=KazBaseUrl)
+            KazSess.authenticate()
+        elif authmethod == 'tk':
+            # we need to auth differently that the standard package
+            def monkey_patched_init(self, auth_token, base_url):
+                self.base_url = base_url
+                self.auth_token = auth_token
+                self._authenticated = True
+            KazAuthTok = input("Please enter your auth token: ")
             KazAccountID = json.loads(base64.b64decode(bytes(KazAuthTok.split('.')[1], 'utf-8') + b'==', validate=False))['account_id']
-        except:
-            KazAccountID = input("Please enter an account ID to auth with: ")
-        url = "%s/accounts/%s/api_key" % (KazBaseUrl, KazAccountID)
-        headers = {'X-Auth-Token': KazAuthTok}
-        response = requests.request("GET", url, headers=headers, data={})
-        response = json.loads(response.text)
-        KazSess = kazoo.Client(api_key=response['data']['api_key'], base_url=KazBaseUrl)
-    KazSess.authenticate()
+            orig_init = kazoo.Client.__init__
+            kazoo.Client.__init__ = monkey_patched_init
+            KazSess = kazoo.Client(auth_token=KazAuthTok, base_url=KazBaseUrl)
+            kazoo.Client.__init__ = orig_init
+            acct_resp = KazSess.get_account(KazAccountID)
+            KazSess.auth_data = acct_resp
+            KazSess.auth_data['auth_token'] = KazAuthTok
 
+        acctId = KazSess.auth_data['data']['account_id']
+        KazSess.get_account(acctId)
+    except:
+        print("Unable to authenticate with the information provided. Please try again")
+        return interactiveKazooAuth()
     return KazSess
