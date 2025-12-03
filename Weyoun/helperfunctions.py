@@ -1,8 +1,11 @@
-import kazoo
-from kazoo.request_objects import KazooRequest
+#import kazoo
+#from kazoo.request_objects import KazooRequest
+import modded_kazoo_sdk as kazoo
+from modded_kazoo_sdk.request_objects import KazooRequest
 import requests
 import json
 import base64
+import os
 
 def pagedApiCallToEnd(KazSess, method, basepath, start_key=None, AppendQuestionMarkToUrl=True):
     global pagedApiCallToEndPageSize
@@ -143,14 +146,24 @@ def interactiveKazooAuth ():
             orig_init = kazoo.Client.__init__
             kazoo.Client.__init__ = monkey_patched_init
             KazSess = kazoo.Client(auth_token=KazAuthTok, base_url=KazBaseUrl)
+            # supports inserting persistent headers (for example for an IDP)
+            try:
+                if os.path.isfile(".env"):
+                    with open(".env", "r") as f:
+                        envData = json.load(f)
+                        if "always_add_headers" in envData:
+                            KazSess.always_add_headers = envData['always_add_headers']
+            except:
+                pass
             kazoo.Client.__init__ = orig_init
             acct_resp = KazSess.get_account(KazAccountID)
             KazSess.auth_data = acct_resp
             KazSess.auth_data['auth_token'] = KazAuthTok
-
-        acctId = KazSess.auth_data['data']['account_id']
+        acctId = KazSess.auth_data['data']['id']
         KazSess.get_account(acctId)
     except:
         print("Unable to authenticate with the information provided. Please try again")
         return interactiveKazooAuth()
+
+
     return KazSess

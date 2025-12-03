@@ -1,8 +1,10 @@
 import json
 import sys
 
-import kazoo
-from kazoo.request_objects import KazooRequest
+#import kazoo
+#from kazoo.request_objects import KazooRequest
+import modded_kazoo_sdk as kazoo
+from modded_kazoo_sdk.request_objects import KazooRequest
 from datetime import datetime, timedelta
 import pytz
 import time
